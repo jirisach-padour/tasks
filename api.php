@@ -14,6 +14,7 @@ match($action) {
     'daktela'        => require __DIR__ . '/api/daktela.php',
     'calendar'       => require __DIR__ . '/api/calendar.php',
     'ai_suggest'     => require __DIR__ . '/api/ai.php',
+    'onenon'         => require __DIR__ . '/api/onenon.php',
     'logout'         => (function() {
         session_destroy();
         echo json_encode(['ok' => true]);

@@ -84,8 +84,10 @@ switch ($method) {
                                   ? $body['quadrant'] : 'other',
             'type'            => ($body['type'] ?? '') === 'personal' ? 'personal' : 'work',
             'due_date'        => $body['due_date'] ?: null,
-            'daktela_tickets' => json_encode($body['daktela_tickets'] ?? []),
-            'sort_order'      => (int)($body['sort_order'] ?? 0),
+            'daktela_tickets'  => json_encode($body['daktela_tickets'] ?? []),
+            'sort_order'       => (int)($body['sort_order'] ?? 0),
+            'recurrence'       => in_array($body['recurrence'] ?? '', ['weekly','monthly']) ? $body['recurrence'] : 'none',
+            'recurrence_day'   => isset($body['recurrence_day']) ? (int)$body['recurrence_day'] : null,
         ]);
         $row = DB::q("SELECT * FROM tasks WHERE id = ?", [$id])->fetch();
         $row['daktela_tickets'] = json_decode($row['daktela_tickets']);
@@ -97,7 +99,7 @@ switch ($method) {
         if (!$id) { http_response_code(400); echo json_encode(['error' => 'Chybí id']); break; }
 
         $data = [];
-        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daktela_tickets'];
+        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daktela_tickets','recurrence','recurrence_day'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 $data[$f] = $f === 'daktela_tickets' ? json_encode($body[$f]) : ($body[$f] ?: null);
@@ -109,6 +111,23 @@ switch ($method) {
             $data['done_at'] = $body['status'] === 'done' ? date('Y-m-d H:i:s') : null;
         }
         if ($data) DB::update('tasks', $data, $id);
+
+        // Opakující se task — vytvoř nový po dokončení
+        if (($body['status'] ?? '') === 'done') {
+            $orig = DB::q("SELECT * FROM tasks WHERE id = ?", [$id])->fetch();
+            $rec  = $orig['recurrence'] ?? 'none';
+            if ($rec !== 'none' && $orig['due_date']) {
+                $base = new DateTime($orig['due_date']);
+                $rec === 'weekly' ? $base->modify('+7 days') : $base->modify('+1 month');
+                DB::q(
+                    "INSERT INTO tasks (title, description, ai_context, quadrant, type, due_date, daktela_tickets, recurrence, recurrence_day)
+                     VALUES (?,?,?,?,?,?,?,?,?)",
+                    [$orig['title'], $orig['description'], $orig['ai_context'], $orig['quadrant'], $orig['type'],
+                     $base->format('Y-m-d'), $orig['daktela_tickets'], $rec, $orig['recurrence_day']]
+                );
+            }
+        }
+
         $row = DB::q("SELECT * FROM tasks WHERE id = ?", [$id])->fetch();
         $row['daktela_tickets'] = json_decode($row['daktela_tickets'] ?? '[]');
         echo json_encode(['task' => $row]);

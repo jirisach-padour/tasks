@@ -1,17 +1,66 @@
 <?php
-$method = $_SERVER['REQUEST_METHOD'];
-$body   = json_decode(file_get_contents('php://input'), true) ?? [];
-$sub    = $_GET['sub'] ?? 'events'; // events | connect | disconnect
+require_once __DIR__ . '/../config.php';
 
-// Zkontroluj zda jsou Google credentials nakonfigurovány
-if (!defined('GOOGLE_CLIENT_ID') || GOOGLE_CLIENT_ID === 'PLACEHOLDER_GOOGLE_CLIENT_ID') {
-    echo json_encode(['connected' => false, 'events' => [], 'error' => 'Google Calendar není nakonfigurován']);
+function getCalendarToken(): ?string {
+    $row = DB::q("SELECT * FROM calendar_tokens ORDER BY id DESC LIMIT 1")->fetch();
+    if (!$row) return null;
+    if (strtotime($row['expires_at']) > time() + 60) return $row['access_token'];
+    if (!$row['refresh_token']) return null;
+
+    $resp = @file_get_contents('https://oauth2.googleapis.com/token', false, stream_context_create(['http' => [
+        'method'  => 'POST',
+        'header'  => 'Content-Type: application/x-www-form-urlencoded',
+        'content' => http_build_query([
+            'refresh_token' => $row['refresh_token'],
+            'client_id'     => GOOGLE_CLIENT_ID,
+            'client_secret' => GOOGLE_CLIENT_SECRET,
+            'grant_type'    => 'refresh_token',
+        ]),
+    ]]));
+    $data = $resp ? json_decode($resp, true) : null;
+    if (!isset($data['access_token'])) return null;
+
+    $exp = date('Y-m-d H:i:s', time() + ($data['expires_in'] ?? 3600));
+    DB::q("UPDATE calendar_tokens SET access_token=?, expires_at=? WHERE id=?",
+        [$data['access_token'], $exp, $row['id']]);
+    return $data['access_token'];
+}
+
+function fetchEvents(string $token): array {
+    $tz      = 'Europe/Prague';
+    $today   = (new DateTime('today',    new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $dayAfter = (new DateTime('tomorrow +1 day', new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?'
+        . http_build_query(['timeMin'=>$today,'timeMax'=>$dayAfter,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>20,'fields'=>'items(id,summary,start,end)']);
+    $resp = @file_get_contents($url, false, stream_context_create(['http'=>['header'=>'Authorization: Bearer '.$token]]));
+    if (!$resp) return [];
+    $data = json_decode($resp, true);
+    $events = [];
+    foreach ($data['items'] ?? [] as $e) {
+        $startRaw = $e['start']['dateTime'] ?? $e['start']['date'] ?? '';
+        $endRaw   = $e['end']['dateTime']   ?? $e['end']['date']   ?? '';
+        $allDay   = !isset($e['start']['dateTime']);
+        $date     = substr($startRaw, 0, 10);
+        $time     = $allDay ? '' : substr($startRaw, 11, 5);
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw];
+    }
+    return $events;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$sub    = $_GET['sub'] ?? '';
+
+// Výchozí — load stavu + eventů
+if (!$sub && $method === 'GET') {
+    $token = getCalendarToken();
+    if (!$token) { echo json_encode(['connected'=>false,'events'=>[]]); exit; }
+    echo json_encode(['connected'=>true,'events'=>fetchEvents($token)]);
     exit;
 }
 
-if ($sub === 'connect') {
-    // Redirect na Google OAuth
-    $params = buildQuery([
+// Přihlášení — vrátí redirect URL na Google OAuth
+if ($sub === 'connect' && $method === 'GET') {
+    $url = 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query([
         'client_id'     => GOOGLE_CLIENT_ID,
         'redirect_uri'  => GOOGLE_REDIRECT_URI,
         'response_type' => 'code',
@@ -19,85 +68,16 @@ if ($sub === 'connect') {
         'access_type'   => 'offline',
         'prompt'        => 'consent',
     ]);
-    echo json_encode(['redirect' => 'https://accounts.google.com/o/oauth2/v2/auth?' . $params]);
+    echo json_encode(['redirect' => $url]);
     exit;
 }
 
-if ($sub === 'disconnect') {
+// Odpojit
+if ($sub === 'disconnect' && $method === 'POST') {
     DB::q("DELETE FROM calendar_tokens");
     echo json_encode(['ok' => true]);
     exit;
 }
 
-// Zjisti zda jsou uloženy tokeny
-$tokenRow = DB::q("SELECT * FROM calendar_tokens LIMIT 1")->fetch();
-if (!$tokenRow) {
-    echo json_encode(['connected' => false, 'events' => []]);
-    exit;
-}
-
-// Refresh pokud token expiroval
-$accessToken = $tokenRow['access_token'];
-if (new DateTime() >= new DateTime($tokenRow['expires_at'])) {
-    $refreshed = refreshGoogleToken($tokenRow['refresh_token']);
-    if (isset($refreshed['access_token'])) {
-        $accessToken = $refreshed['access_token'];
-        $expiresAt   = date('Y-m-d H:i:s', time() + ($refreshed['expires_in'] ?? 3600) - 60);
-        DB::update('calendar_tokens', ['access_token' => $accessToken, 'expires_at' => $expiresAt], $tokenRow['id']);
-    } else {
-        echo json_encode(['connected' => false, 'events' => [], 'error' => 'Token nelze obnovit, připoj znovu']);
-        exit;
-    }
-}
-
-// Stáhni dnešní + zítřejší eventy
-$timeMin = date('Y-m-d') . 'T00:00:00Z';
-$timeMax = date('Y-m-d', strtotime('+2 days')) . 'T00:00:00Z';
-$qs = buildQuery([
-    'calendarId'   => 'primary',
-    'timeMin'      => $timeMin,
-    'timeMax'      => $timeMax,
-    'singleEvents' => 'true',
-    'orderBy'      => 'startTime',
-    'maxResults'   => '20',
-]);
-$url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?' . $qs;
-$ch  = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $accessToken],
-    CURLOPT_TIMEOUT        => 8,
-]);
-$out  = curl_exec($ch);
-curl_close($ch);
-$data = json_decode($out, true);
-
-$events = [];
-foreach ($data['items'] ?? [] as $item) {
-    $start = $item['start']['dateTime'] ?? $item['start']['date'] ?? '';
-    $events[] = [
-        'title' => $item['summary'] ?? '(bez názvu)',
-        'start' => $start,
-        'time'  => $start ? date('H:i', strtotime($start)) : 'celodenní',
-        'date'  => $start ? date('Y-m-d', strtotime($start)) : date('Y-m-d'),
-    ];
-}
-
-echo json_encode(['connected' => true, 'events' => $events]);
-
-function refreshGoogleToken(string $refreshToken): array {
-    $ch = curl_init('https://oauth2.googleapis.com/token');
-    curl_setopt_array($ch, [
-        CURLOPT_POST           => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POSTFIELDS     => http_build_query([
-            'client_id'     => GOOGLE_CLIENT_ID,
-            'client_secret' => GOOGLE_CLIENT_SECRET,
-            'refresh_token' => $refreshToken,
-            'grant_type'    => 'refresh_token',
-        ]),
-    ]);
-    $out = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($out, true) ?? [];
-}
+http_response_code(400);
+echo json_encode(['error' => 'Unknown action']);

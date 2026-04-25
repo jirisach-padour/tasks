@@ -247,7 +247,7 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
 }
 
 // ---- TaskModal ----
-function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, onSave, onClose }) {
+function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, onSave, onClose, onDelete }) {
   const initial = task || {};
   const [title, setTitle] = useState(initial.title || '');
   const [description, setDescription] = useState(initial.description || '');
@@ -261,6 +261,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     }
     return defaultTickets || [];
   });
+  const [recurrence, setRecurrence] = useState(initial.recurrence || 'none');
   const [saving, setSaving] = useState(false);
 
   function removeTicket(name) {
@@ -279,7 +280,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets });
+      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence });
       onClose();
     } catch(e) { toast('Chyba: ' + e.message); }
     setSaving(false);
@@ -345,11 +346,24 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
             <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Připoj Daktelu v sidebaru pro výběr ticketů</div>
           )}
         </div>
-        <div className="modal-actions">
-          <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Ukládám...' : 'Uložit'}
-          </button>
+        <div className="form-group">
+          <label>Opakování</label>
+          <select value={recurrence} onChange={e => setRecurrence(e.target.value)}>
+            <option value="none">Nikdy</option>
+            <option value="weekly">Týdně</option>
+            <option value="monthly">Měsíčně</option>
+          </select>
+        </div>
+        <div className="modal-actions" style={{justifyContent:'space-between'}}>
+          <div>
+            {task && <button className="btn" style={{color:'#E05C4E',border:'1px solid #E05C4E',background:'none'}} onClick={() => { if(window.confirm('Opravdu smazat task?')) { onDelete(task.id); onClose(); } }}>Smazat</button>}
+          </div>
+          <div style={{display:'flex',gap:8}}>
+            <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
+            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+              {saving ? 'Ukládám...' : 'Uložit'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -462,6 +476,8 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
 
   const today = new Date().toISOString().split('T')[0];
   const isOverdue = task.status === 'open' && task.due_date && task.due_date < today;
+  const daysUntil = task.due_date ? Math.ceil((new Date(task.due_date) - new Date(today)) / 86400000) : null;
+  const isSoon = !isOverdue && task.status === 'open' && daysUntil !== null && daysUntil <= 3;
 
   function startEdit(e) {
     e.stopPropagation();
@@ -523,7 +539,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
           ))}
           {task.due_date && (
             <span className={isOverdue ? 'overdue-badge' : ''}>
-              {isOverdue ? 'Po termínu: ' : ''}{task.due_date}
+              {isOverdue ? 'Po termínu: ' : isSoon ? '⚡ ' : ''}{task.due_date}
             </span>
           )}
         </div>
@@ -956,6 +972,167 @@ function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onTo
   );
 }
 
+// ---- OneOnOneView ----
+function OneOnOneView() {
+  const [people, setPeople] = React.useState([]);
+  const [selected, setSelected] = React.useState(null);
+  const [notes, setNotes] = React.useState([]);
+  const [modal, setModal] = React.useState(null);
+
+  React.useEffect(() => { loadPeople(); }, []);
+
+  async function loadPeople() {
+    const d = await apiFetch('onenon', 'GET');
+    setPeople(d.people || []);
+  }
+
+  async function loadNotes(person) {
+    setSelected(person);
+    const d = await apiFetch('onenon', 'GET', null, { person });
+    setNotes(d.notes || []);
+  }
+
+  async function handleSave({ id, person, meeting_date, notes: txt, action_items }) {
+    if (id) {
+      await apiFetch('onenon', 'PUT', { notes: txt, action_items }, { id });
+    } else {
+      await apiFetch('onenon', 'POST', { person, meeting_date, notes: txt, action_items });
+    }
+    loadPeople();
+    if (selected) loadNotes(selected);
+    setModal(null);
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Smazat záznam?')) return;
+    await apiFetch('onenon', 'DELETE', null, { id });
+    loadNotes(selected);
+    loadPeople();
+  }
+
+  async function toggleActionItem(note, idx) {
+    const items = (note.action_items || []).map((it, i) => i === idx ? {...it, done: !it.done} : it);
+    await apiFetch('onenon', 'PUT', { action_items: items }, { id: note.id });
+    loadNotes(selected);
+  }
+
+  return (
+    <div style={{display:'flex',gap:20,padding:'20px',height:'100%'}}>
+      <div style={{width:220,flexShrink:0}}>
+        <div className="section-title" style={{marginBottom:12}}>Lidé</div>
+        {people.map(p => (
+          <div key={p.person} onClick={() => loadNotes(p.person)}
+            style={{padding:'8px 12px',borderRadius:6,cursor:'pointer',marginBottom:4,
+              background: selected === p.person ? 'var(--navy)' : 'var(--grey-bg)',
+              color: selected === p.person ? '#fff' : 'var(--navy)',
+              fontWeight:600,fontSize:13}}>
+            {p.person} <span style={{opacity:.6,fontWeight:400}}>({p.count})</span>
+          </div>
+        ))}
+        <button className="btn btn-primary" style={{width:'100%',marginTop:12,fontSize:12}}
+          onClick={() => setModal({ person: selected || '' })}>+ Nová schůzka</button>
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        {!selected && <div style={{color:'var(--grey-text)',fontSize:13}}>Vyber osobu vlevo</div>}
+        {selected && (
+          <>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+              <div className="section-title">{selected}</div>
+              <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
+            </div>
+            {notes.length === 0 && <div style={{color:'var(--grey-text)',fontSize:13}}>Zatím žádné záznamy</div>}
+            {notes.map(n => (
+              <div key={n.id} style={{background:'#fff',border:'1px solid var(--grey-border)',borderRadius:8,padding:16,marginBottom:12}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
+                  <div style={{fontWeight:700,color:'var(--navy)',fontSize:13}}>{n.meeting_date}</div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'var(--grey-text)'}}>Upravit</button>
+                    <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'#E05C4E'}}>Smazat</button>
+                  </div>
+                </div>
+                {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8}}>{n.notes}</div>}
+                {(n.action_items || []).length > 0 && (
+                  <div>
+                    <div style={{fontSize:11,fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Action items</div>
+                    {(n.action_items || []).map((it, idx) => (
+                      <div key={idx} onClick={() => toggleActionItem(n, idx)}
+                        style={{display:'flex',alignItems:'center',gap:8,padding:'4px 0',cursor:'pointer',fontSize:13,
+                          color: it.done ? 'var(--grey-text)' : 'var(--text)',
+                          textDecoration: it.done ? 'line-through' : 'none'}}>
+                        <span style={{width:14,height:14,borderRadius:3,border:'2px solid '+(it.done?'var(--grey-text)':'var(--navy)'),
+                          background:it.done?'var(--grey-bg)':'none',display:'inline-block',flexShrink:0}}/>
+                        {it.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+      {modal !== null && <OneOnOneModal note={modal} onSave={handleSave} onClose={() => setModal(null)} />}
+    </div>
+  );
+}
+
+function OneOnOneModal({ note, onSave, onClose }) {
+  const [person, setPerson] = React.useState(note.person || '');
+  const [date, setDate] = React.useState(note.meeting_date || new Date().toISOString().split('T')[0]);
+  const [txt, setTxt] = React.useState(note.notes || '');
+  const [items, setItems] = React.useState(note.action_items || []);
+  const [newItem, setNewItem] = React.useState('');
+
+  function addItem() {
+    if (!newItem.trim()) return;
+    setItems(prev => [...prev, { text: newItem.trim(), done: false }]);
+    setNewItem('');
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <h2>{note.id ? 'Upravit záznam' : 'Nová schůzka'}</h2>
+        {!note.id && (
+          <div className="form-group">
+            <label>Osoba</label>
+            <input value={person} onChange={e => setPerson(e.target.value)} placeholder="Jméno" autoFocus />
+          </div>
+        )}
+        <div className="form-group">
+          <label>Datum</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Poznámky</label>
+          <textarea value={txt} onChange={e => setTxt(e.target.value)} rows={5} placeholder="Co jsme řešili..." />
+        </div>
+        <div className="form-group">
+          <label>Action items</label>
+          {items.map((it, i) => (
+            <div key={i} style={{display:'flex',alignItems:'center',gap:6,marginBottom:4}}>
+              <input type="text" value={it.text} onChange={e => setItems(prev => prev.map((x,j) => j===i?{...x,text:e.target.value}:x))}
+                style={{flex:1,fontSize:13,padding:'4px 8px',border:'1px solid var(--grey-border)',borderRadius:4}} />
+              <button onClick={() => setItems(prev => prev.filter((_,j) => j!==i))}
+                style={{background:'none',border:'none',cursor:'pointer',color:'#E05C4E',fontSize:16}}>×</button>
+            </div>
+          ))}
+          <div style={{display:'flex',gap:6,marginTop:4}}>
+            <input value={newItem} onChange={e => setNewItem(e.target.value)} placeholder="Nový action item..."
+              onKeyDown={e => e.key==='Enter' && addItem()}
+              style={{flex:1,fontSize:13,padding:'4px 8px',border:'1px solid var(--grey-border)',borderRadius:4}} />
+            <button onClick={addItem} className="btn btn-secondary" style={{fontSize:12}}>Přidat</button>
+          </div>
+        </div>
+        <div className="modal-actions">
+          <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
+          <button className="btn btn-primary" onClick={() => onSave({ id: note.id, person, meeting_date: date, notes: txt, action_items: items })}>Uložit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---- App ----
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -1174,6 +1351,7 @@ function App() {
     { key: 'work', label: 'Pracovní', count: workCount },
     { key: 'personal', label: 'Osobní', count: personalCount },
     { key: 'history', label: 'Historie', count: null },
+    { key: 'onenon', label: '1on1', count: null },
   ];
 
   return (
@@ -1252,6 +1430,8 @@ function App() {
           ? <SearchResults query={searchQuery} checklistItems={checklistItems} daktelaTickets={daktelaTickets} onEditTask={handleEditTask} onToggleCl={handleToggleCl} />
           : activeTab === 'history'
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
+          : activeTab === 'onenon'
+          ? <OneOnOneView />
           : (
             <>
               <div className="matrix">
@@ -1290,6 +1470,7 @@ function App() {
           defaultTickets={(modal.defaults || {}).daktela_tickets}
           availableTickets={daktelaTickets}
           onSave={handleSaveTask}
+          onDelete={id => { handleDeleteTask({ id }); setModal(null); }}
           onClose={() => setModal(null)}
         />
       )}
