@@ -1,5 +1,16 @@
 <?php
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/DB.php';
+// OAuth callback přichází jako cross-site redirect z Googlu — SameSite=Lax nutný
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_secure', 1);
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.gc_maxlifetime', 28800);
+session_start();
+if (empty($_SESSION['authenticated'])) {
+    header('Location: /tasks/login.php?redirect=calendar');
+    exit;
+}
 
 $code  = $_GET['code']  ?? '';
 $error = $_GET['error'] ?? '';
