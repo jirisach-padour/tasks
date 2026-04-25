@@ -27,6 +27,34 @@ switch ($method) {
             break;
         }
 
+        // Fulltext search
+        if ($search = trim($_GET['search'] ?? '')) {
+            $like = '%' . $search . '%';
+            $rows = DB::q(
+                "SELECT * FROM tasks WHERE (title LIKE ? OR description LIKE ? OR ai_context LIKE ?) ORDER BY status ASC, quadrant ASC LIMIT 50",
+                [$like, $like, $like]
+            )->fetchAll();
+            foreach ($rows as &$r) {
+                $r['daktela_tickets'] = $r['daktela_tickets'] ? json_decode($r['daktela_tickets']) : [];
+            }
+            echo json_encode(['tasks' => $rows]);
+            break;
+        }
+
+        // Fulltext search
+        if ($search = trim($_GET['search'] ?? '')) {
+            $like = '%' . $search . '%';
+            $rows = DB::q(
+                "SELECT * FROM tasks WHERE (title LIKE ? OR description LIKE ? OR ai_context LIKE ?) ORDER BY status ASC, quadrant ASC LIMIT 50",
+                [$like, $like, $like]
+            )->fetchAll();
+            foreach ($rows as &$r) {
+                $r['daktela_tickets'] = $r['daktela_tickets'] ? json_decode($r['daktela_tickets']) : [];
+            }
+            echo json_encode(['tasks' => $rows]);
+            break;
+        }
+
         $typeWhere = $type ? 'AND type = ?' : '';
         $params = $type ? [$type] : [];
         $rows = DB::q(

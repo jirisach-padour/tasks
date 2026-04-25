@@ -135,6 +135,25 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 /* Loading */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.6);z-index:300;display:flex;align-items:center;justify-content:center}
 .spinner{width:32px;height:32px;border:3px solid var(--grey-border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
+input[type=search]::placeholder{color:rgba(255,255,255,.5)}
+input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cursor:pointer}
+/* Overdue */
+.task-card.overdue{border-color:#E63327;background:#FFF5F5}
+.task-card.overdue .task-title{color:#c0392b}
+.overdue-badge{font-size:10px;font-weight:700;color:#E63327;background:#FEE8E7;padding:1px 6px;border-radius:4px}
+/* Drag & drop */
+.task-card.dragging{opacity:.4}
+.quadrant.drag-over{background:#EBF0FF;border-color:#1B3468}
+/* Inline edit */
+.task-title-input{font-size:13px;font-weight:500;width:100%;border:none;border-bottom:1px solid var(--navy);background:transparent;outline:none;font-family:var(--font);padding:0;color:var(--navy)}
+/* Q1 alert badge */
+.q1-alert{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#E63327;color:#fff;font-size:10px;font-weight:700;border-radius:50%;margin-left:6px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+/* Quick capture modal */
+.qc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding-top:120px}
+.qc-modal{background:#fff;border-radius:12px;padding:20px 24px;width:100%;max-width:480px;box-shadow:0 12px 48px rgba(0,0,0,.25)}
+.qc-modal input{width:100%;font-size:16px;border:none;outline:none;font-family:var(--font);color:var(--navy);padding:4px 0}
+.qc-hint{font-size:11px;color:var(--grey-text);margin-top:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Toast */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s}
@@ -172,7 +191,10 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 </header>
 
 <main class="container">
-  <div class="layout" id="layout">
+  <div id="app-root" style="position:absolute;width:0;height:0;overflow:visible"></div>
+<div class="layout" id="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div id="mainContent"></div>
     <aside class="sidebar" id="sidebar"></aside>
     <div id="mainContent"></div>
   </div>
@@ -225,7 +247,7 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
 }
 
 // ---- TaskModal ----
-function TaskModal({ task, defaultQuadrant, defaultType, onSave, onClose }) {
+function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, onSave, onClose }) {
   const initial = task || {};
   const [title, setTitle] = useState(initial.title || '');
   const [description, setDescription] = useState(initial.description || '');
@@ -233,13 +255,31 @@ function TaskModal({ task, defaultQuadrant, defaultType, onSave, onClose }) {
   const [quadrant, setQuadrant] = useState(initial.quadrant || defaultQuadrant || 'other');
   const [type, setType] = useState(initial.type || defaultType || 'work');
   const [dueDate, setDueDate] = useState(initial.due_date || '');
+  const [daktelaTickets, setDaktelaTickets] = useState(() => {
+    if (initial.daktela_tickets) {
+      try { return JSON.parse(initial.daktela_tickets); } catch(e) { return []; }
+    }
+    return defaultTickets || [];
+  });
   const [saving, setSaving] = useState(false);
+
+  function removeTicket(name) {
+    setDaktelaTickets(prev => prev.filter(n => n !== name));
+  }
+
+  function addTicket(ticket) {
+    if (!daktelaTickets.includes(ticket.name)) {
+      setDaktelaTickets(prev => [...prev, ticket.name]);
+    }
+  }
+
+  const attachable = (availableTickets || []).filter(t => !daktelaTickets.includes(t.name));
 
   async function handleSave() {
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate });
+      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets });
       onClose();
     } catch(e) { toast('Chyba: ' + e.message); }
     setSaving(false);
@@ -279,6 +319,31 @@ function TaskModal({ task, defaultQuadrant, defaultType, onSave, onClose }) {
         <div className="form-group">
           <label>Kontext pro AI</label>
           <textarea value={aiContext} onChange={e => setAiContext(e.target.value)} placeholder="Popiš složitost, blokátory, závislosti — AI to použije při návrhu priorit..." />
+        </div>
+        <div className="form-group">
+          <label>Daktela tickety</label>
+          {daktelaTickets.length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
+              {daktelaTickets.map(name => (
+                <span key={name} style={{display:'inline-flex',alignItems:'center',gap:4,background:'#FFF4E0',color:'#A06000',fontSize:'11px',fontWeight:700,padding:'3px 8px',borderRadius:20}}>
+                  <a href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" style={{color:'#A06000',textDecoration:'none'}}>{name}</a>
+                  <button onClick={() => removeTicket(name)} style={{background:'none',border:'none',cursor:'pointer',color:'#A06000',fontSize:'13px',lineHeight:1,padding:0,marginLeft:2}}>×</button>
+                </span>
+              ))}
+            </div>
+          )}
+          {attachable.length > 0 && (
+            <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
+              {attachable.map(t => (
+                <button key={t.name} onClick={() => addTicket(t)} style={{fontSize:'11px',padding:'3px 8px',background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',color:'var(--navy)',fontWeight:600}}>
+                  + {t.title || t.name}
+                </button>
+              ))}
+            </div>
+          )}
+          {daktelaTickets.length === 0 && attachable.length === 0 && (
+            <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Připoj Daktelu v sidebaru pro výběr ticketů</div>
+          )}
         </div>
         <div className="modal-actions">
           <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
@@ -389,10 +454,39 @@ function AiSuggestModal({ suggestions, tasks, onApply, onClose }) {
 }
 
 // ---- TaskCard ----
-function TaskCard({ task, onToggleDone, onEdit, onDelete }) {
+function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragStart }) {
   const tickets = task.daktela_tickets || [];
+  const [editing, setEditing] = useState(false);
+  const [editVal, setEditVal] = useState(task.title);
+  const inputRef = useRef(null);
+
+  const today = new Date().toISOString().split('T')[0];
+  const isOverdue = task.status === 'open' && task.due_date && task.due_date < today;
+
+  function startEdit(e) {
+    e.stopPropagation();
+    setEditVal(task.title);
+    setEditing(true);
+    setTimeout(() => inputRef.current && inputRef.current.focus(), 0);
+  }
+
+  function commitEdit() {
+    setEditing(false);
+    if (editVal.trim() && editVal.trim() !== task.title) {
+      onInlineEdit(task, editVal.trim());
+    }
+  }
+
+  const cardClass = 'task-card' + (isOverdue ? ' overdue' : '');
+
   return (
-    <div className="task-card" onClick={() => onEdit(task)}>
+    <div
+      className={cardClass}
+      onClick={() => !editing && onEdit(task)}
+      draggable
+      onDragStart={e => { e.dataTransfer.setData('taskId', task.id); e.currentTarget.classList.add('dragging'); if (onDragStart) onDragStart(task); }}
+      onDragEnd={e => e.currentTarget.classList.remove('dragging')}
+    >
       <input
         type="checkbox"
         className="task-checkbox"
@@ -401,13 +495,37 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete }) {
         onChange={() => onToggleDone(task)}
       />
       <div className="task-body">
-        <div className={'task-title' + (task.status === 'done' ? ' done-text' : '')}>{task.title}</div>
+        {editing
+          ? <input
+              ref={inputRef}
+              className="task-title-input"
+              value={editVal}
+              onChange={e => setEditVal(e.target.value)}
+              onBlur={commitEdit}
+              onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditing(false); }}
+              onClick={e => e.stopPropagation()}
+            />
+          : <div
+              className={'task-title' + (task.status === 'done' ? ' done-text' : '')}
+              onDoubleClick={startEdit}
+              title="Dvojklik = rychlá editace názvu"
+            >{task.title}</div>
+        }
         <div className="task-meta">
           <span className={'badge ' + (task.type === 'personal' ? 'badge-personal' : 'badge-work')}>
             {task.type === 'personal' ? 'Osobní' : 'Work'}
           </span>
-          {tickets.length > 0 && <span className="badge badge-daktela">Daktela ×{tickets.length}</span>}
-          {task.due_date && <span>{task.due_date}</span>}
+          {tickets.length === 1 && (
+            <a href={'https://daktela.daktela.com/tickets/update/' + tickets[0]} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="badge badge-daktela" style={{textDecoration:'none'}}>{tickets[0]}</a>
+          )}
+          {tickets.length > 1 && tickets.map(name => (
+            <a key={name} href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="badge badge-daktela" style={{textDecoration:'none'}}>{name}</a>
+          ))}
+          {task.due_date && (
+            <span className={isOverdue ? 'overdue-badge' : ''}>
+              {isOverdue ? 'Po termínu: ' : ''}{task.due_date}
+            </span>
+          )}
         </div>
       </div>
       <button className="task-del" onClick={e => { e.stopPropagation(); onDelete(task); }} title="Smazat">×</button>
@@ -416,8 +534,9 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete }) {
 }
 
 // ---- Quadrant ----
-function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask }) {
+function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask, onInlineEdit, onMoveTask }) {
   const [addTitle, setAddTitle] = useState('');
+  const [dragOver, setDragOver] = useState(false);
   const visible = tasks.filter(t =>
     t.quadrant === q.key &&
     t.status === 'open' &&
@@ -430,13 +549,30 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask 
     setAddTitle('');
   }
 
+  function handleDragOver(e) {
+    e.preventDefault();
+    setDragOver(true);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragOver(false);
+    const taskId = parseInt(e.dataTransfer.getData('taskId'));
+    if (taskId) onMoveTask(taskId, q.key);
+  }
+
   return (
-    <div className="quadrant">
+    <div
+      className={'quadrant' + (dragOver ? ' drag-over' : '')}
+      onDragOver={handleDragOver}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
       <div className="q-header">
-        <div className="q-label">{q.label}</div>
+        <div className="q-label">{q.label} {visible.length > 0 && <span style={{fontSize:'10px',fontWeight:400,color:'var(--grey-text)'}}>({visible.length})</span>}</div>
       </div>
       {visible.map(t => (
-        <TaskCard key={t.id} task={t} onToggleDone={onToggleDone} onEdit={onEdit} onDelete={onDelete} />
+        <TaskCard key={t.id} task={t} onToggleDone={onToggleDone} onEdit={onEdit} onDelete={onDelete} onInlineEdit={onInlineEdit} />
       ))}
       <div className="add-inline">
         <input
@@ -498,10 +634,11 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete }) {
 }
 
 // ---- Daktela Panel ----
-function DaktelaPanel({ token, onConnectClick, onCreateTask }) {
+function DaktelaPanel({ token, onConnectClick, onCreateTask, onTicketsLoaded, assignedMap }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showAssigned, setShowAssigned] = useState(false);
 
   useEffect(() => {
     if (token) loadTickets();
@@ -518,7 +655,9 @@ function DaktelaPanel({ token, onConnectClick, onCreateTask }) {
         params,
       });
       const items = data.result?.data || data.result || [];
-      setTickets(Array.isArray(items) ? items.slice(0, 10) : []);
+      const list = (Array.isArray(items) ? items : []).filter(t => t.stage === 'OPEN');
+      setTickets(list);
+      if (onTicketsLoaded) onTicketsLoaded(list);
     } catch(e) {
       setError(e.message);
     }
@@ -527,14 +666,21 @@ function DaktelaPanel({ token, onConnectClick, onCreateTask }) {
 
   function buildDaktelaParams() {
     return {
-      'filter[0][field]': 'user',
-      'filter[0][operator]': 'eq',
-      'filter[0][value]': 'sachj',
-      'filter[1][field]': 'stage',
-      'filter[1][operator]': 'in',
-      'filter[1][value][]': ['OPEN', 'WAIT'],
+      'filter[logic]': 'and',
+      'filter[filters][0][logic]': 'and',
+      'filter[filters][0][filters][0][field]': 'user',
+      'filter[filters][0][filters][0][operator]': 'in',
+      'filter[filters][0][filters][0][value][0]': 'sachj',
+      'filter[filters][0][filters][1][field]': 'stage',
+      'filter[filters][0][filters][1][operator]': 'in',
+      'filter[filters][0][filters][1][value][0]': 'OPEN',
+      'filter[filters][1][field]': '_ticketView',
+      'filter[filters][1][operator]': 'eq',
+      'filter[filters][1][value]': 'default',
+      'filter[filters][2][field]': 'id_merge',
+      'filter[filters][2][operator]': 'isnull',
       'fields[]': ['name', 'title', 'stage', 'sla_deadline'],
-      'take': 15,
+      'take': 100,
     };
   }
 
@@ -542,7 +688,10 @@ function DaktelaPanel({ token, onConnectClick, onCreateTask }) {
     <div className="panel">
       <div className="section-title">
         Daktela tickety
-        {token && <button onClick={loadTickets} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)'}}>↺</button>}
+        <span style={{display:'flex',gap:6}}>
+          {token && <button onClick={loadTickets} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)'}}>↺</button>}
+          {token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',textDecoration:'underline'}}>přihlásit znovu</button>}
+        </span>
       </div>
       {!token && (
         <div className="daktela-connect">
@@ -552,16 +701,41 @@ function DaktelaPanel({ token, onConnectClick, onCreateTask }) {
       )}
       {token && loading && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Načítám...</div>}
       {token && error && <div style={{fontSize:'12px',color:'#E63327'}}>{error} <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',color:'var(--navy)',fontSize:'12px',textDecoration:'underline'}}>Přihlásit znovu</button></div>}
-      {token && !loading && tickets.map(t => (
-        <div key={t.name} className="ticket-row">
-          <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
-          <span className="ticket-title" title={t.title}>{t.title}</span>
-          <button className="ticket-add-btn" onClick={() => onCreateTask(t)}>+ Task</button>
-        </div>
-      ))}
-      {token && !loading && tickets.length === 0 && !error && (
-        <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné otevřené tickety</div>
-      )}
+      {token && !loading && (() => {
+        const am = assignedMap || {};
+        const free = tickets.filter(t => !am[t.name]);
+        const assigned = tickets.filter(t => am[t.name]);
+        return (
+          <>
+            {free.map(t => (
+              <div key={t.name} className="ticket-row">
+                <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
+                <a className="ticket-title" href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" title={t.title + ' (' + t.name + ')'}>{t.title}</a>
+                <button className="ticket-add-btn" onClick={() => onCreateTask(t)}>+ Task</button>
+              </div>
+            ))}
+            {free.length === 0 && assigned.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné otevřené tickety</div>}
+            {assigned.length > 0 && (
+              <>
+                <button onClick={() => setShowAssigned(v => !v)} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',padding:'6px 0 2px',width:'100%',textAlign:'left',fontFamily:'var(--font)'}}>
+                  {showAssigned ? '▾' : '▸'} Přiřazené ({assigned.length})
+                </button>
+                {showAssigned && (
+                  <div style={{background:'var(--grey-bg)',borderRadius:6,padding:'6px 8px',marginTop:4}}>
+                    {assigned.map(t => (
+                      <div key={t.name} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0',borderBottom:'1px solid var(--grey-border)',fontSize:'12px'}}>
+                        <span className={'stage-pill stage-' + (t.stage || 'OPEN')} style={{flexShrink:0}}>{t.stage || 'OPEN'}</span>
+                        <a href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--navy)',textDecoration:'none',fontWeight:500}}>{t.title}</a>
+                        <span style={{color:'var(--grey-text)',flexShrink:0,whiteSpace:'nowrap'}}>→ {am[t.name]}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
@@ -629,7 +803,7 @@ function KpiPanel({ todayDone, totalOpen }) {
 }
 
 // ---- History View ----
-function HistoryView({ filter }) {
+function HistoryView({ filter, onReopen }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -642,7 +816,6 @@ function HistoryView({ filter }) {
     const type = filter === 'all' ? '' : filter;
     const data = await apiFetch('tasks', 'GET', null, { history: 'week', ...(type ? {type} : {}) });
     const tasks = data.tasks || [];
-    // Seskup po dnech
     const byDate = {};
     tasks.forEach(t => {
       const d = t.done_at ? t.done_at.split(' ')[0] : 'neznámé';
@@ -659,6 +832,11 @@ function HistoryView({ filter }) {
     setLoading(false);
   }
 
+  async function handleReopen(task) {
+    await onReopen(task);
+    setGroups(prev => prev.map(g => ({ ...g, tasks: g.tasks.filter(t => t.id !== task.id) })).filter(g => g.tasks.length > 0));
+  }
+
   if (loading) return <div style={{padding:'20px',color:'var(--grey-text)'}}>Načítám historii...</div>;
   if (!groups.length) return <div className="panel"><p style={{color:'var(--grey-text)',fontSize:'13px'}}>Žádné dokončené tasky tento týden.</p></div>;
 
@@ -673,12 +851,107 @@ function HistoryView({ filter }) {
           {g.tasks.map(t => (
             <div key={t.id} className="history-task">
               <span style={{color:'var(--grey-text)',fontSize:16,marginRight:4}}>✓</span>
-              <span>{t.title}</span>
-              <span className="history-time">{t.done_at ? t.done_at.split(' ')[1].slice(0,5) : ''}</span>
+              <span style={{flex:1}}>{t.title}</span>
+              <button onClick={() => handleReopen(t)} title="Vrátit do aktivních" style={{background:'none',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',padding:'2px 7px',marginLeft:8,whiteSpace:'nowrap',flexShrink:0}}>↩ Znovu</button>
+              <span className="history-time" style={{marginLeft:6}}>{t.done_at ? t.done_at.split(' ')[1].slice(0,5) : ''}</span>
             </div>
           ))}
         </div>
       ))}
+    </div>
+  );
+}
+
+// ---- QuickCapture ----
+function QuickCapture({ onSave, onClose }) {
+  const [title, setTitle] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function handleSave() {
+    if (!title.trim()) return;
+    setSaving(true);
+    await onSave({ title: title.trim(), quadrant: 'other' });
+    onClose();
+  }
+
+  return (
+    <div className="qc-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="qc-modal">
+        <input
+          autoFocus
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Co chceš udělat? (Enter = uložit do Backlogu)"
+          onKeyDown={e => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose(); }}
+        />
+        <div className="qc-hint">Esc = zrušit · Enter = uložit do Backlogu · pak roztřídíš v matici</div>
+      </div>
+    </div>
+  );
+}
+
+// ---- SearchResults ----
+function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onToggleCl }) {
+  const [dbTasks, setDbTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const lq = query.toLowerCase();
+
+  useEffect(() => {
+    if (query.length < 2) { setDbTasks([]); return; }
+    setLoading(true);
+    apiFetch('tasks', 'GET', null, { search: query })
+      .then(d => setDbTasks(d.tasks || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [query]);
+
+  const clMatches = checklistItems.filter(i => i.title.toLowerCase().includes(lq));
+  const tkMatches = daktelaTickets.filter(t =>
+    (t.title || '').toLowerCase().includes(lq) || t.name.toLowerCase().includes(lq)
+  );
+
+  const Q_COLOR = { urgent_important: '#E63327', important: '#1B3468', urgent: '#A06000', other: '#5E6778' };
+  const Q_BG = { urgent_important: '#FEE8E7', important: '#E0E8F5', urgent: '#FFF4E0', other: '#F4F5F7' };
+
+  return (
+    <div className="panel">
+      {loading && <div style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:8}}>Hledám...</div>}
+      {dbTasks.length > 0 && (
+        <>
+          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>Tasky ({dbTasks.length})</div>
+          {dbTasks.map(t => (
+            <div key={t.id} onClick={() => onEditTask(t)} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:6,cursor:'pointer',marginBottom:4,border:'1px solid var(--grey-border)',background:'var(--grey-bg)'}}>
+              <span style={{fontSize:'10px',fontWeight:700,padding:'2px 7px',borderRadius:4,background: Q_BG[t.quadrant] || '#F4F5F7',color: Q_COLOR[t.quadrant] || '#5E6778',whiteSpace:'nowrap',flexShrink:0}}>{Q_LABELS[t.quadrant] || t.quadrant}</span>
+              <span style={{fontSize:'13px',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textDecoration: t.status === 'done' ? 'line-through' : 'none',color: t.status === 'done' ? 'var(--grey-text)' : 'var(--navy)'}}>{t.title}</span>
+            </div>
+          ))}
+        </>
+      )}
+      {clMatches.length > 0 && (
+        <>
+          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.5px',margin:'12px 0 8px'}}>Checklist ({clMatches.length})</div>
+          {clMatches.map(i => (
+            <div key={i.id} onClick={() => onToggleCl(i, !i.done)} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:6,cursor:'pointer',marginBottom:4,border:'1px solid var(--grey-border)',background:'var(--grey-bg)'}}>
+              <input type="checkbox" checked={!!i.done} readOnly style={{accentColor:'var(--red)',width:14,height:14,flexShrink:0}} />
+              <span style={{fontSize:'13px',textDecoration: i.done ? 'line-through' : 'none',color: i.done ? 'var(--grey-text)' : 'var(--navy)'}}>{i.title}</span>
+            </div>
+          ))}
+        </>
+      )}
+      {tkMatches.length > 0 && (
+        <>
+          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.5px',margin:'12px 0 8px'}}>Daktela tickety ({tkMatches.length})</div>
+          {tkMatches.map(t => (
+            <a key={t.name} href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:6,marginBottom:4,border:'1px solid var(--grey-border)',background:'var(--grey-bg)',textDecoration:'none'}}>
+              <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
+              <span style={{fontSize:'13px',color:'var(--navy)',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{t.title}</span>
+            </a>
+          ))}
+        </>
+      )}
+      {!loading && dbTasks.length === 0 && clMatches.length === 0 && tkMatches.length === 0 && (
+        <div style={{color:'var(--grey-text)',fontSize:'13px'}}>Nic nenalezeno pro "{query}"</div>
+      )}
     </div>
   );
 }
@@ -698,6 +971,9 @@ function App() {
   const [modal, setModal] = useState(null); // null | {type, ...}
 
   const [daktelaToken, setDaktelaToken] = useState(() => sessionStorage.getItem('daktela_token') || '');
+  const [daktelaTickets, setDaktelaTickets] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [quickCapture, setQuickCapture] = useState(false);
 
   // Load tasks
   async function loadTasks() {
@@ -741,6 +1017,16 @@ function App() {
     document.getElementById('sidebarToggle').onclick = () => {
       document.getElementById('sidebar').classList.toggle('open');
     };
+
+    // Cmd+K = quick capture
+    function handleKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setQuickCapture(true);
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   async function handleAddTask(data) {
@@ -809,6 +1095,33 @@ function App() {
     });
   }
 
+  // Inline edit názvu
+  async function handleInlineEdit(task, newTitle) {
+    const result = await apiFetch('tasks', 'PUT', { title: newTitle }, { id: task.id });
+    setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
+  }
+
+  // Drag & drop přesun
+  async function handleMoveTask(taskId, newQuadrant) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.quadrant === newQuadrant) return;
+    const result = await apiFetch('tasks', 'PUT', { quadrant: newQuadrant }, { id: taskId });
+    setTasks(prev => prev.map(t => t.id === taskId ? result.task : t));
+    toast('Task přesunut');
+  }
+
+  // Znovu otevřít task z historie
+  async function handleReopenTask(task) {
+    const result = await apiFetch('tasks', 'PUT', { status: 'open' }, { id: task.id });
+    setTasks(prev => {
+      const existing = prev.find(t => t.id === task.id);
+      if (existing) return prev.map(t => t.id === task.id ? result.task : t);
+      return [...prev, result.task];
+    });
+    setTodayDone(v => Math.max(0, v - 1));
+    toast('Task vrácen do aktivních');
+  }
+
   // AI suggest
   async function handleAiSuggest() {
     setAiLoading(true);
@@ -849,14 +1162,18 @@ function App() {
     toast('Google Calendar odpojen');
   }
 
-  const totalOpen = tasks.filter(t => t.status === 'open').length;
+  const openTasks = tasks.filter(t => t.status === 'open');
+  const totalOpen = openTasks.length;
   const filter = activeTab === 'history' ? 'all' : (activeTab === 'all' ? 'all' : activeTab);
+  const workCount = openTasks.filter(t => t.type === 'work').length;
+  const personalCount = openTasks.filter(t => t.type === 'personal').length;
+  const q1Count = openTasks.filter(t => t.quadrant === 'urgent_important').length;
 
   const TABS = [
-    { key: 'all', label: 'Vše' },
-    { key: 'work', label: 'Pracovní' },
-    { key: 'personal', label: 'Osobní' },
-    { key: 'history', label: 'Historie' },
+    { key: 'all', label: 'Vše', count: openTasks.length },
+    { key: 'work', label: 'Pracovní', count: workCount },
+    { key: 'personal', label: 'Osobní', count: personalCount },
+    { key: 'history', label: 'Historie', count: null },
   ];
 
   return (
@@ -864,10 +1181,20 @@ function App() {
       {/* Header actions */}
       {ReactDOM.createPortal(
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Hledat..."
+            style={{height:34,padding:'0 10px',border:'1px solid rgba(255,255,255,.25)',borderRadius:'var(--radius)',background:'rgba(255,255,255,.12)',color:'#fff',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
+            onFocus={e => e.target.style.width='240px'}
+            onBlur={e => e.target.style.width='160px'}
+          />
           <button className="btn btn-ghost" onClick={handleAiSuggest} disabled={aiLoading}>
             {aiLoading ? '...' : '✦ AI priority'}
           </button>
           <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Task</button>
+          <button className="btn btn-ghost" style={{fontSize:'12px',padding:'6px 10px'}} onClick={() => setQuickCapture(true)} title="Cmd+K">⚡</button>
           <button className="btn btn-ghost" style={{fontSize:'12px'}} onClick={async () => {
             await apiFetch('logout', 'POST');
             window.location.href = '/tasks/login.php';
@@ -878,12 +1205,15 @@ function App() {
 
       {/* Tab bar */}
       {ReactDOM.createPortal(
-        <div style={{display:'flex'}}>
+        <div style={{display:'flex',alignItems:'center'}}>
           {TABS.map(t => (
             <button key={t.key} className={'tab' + (activeTab === t.key ? ' active' : '')} onClick={() => setActiveTab(t.key)}>
-              {t.label}
+              {t.label}{t.count !== null && t.count > 0 ? ' (' + t.count + ')' : ''}
             </button>
           ))}
+          {q1Count >= 3 && (
+            <span className="q1-alert" title={q1Count + ' urgentních+důležitých tasků!'} style={{marginLeft:8}}>{q1Count}</span>
+          )}
         </div>,
         document.getElementById('tabBar')
       )}
@@ -896,6 +1226,8 @@ function App() {
             token={daktelaToken}
             onConnectClick={() => setModal({ type: 'daktela' })}
             onCreateTask={handleDaktelaCreateTask}
+            onTicketsLoaded={setDaktelaTickets}
+            assignedMap={(() => { const m = {}; tasks.forEach(task => { try { (task.daktela_tickets || []).forEach(n => { m[n] = task.title; }); } catch(e){} }); return m; })()}
           />
           <CalendarPanel
             events={calEvents}
@@ -916,8 +1248,10 @@ function App() {
 
       {/* Main content */}
       {ReactDOM.createPortal(
-        activeTab === 'history'
-          ? <HistoryView filter="all" />
+        searchQuery.length >= 2
+          ? <SearchResults query={searchQuery} checklistItems={checklistItems} daktelaTickets={daktelaTickets} onEditTask={handleEditTask} onToggleCl={handleToggleCl} />
+          : activeTab === 'history'
+          ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : (
             <>
               <div className="matrix">
@@ -931,6 +1265,8 @@ function App() {
                     onEdit={handleEditTask}
                     onDelete={handleDeleteTask}
                     onAddTask={handleAddTask}
+                    onInlineEdit={handleInlineEdit}
+                    onMoveTask={handleMoveTask}
                   />
                 ))}
               </div>
@@ -951,6 +1287,8 @@ function App() {
           task={modal.task || null}
           defaultQuadrant={(modal.defaults || {}).quadrant}
           defaultType={(modal.defaults || {}).type}
+          defaultTickets={(modal.defaults || {}).daktela_tickets}
+          availableTickets={daktelaTickets}
           onSave={handleSaveTask}
           onClose={() => setModal(null)}
         />
@@ -970,6 +1308,13 @@ function App() {
         />
       )}
 
+      {quickCapture && (
+        <QuickCapture
+          onSave={handleAddTask}
+          onClose={() => setQuickCapture(false)}
+        />
+      )}
+
       {loading && (
         <div className="loading-overlay">
           <div className="spinner"></div>
@@ -979,7 +1324,7 @@ function App() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('layout')).render(<App />);
+ReactDOM.createRoot(document.getElementById('app-root')).render(<App />);
 </script>
 </body>
 </html>

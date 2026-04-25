@@ -48,10 +48,27 @@ if (!$safe) {
     exit;
 }
 
-$qs = $params ? ('?' . buildQuery($params)) : '';
+// accessToken jako query param (nutné pro Daktela API)
+$params['accessToken'] = $token;
+$qs = '?' . buildQuery($params);
 $url = 'https://daktela.daktela.com/api/v6/' . ltrim($endpoint, '/') . '.json' . $qs;
+ini_set('memory_limit', '256M');
+error_log('DAKTELA_PROXY URL: ' . $url);
 $resp = daktelaRequest('GET', $url, $token);
-echo json_encode($resp);
+error_log('DAKTELA_PROXY count raw: ' . (isset($resp['result']['data']) ? count($resp['result']['data']) : 'no data'));
+// Zkrátit odpověď — ponechat jen result.data pole + serverové filtrování
+if (isset($resp['result']['data']) && is_array($resp['result']['data'])) {
+    $data = $resp['result']['data'];
+    error_log('DAKTELA_PROXY count after filter: ' . count($data));
+    $resp = ['result' => ['data' => $data]];
+}
+$out = json_encode($resp, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+if ($out === false) {
+    error_log('daktela json_encode error: ' . json_last_error_msg() . ' data: ' . print_r($resp, true));
+    echo json_encode(['error' => 'Chyba kódování odpovědi: ' . json_last_error_msg()]);
+} else {
+    echo $out;
+}
 
 function daktelaRequest(string $method, string $url, ?string $token, array $postData = []): array {
     $ch = curl_init($url);
