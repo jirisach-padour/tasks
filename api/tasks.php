@@ -99,7 +99,7 @@ switch ($method) {
         if (!$id) { http_response_code(400); echo json_encode(['error' => 'Chybí id']); break; }
 
         $data = [];
-        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daktela_tickets','recurrence','recurrence_day'];
+        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 $data[$f] = $f === 'daktela_tickets' ? json_encode($body[$f]) : ($body[$f] ?: null);
@@ -118,12 +118,21 @@ switch ($method) {
             $rec  = $orig['recurrence'] ?? 'none';
             if ($rec !== 'none' && $orig['due_date']) {
                 $base = new DateTime($orig['due_date']);
-                $rec === 'weekly' ? $base->modify('+7 days') : $base->modify('+1 month');
+                if ($rec === 'weekly') {
+                    $base->modify('+7 days');
+                } elseif ($rec === 'monthly') {
+                    $base->modify('+1 month');
+                } elseif ($rec === 'custom') {
+                    $interval = max(1, (int)($orig['recurrence_interval'] ?? 1));
+                    $unit = in_array($orig['recurrence_unit'], ['days','weeks','months']) ? $orig['recurrence_unit'] : 'days';
+                    $base->modify("+$interval $unit");
+                }
                 DB::q(
-                    "INSERT INTO tasks (title, description, ai_context, quadrant, type, due_date, daktela_tickets, recurrence, recurrence_day)
-                     VALUES (?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO tasks (title, description, ai_context, quadrant, type, due_date, daktela_tickets, recurrence, recurrence_interval, recurrence_unit)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)",
                     [$orig['title'], $orig['description'], $orig['ai_context'], $orig['quadrant'], $orig['type'],
-                     $base->format('Y-m-d'), $orig['daktela_tickets'], $rec, $orig['recurrence_day']]
+                     $base->format('Y-m-d'), $orig['daktela_tickets'], $rec,
+                     $orig['recurrence_interval'] ?? 1, $orig['recurrence_unit'] ?? 'weeks']
                 );
             }
         }

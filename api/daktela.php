@@ -3,6 +3,63 @@ $method = $_SERVER['REQUEST_METHOD'];
 $body   = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $_GET['action'] ?? '';
 
+// Cache — čti nebo obnov DB cache ticketů
+if ($action === 'daktela_cache') {
+    if ($method === 'GET') {
+        $tickets = DB::q("SELECT * FROM daktela_cache ORDER BY title ASC")->fetchAll();
+        $meta = DB::q("SELECT * FROM daktela_cache_meta WHERE id=1")->fetch();
+        echo json_encode([
+            'tickets'      => $tickets,
+            'refreshed_at' => $meta['refreshed_at'] ?? null,
+            'count'        => count($tickets),
+        ]);
+        exit;
+    }
+    if ($method === 'POST') {
+        $token = $body['accessToken'] ?? '';
+        if (!$token) { http_response_code(400); echo json_encode(['error' => 'Chybí accessToken']); exit; }
+        $params = [
+            'filter[logic]' => 'and',
+            'filter[filters][0][logic]' => 'and',
+            'filter[filters][0][filters][0][field]' => 'user',
+            'filter[filters][0][filters][0][operator]' => 'in',
+            'filter[filters][0][filters][0][value][0]' => 'sachj',
+            'filter[filters][0][filters][1][field]' => 'stage',
+            'filter[filters][0][filters][1][operator]' => 'in',
+            'filter[filters][0][filters][1][value][0]' => 'OPEN',
+            'filter[filters][1][field]' => '_ticketView',
+            'filter[filters][1][operator]' => 'eq',
+            'filter[filters][1][value]' => 'default',
+            'filter[filters][2][field]' => 'id_merge',
+            'filter[filters][2][operator]' => 'isnull',
+            'fields[0]' => 'name',
+            'fields[1]' => 'title',
+            'fields[2]' => 'stage',
+            'fields[3]' => 'sla_deadline',
+            'take' => 100,
+        ];
+        $params['accessToken'] = $token;
+        $qs = '?' . buildQuery($params);
+        $url = 'https://daktela.daktela.com/api/v6/tickets.json' . $qs;
+        $resp = daktelaRequest('GET', $url, $token);
+        $items = $resp['result']['data'] ?? [];
+        if (!is_array($items)) { http_response_code(502); echo json_encode(['error' => 'Daktela API chyba']); exit; }
+        // Ulož do cache
+        DB::q("DELETE FROM daktela_cache");
+        foreach ($items as $t) {
+            DB::q(
+                "INSERT INTO daktela_cache (name, title, stage, sla_deadline) VALUES (?,?,?,?)",
+                [$t['name'] ?? '', $t['title'] ?? '', $t['stage'] ?? '', $t['sla_deadline'] ?? '']
+            );
+        }
+        $now = date('Y-m-d H:i:s');
+        DB::q("UPDATE daktela_cache_meta SET refreshed_at=?, ticket_count=? WHERE id=1", [$now, count($items)]);
+        $tickets = DB::q("SELECT * FROM daktela_cache ORDER BY title ASC")->fetchAll();
+        echo json_encode(['tickets' => $tickets, 'refreshed_at' => $now, 'count' => count($tickets)]);
+        exit;
+    }
+}
+
 // Login — vyměn user+pass za accessToken
 if ($action === 'daktela_login') {
     $user = trim($body['username'] ?? '');

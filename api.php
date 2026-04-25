@@ -12,6 +12,7 @@ match($action) {
     'checklist'      => require __DIR__ . '/api/checklist.php',
     'daktela_login'  => require __DIR__ . '/api/daktela.php',
     'daktela'        => require __DIR__ . '/api/daktela.php',
+    'daktela_cache'  => require __DIR__ . '/api/daktela.php',
     'calendar'       => require __DIR__ . '/api/calendar.php',
     'ai_suggest'     => require __DIR__ . '/api/ai.php',
     'onenon'         => require __DIR__ . '/api/onenon.php',

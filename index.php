@@ -262,6 +262,8 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     return defaultTickets || [];
   });
   const [recurrence, setRecurrence] = useState(initial.recurrence || 'none');
+  const [recurrenceInterval, setRecurrenceInterval] = useState(initial.recurrence_interval || 1);
+  const [recurrenceUnit, setRecurrenceUnit] = useState(initial.recurrence_unit || 'weeks');
   const [saving, setSaving] = useState(false);
 
   function removeTicket(name) {
@@ -280,7 +282,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence });
+      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence, recurrence_interval: recurrenceInterval, recurrence_unit: recurrenceUnit });
       onClose();
     } catch(e) { toast('Chyba: ' + e.message); }
     setSaving(false);
@@ -310,7 +312,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
           </div>
         </div>
         <div className="form-group">
-          <label>Deadline</label>
+          <label>{recurrence !== 'none' ? 'Termín / start opakování' : 'Termín'}</label>
           <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
         </div>
         <div className="form-group">
@@ -352,7 +354,19 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
             <option value="none">Nikdy</option>
             <option value="weekly">Týdně</option>
             <option value="monthly">Měsíčně</option>
+            <option value="custom">Vlastní</option>
           </select>
+          {recurrence === 'custom' && (
+            <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center'}}>
+              <span style={{fontSize:'12px',color:'var(--grey-text)'}}>Každých</span>
+              <input type="number" min="1" max="365" value={recurrenceInterval} onChange={e => setRecurrenceInterval(parseInt(e.target.value) || 1)} style={{width:60,padding:'4px 6px',border:'1px solid var(--grey-border)',borderRadius:4,fontSize:'13px'}} />
+              <select value={recurrenceUnit} onChange={e => setRecurrenceUnit(e.target.value)} style={{padding:'4px 6px',border:'1px solid var(--grey-border)',borderRadius:4,fontSize:'13px'}}>
+                <option value="days">dní</option>
+                <option value="weeks">týdnů</option>
+                <option value="months">měsíců</option>
+              </select>
+            </div>
+          )}
         </div>
         <div className="modal-actions" style={{justifyContent:'space-between'}}>
           <div>
@@ -650,74 +664,39 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete }) {
 }
 
 // ---- Daktela Panel ----
-function DaktelaPanel({ token, onConnectClick, onCreateTask, onTicketsLoaded, assignedMap }) {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, onCreateTask, assignedMap }) {
   const [showAssigned, setShowAssigned] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    if (token) loadTickets();
-  }, [token]);
-
-  async function loadTickets() {
-    setLoading(true);
-    setError('');
-    try {
-      const params = buildDaktelaParams();
-      const data = await apiFetch('daktela', 'POST', {
-        accessToken: token,
-        endpoint: 'tickets',
-        params,
-      });
-      const items = data.result?.data || data.result || [];
-      const list = (Array.isArray(items) ? items : []).filter(t => t.stage === 'OPEN');
-      setTickets(list);
-      if (onTicketsLoaded) onTicketsLoaded(list);
-    } catch(e) {
-      setError(e.message);
-    }
-    setLoading(false);
+  async function handleRefresh() {
+    if (!token) { onConnectClick(); return; }
+    setRefreshing(true);
+    try { await onRefresh(token); } catch(e) { toast('Chyba: ' + e.message); }
+    setRefreshing(false);
   }
 
-  function buildDaktelaParams() {
-    return {
-      'filter[logic]': 'and',
-      'filter[filters][0][logic]': 'and',
-      'filter[filters][0][filters][0][field]': 'user',
-      'filter[filters][0][filters][0][operator]': 'in',
-      'filter[filters][0][filters][0][value][0]': 'sachj',
-      'filter[filters][0][filters][1][field]': 'stage',
-      'filter[filters][0][filters][1][operator]': 'in',
-      'filter[filters][0][filters][1][value][0]': 'OPEN',
-      'filter[filters][1][field]': '_ticketView',
-      'filter[filters][1][operator]': 'eq',
-      'filter[filters][1][value]': 'default',
-      'filter[filters][2][field]': 'id_merge',
-      'filter[filters][2][operator]': 'isnull',
-      'fields[]': ['name', 'title', 'stage', 'sla_deadline'],
-      'take': 100,
-    };
+  function formatRefreshed(ts) {
+    if (!ts) return 'nikdy';
+    const d = new Date(ts);
+    return d.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'}) + ' ' + d.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
   }
 
   return (
     <div className="panel">
       <div className="section-title">
         Daktela tickety
-        <span style={{display:'flex',gap:6}}>
-          {token && <button onClick={loadTickets} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)'}}>↺</button>}
-          {token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',textDecoration:'underline'}}>přihlásit znovu</button>}
+        <span style={{display:'flex',gap:6,alignItems:'center'}}>
+          <button onClick={handleRefresh} disabled={refreshing} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)',padding:0}} title="Obnovit z Daktely">{refreshing ? '...' : '↻'}</button>
+          {!token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--navy)',fontWeight:700,textDecoration:'underline',padding:0}}>Připojit</button>}
         </span>
       </div>
-      {!token && (
+      {tickets.length === 0 && !token && (
         <div className="daktela-connect">
-          <p style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:'10px'}}>Připoj Daktelu pro zobrazení otevřených ticketů.</p>
+          <p style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:'10px'}}>Připoj Daktelu pro načtení ticketů. Poté se zobrazí bez nutnosti přihlášení.</p>
           <button className="btn btn-secondary" style={{width:'100%',fontSize:'12px'}} onClick={onConnectClick}>Připojit Daktelu</button>
         </div>
       )}
-      {token && loading && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Načítám...</div>}
-      {token && error && <div style={{fontSize:'12px',color:'#E63327'}}>{error} <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',color:'var(--navy)',fontSize:'12px',textDecoration:'underline'}}>Přihlásit znovu</button></div>}
-      {token && !loading && (() => {
+      {(() => {
         const am = assignedMap || {};
         const free = tickets.filter(t => !am[t.name]);
         const assigned = tickets.filter(t => am[t.name]);
@@ -752,6 +731,10 @@ function DaktelaPanel({ token, onConnectClick, onCreateTask, onTicketsLoaded, as
           </>
         );
       })()}
+      <div style={{fontSize:'11px',color:'var(--grey-text)',marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <span>Obnoveno: {formatRefreshed(refreshedAt)}</span>
+        {token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',textDecoration:'underline',padding:0}}>přihlásit znovu</button>}
+      </div>
     </div>
   );
 }
@@ -1149,6 +1132,7 @@ function App() {
 
   const [daktelaToken, setDaktelaToken] = useState(() => sessionStorage.getItem('daktela_token') || '');
   const [daktelaTickets, setDaktelaTickets] = useState([]);
+  const [daktelaRefreshedAt, setDaktelaRefreshedAt] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [quickCapture, setQuickCapture] = useState(false);
 
@@ -1166,6 +1150,23 @@ function App() {
     setClTodayDone(data.today_done || 0);
   }
 
+  // Load Daktela cache from DB (no token needed)
+  async function loadDaktelaCache() {
+    try {
+      const data = await apiFetch('daktela_cache');
+      setDaktelaTickets(data.tickets || []);
+      setDaktelaRefreshedAt(data.refreshed_at || null);
+    } catch(e) {}
+  }
+
+  // Refresh Daktela cache via API (requires token)
+  async function refreshDaktelaCache(token) {
+    const data = await apiFetch('daktela_cache', 'POST', { accessToken: token });
+    setDaktelaTickets(data.tickets || []);
+    setDaktelaRefreshedAt(data.refreshed_at || null);
+    toast('Tickety aktualizovány (' + (data.count || 0) + ')');
+  }
+
   // Load calendar
   async function loadCalendar() {
     try {
@@ -1176,7 +1177,7 @@ function App() {
   }
 
   useEffect(() => {
-    Promise.all([loadTasks(), loadChecklist(), loadCalendar()])
+    Promise.all([loadTasks(), loadChecklist(), loadCalendar(), loadDaktelaCache()])
       .finally(() => setLoading(false));
 
     // Check for calendar connection callback
@@ -1401,10 +1402,12 @@ function App() {
         <>
           <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
           <DaktelaPanel
+            tickets={daktelaTickets}
+            refreshedAt={daktelaRefreshedAt}
             token={daktelaToken}
             onConnectClick={() => setModal({ type: 'daktela' })}
+            onRefresh={refreshDaktelaCache}
             onCreateTask={handleDaktelaCreateTask}
-            onTicketsLoaded={setDaktelaTickets}
             assignedMap={(() => { const m = {}; tasks.forEach(task => { try { (task.daktela_tickets || []).forEach(n => { m[n] = task.title; }); } catch(e){} }); return m; })()}
           />
           <CalendarPanel
@@ -1476,7 +1479,7 @@ function App() {
       )}
       {modal?.type === 'daktela' && (
         <DaktelaAuthModal
-          onConnected={token => { setDaktelaToken(token); sessionStorage.setItem('daktela_token', token); }}
+          onConnected={token => { setDaktelaToken(token); sessionStorage.setItem('daktela_token', token); refreshDaktelaCache(token); }}
           onClose={() => setModal(null)}
         />
       )}

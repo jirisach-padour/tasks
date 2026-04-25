@@ -11,23 +11,35 @@ if (!$code) {
     die('Chybí auth code.');
 }
 
-// Vyměň code za tokeny
-$resp = file_get_contents('https://oauth2.googleapis.com/token', false, stream_context_create([
-    'http' => [
-        'method'  => 'POST',
-        'header'  => 'Content-Type: application/x-www-form-urlencoded',
-        'content' => http_build_query([
-            'code'          => $code,
-            'client_id'     => GOOGLE_CLIENT_ID,
-            'client_secret' => GOOGLE_CLIENT_SECRET,
-            'redirect_uri'  => GOOGLE_REDIRECT_URI,
-            'grant_type'    => 'authorization_code',
-        ]),
-    ],
-]));
+// Vyměň code za tokeny (curl — file_get_contents nefunguje spolehlivě s POST)
+$postData = http_build_query([
+    'code'          => $code,
+    'client_id'     => GOOGLE_CLIENT_ID,
+    'client_secret' => GOOGLE_CLIENT_SECRET,
+    'redirect_uri'  => GOOGLE_REDIRECT_URI,
+    'grant_type'    => 'authorization_code',
+]);
+$ch = curl_init('https://oauth2.googleapis.com/token');
+curl_setopt_array($ch, [
+    CURLOPT_POST           => true,
+    CURLOPT_POSTFIELDS     => $postData,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+    CURLOPT_TIMEOUT        => 10,
+    CURLOPT_SSL_VERIFYPEER => true,
+]);
+$resp = curl_exec($ch);
+$curlError = curl_error($ch);
+curl_close($ch);
+
+if (!$resp) {
+    error_log('CALENDAR_OAUTH curl error: ' . $curlError);
+    die('Chyba při výměně tokenu: curl selhal — ' . htmlspecialchars($curlError));
+}
 
 $data = json_decode($resp, true);
 if (!isset($data['access_token'])) {
+    error_log('CALENDAR_OAUTH Google error: ' . $resp);
     die('Chyba při výměně tokenu: ' . htmlspecialchars($resp));
 }
 
