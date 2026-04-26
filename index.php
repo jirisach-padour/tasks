@@ -158,6 +158,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .sidebar-toggle{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--font)}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:149}
 .sidebar-backdrop.active{display:block}
+.sidebar-mobile-panels{display:none}
 /* Loading */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.6);z-index:300;display:flex;align-items:center;justify-content:center}
 .spinner{width:32px;height:32px;border:3px solid var(--grey-border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
@@ -233,6 +234,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
   .layout{grid-template-columns:1fr}
   .sidebar-left{display:none}
   .sidebar-left.open{display:block;position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
+  .sidebar-mobile-panels{display:block}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
   .header-desktop-only{display:none}
@@ -1934,6 +1936,24 @@ function App() {
                 onToggle={handleToggleCl}
                 onDelete={handleDeleteCl}
               />
+              <div className="sidebar-mobile-panels">
+                <DaktelaPanel
+                  tickets={daktelaTickets}
+                  refreshedAt={daktelaRefreshedAt}
+                  token={daktelaToken}
+                  onConnectClick={() => setModal({ type: 'daktela' })}
+                  onRefresh={refreshDaktelaCache}
+                  onCreateTask={handleDaktelaCreateTask}
+                  assignedMap={assignedMap}
+                />
+                <CalendarPanel
+                  events={calEvents}
+                  connected={calConnected}
+                  onConnect={handleCalConnect}
+                  onDisconnect={handleCalDisconnect}
+                  onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
+                />
+              </div>
             </>,
         document.getElementById('sidebarLeft')
       )}
