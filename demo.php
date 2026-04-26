@@ -681,9 +681,20 @@ function switchTab(btn, tab) {
   const matrix = document.getElementById('matrixView');
   const history = document.getElementById('historyView');
   const onenon = document.getElementById('onenonView');
+  const sideL = document.querySelector('.demo-sidebar-l');
+  const sideR = document.querySelector('.demo-sidebar-r');
+  const body = document.getElementById('demoBody');
+
+  const isOnenon = tab === 'onenon';
   matrix.style.display = ['all','work','personal'].includes(tab) ? '' : 'none';
   history.style.display = tab === 'history' ? '' : 'none';
-  onenon.style.display = tab === 'onenon' ? '' : 'none';
+  onenon.style.display = isOnenon ? '' : 'none';
+
+  // v 1on1 skryjeme oba sidebary a rozšíříme layout
+  if (sideL) sideL.style.display = isOnenon ? 'none' : '';
+  if (sideR) sideR.style.display = isOnenon ? 'none' : '';
+  body.style.gridTemplateColumns = isOnenon ? '1fr' : '';
+
   if (tab === 'work') filterMatrix('w');
   else if (tab === 'personal') filterMatrix('p');
   else filterMatrix(null);
