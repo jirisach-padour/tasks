@@ -15,7 +15,7 @@ requireAuth();
 <style>
 :root{--red:#E05C4E;--red-hover:#C94F42;--navy:#1B3468;--grey-bg:#F4F5F7;--grey-border:#DDE1E7;--grey-text:#5E6778;--white:#FFFFFF;--radius:8px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy)}
+body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy);overflow-x:hidden}
 /* Header */
 .app-header{background:linear-gradient(135deg,#1B3468 0%,#152a52 100%);padding:12px 0 0}
 .container{max-width:1600px;margin:0 auto;padding:0 24px}
@@ -618,23 +618,15 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
   }
 
   const cardClass = 'task-card' + (isOverdue ? ' overdue' : '');
-  const touchStartPos = useRef(null);
+  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window);
 
   return (
     <div
       className={cardClass}
       onClick={() => !editing && onEdit(task)}
-      onTouchStart={e => { touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
-      onTouchEnd={e => {
-        if (!touchStartPos.current || editing) return;
-        const dx = Math.abs(e.changedTouches[0].clientX - touchStartPos.current.x);
-        const dy = Math.abs(e.changedTouches[0].clientY - touchStartPos.current.y);
-        touchStartPos.current = null;
-        if (dx < 10 && dy < 10) { e.preventDefault(); onEdit(task); }
-      }}
-      draggable
-      onDragStart={e => { e.dataTransfer.setData('taskId', task.id); e.currentTarget.classList.add('dragging'); if (onDragStart) onDragStart(task); }}
-      onDragEnd={e => e.currentTarget.classList.remove('dragging')}
+      draggable={!isTouch}
+      onDragStart={e => { if (isTouch) return; e.dataTransfer.setData('taskId', task.id); e.currentTarget.classList.add('dragging'); if (onDragStart) onDragStart(task); }}
+      onDragEnd={e => { if (isTouch) return; e.currentTarget.classList.remove('dragging'); }}
     >
       <input
         type="checkbox"
