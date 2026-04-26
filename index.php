@@ -16,7 +16,7 @@ requireAuth();
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy)}
 /* Header */
-.app-header{background:var(--navy);padding:20px 0 0}
+.app-header{background:var(--navy);padding:12px 0 0}
 .container{max-width:1280px;margin:0 auto;padding:0 20px}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px}
 .app-header h1{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.2px}
@@ -29,7 +29,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .tab.active{color:#fff;border-bottom:3px solid var(--red)}
 .tab:hover:not(.active){color:rgba(255,255,255,.85)}
 /* Layout */
-.layout{display:grid;grid-template-columns:270px 1fr;gap:18px;margin-top:18px;padding-bottom:80px;align-items:start}
+.layout{display:grid;grid-template-columns:240px 1fr 240px;gap:16px;margin-top:16px;padding-bottom:80px;align-items:start}
 /* Panel */
 .panel{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .panel+.panel{margin-top:14px}
@@ -42,12 +42,15 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 /* Eisenhower */
 .matrix{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .quadrant{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:14px;min-height:160px}
+.quadrant.q-urgent_important{border-left:3px solid var(--red)}
+.quadrant.q-important{border-left:3px solid var(--navy)}
+.quadrant.q-urgent{border-left:3px solid #E8A020}
 .q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .q-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-text);display:flex;align-items:center;gap:5px}
 .q-add-btn{background:none;border:none;cursor:pointer;color:var(--grey-text);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
 .q-add-btn:hover{color:var(--navy)}
 /* Task card */
-.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--grey-bg);border-radius:6px;margin-bottom:6px;border:1px solid var(--grey-border);cursor:pointer;transition:border-color .1s}
+.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--white);border-radius:6px;margin-bottom:6px;border:1px solid var(--grey-border);cursor:pointer;transition:border-color .1s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .task-card:hover{border-color:#bbc}
 .task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--red);cursor:pointer}
 .task-body{flex:1;min-width:0}
@@ -87,6 +90,12 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .ticket-title{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ticket-add-btn{font-size:11px;padding:3px 8px;background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:4px;cursor:pointer;color:var(--navy);font-weight:600;white-space:nowrap;flex-shrink:0}
 .ticket-add-btn:hover{background:var(--grey-border)}
+.tickets-scroll{max-height:200px;overflow-y:auto}
+.tickets-scroll::-webkit-scrollbar{width:3px}
+.tickets-scroll::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:2px}
+.cal-scroll{max-height:180px;overflow-y:auto}
+.cal-scroll::-webkit-scrollbar{width:3px}
+.cal-scroll::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:2px}
 /* Calendar */
 .cal-item{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--grey-border);font-size:12px}
 .cal-item:last-child{border-bottom:none}
@@ -209,16 +218,19 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s}
 .toast.show{opacity:1}
 /* Responsive */
+@media(max-width:1100px){
+  .layout{grid-template-columns:220px 1fr}
+  .sidebar-right{display:none}
+}
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
-  .sidebar{display:none}.sidebar.open{display:block}
+  .sidebar-left{display:none}.sidebar-left.open{display:block}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
 }
 @media(max-width:600px){
   .matrix{grid-template-columns:1fr}
   .form-row{grid-template-columns:1fr}
-  .header-actions .btn{display:none}
 }
 </style>
 </head>
@@ -229,10 +241,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
     <div class="header-inner">
       <div style="display:flex;align-items:center;gap:12px">
         <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-        <div>
-          <h1>Tasks</h1>
-          <p class="header-desc">Osobní prioritizace · Jiří Šach</p>
-        </div>
+        <h1>Tasks</h1>
       </div>
       <div class="header-actions" id="headerActions"></div>
     </div>
@@ -242,11 +251,10 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 
 <main class="container">
   <div id="app-root" style="position:absolute;width:0;height:0;overflow:visible"></div>
-<div class="layout" id="layout">
-    <aside class="sidebar" id="sidebar"></aside>
+  <div class="layout" id="layout">
+    <aside class="sidebar-left" id="sidebarLeft"></aside>
     <div id="mainContent"></div>
-    <aside class="sidebar" id="sidebar"></aside>
-    <div id="mainContent"></div>
+    <aside class="sidebar-right" id="sidebarRight"></aside>
   </div>
 </main>
 
@@ -254,6 +262,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 <div id="modals"></div>
 <div class="toast" id="toast"></div>
 
+<script>const CURRENT_USER = <?= json_encode($_SESSION['user'] ?? '') ?>;</script>
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
@@ -674,7 +683,7 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask,
 
   return (
     <div
-      className={'quadrant' + (dragOver ? ' drag-over' : '')}
+      className={'quadrant q-' + q.key + (dragOver ? ' drag-over' : '')}
       onDragOver={handleDragOver}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
@@ -782,7 +791,7 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
         const free = tickets.filter(t => !am[t.name]);
         const assigned = tickets.filter(t => am[t.name]);
         return (
-          <>
+          <div className="tickets-scroll">
             {free.map(t => (
               <div key={t.name} className="ticket-row">
                 <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
@@ -809,7 +818,7 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
                 )}
               </>
             )}
-          </>
+          </div>
         );
       })()}
       <div style={{fontSize:'11px',color:'var(--grey-text)',marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -840,7 +849,7 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
       </div>
       {!connected && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Propoj Google Calendar pro zobrazení událostí.</div>}
       {connected && events.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné nadcházející události</div>}
-      {connected && dayGroups.map(group => (
+      {connected && <div className="cal-scroll">{dayGroups.map(group => (
         <div key={group.key} className="cal-day-section">
           <div className="cal-day-header">{group.label}</div>
           {group.events.map((e, i) => (
@@ -851,7 +860,7 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
             </div>
           ))}
         </div>
-      ))}
+      ))}</div>}
     </div>
   );
 }
@@ -1475,6 +1484,7 @@ function SettingsModal({ onClose }) {
 
         <div style={sectionStyle}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:'var(--navy)'}}>Uživatelské jméno</div>
+          <div style={{fontSize:12,color:'var(--grey-text)',marginBottom:12}}>Aktuálně: <strong style={{color:'var(--navy)'}}>{CURRENT_USER}</strong></div>
           <div style={fgStyle}>
             <label style={labelStyle}>Nové uživatelské jméno</label>
             <input value={newUser} onChange={e => setNewUser(e.target.value)}
@@ -1589,7 +1599,7 @@ function App() {
 
     // Sidebar toggle
     document.getElementById('sidebarToggle').onclick = () => {
-      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarLeft').classList.toggle('open');
     };
 
     // Cmd+K = quick capture
@@ -1795,10 +1805,24 @@ function App() {
         document.getElementById('tabBar')
       )}
 
-      {/* Sidebar */}
+      {/* Levý sidebar: KPI + Checklist */}
       {ReactDOM.createPortal(
         <>
           <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
+          <ChecklistPanel
+            items={checklistItems}
+            todayDone={clTodayDone}
+            onAdd={handleAddCl}
+            onToggle={handleToggleCl}
+            onDelete={handleDeleteCl}
+          />
+        </>,
+        document.getElementById('sidebarLeft')
+      )}
+
+      {/* Pravý sidebar: Daktela + Calendar */}
+      {ReactDOM.createPortal(
+        <>
           <DaktelaPanel
             tickets={daktelaTickets}
             refreshedAt={daktelaRefreshedAt}
@@ -1815,15 +1839,8 @@ function App() {
             onDisconnect={handleCalDisconnect}
             onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
           />
-          <ChecklistPanel
-            items={checklistItems}
-            todayDone={clTodayDone}
-            onAdd={handleAddCl}
-            onToggle={handleToggleCl}
-            onDelete={handleDeleteCl}
-          />
         </>,
-        document.getElementById('sidebar')
+        document.getElementById('sidebarRight')
       )}
 
       {/* Main content */}
