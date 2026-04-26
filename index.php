@@ -785,6 +785,7 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
     return d.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'}) + ' ' + d.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
   }
 
+  const [showAssigned, setShowAssigned] = useState(false);
   const am = assignedMap || {};
   const free = tickets.filter(t => !am[t.name]);
   const assigned = tickets.filter(t => am[t.name]);
@@ -814,21 +815,27 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
             <button className="ticket-add-btn" onClick={() => onCreateTask(t)}>+ Task</button>
           </div>
         ))}
-        {assigned.length > 0 && (
-          <>
-            <div style={{fontSize:'10px',fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',color:'var(--grey-text)',padding:'8px 0 4px',borderTop:'1px solid var(--grey-border)',marginTop:4}}>
-              Přiřazené ({assigned.length})
-            </div>
-            {assigned.map(t => (
-              <div key={t.name} className="ticket-row" style={{fontSize:'11px'}}>
-                <span className={'stage-pill stage-' + (t.stage || 'OPEN')} style={{flexShrink:0}}>{t.stage || 'OPEN'}</span>
-                <a href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--navy)',textDecoration:'none',fontWeight:500}}>{t.title}</a>
-                <span style={{color:'var(--grey-text)',flexShrink:0,whiteSpace:'nowrap',fontSize:'10px'}}>→ {am[t.name]}</span>
-              </div>
-            ))}
-          </>
-        )}
       </div>
+      {assigned.length > 0 && (
+        <div style={{marginTop:6,borderTop:'1px solid var(--grey-border)',paddingTop:6}}>
+          <button onClick={() => setShowAssigned(v => !v)} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',padding:'2px 0',width:'100%',textAlign:'left',fontFamily:'var(--font)',display:'flex',alignItems:'center',gap:4}}>
+            <span style={{fontSize:'9px'}}>{showAssigned ? '▾' : '▸'}</span>
+            <span>Přiřazené</span>
+            <span style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:10,fontSize:'10px',fontWeight:700,padding:'0 6px',color:'var(--navy)',marginLeft:2}}>{assigned.length}</span>
+          </button>
+          {showAssigned && (
+            <div style={{marginTop:4}}>
+              {assigned.map(t => (
+                <div key={t.name} className="ticket-row" style={{fontSize:'11px'}}>
+                  <span className={'stage-pill stage-' + (t.stage || 'OPEN')} style={{flexShrink:0}}>{t.stage || 'OPEN'}</span>
+                  <a href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--navy)',textDecoration:'none',fontWeight:500}}>{t.title}</a>
+                  <span style={{color:'var(--grey-text)',flexShrink:0,whiteSpace:'nowrap',fontSize:'10px'}}>→ {am[t.name]}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div style={{fontSize:'11px',color:'var(--grey-text)',marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <span>Obnoveno: {formatRefreshed(refreshedAt)}</span>
         {token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',textDecoration:'underline',padding:0}}>přihlásit znovu</button>}
