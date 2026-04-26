@@ -15,6 +15,7 @@ requireAuth();
 <style>
 :root{--red:#E05C4E;--red-hover:#C94F42;--navy:#1B3468;--grey-bg:#F4F5F7;--grey-border:#DDE1E7;--grey-text:#5E6778;--white:#FFFFFF;--radius:8px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:hidden}
 body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy);overflow-x:hidden}
 /* Header */
 .app-header{background:linear-gradient(135deg,#1B3468 0%,#152a52 100%);padding:12px 0 0}
@@ -23,6 +24,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .app-header h1{color:#fff;font-size:18px;font-weight:700;letter-spacing:-.2px}
 .header-desc{color:rgba(255,255,255,.5);font-size:11px;margin-top:1px}
 .header-actions{display:flex;gap:8px;align-items:center}
+.header-desktop-only{display:inline-flex}
 /* Tabs */
 .tab-bar{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tab-bar::-webkit-scrollbar{display:none}
@@ -233,6 +235,8 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
   .sidebar-left.open{position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
+  .header-desktop-only{display:none}
+  .header-actions input[type=search]{width:120px !important}
   .onenon-layout{flex-direction:column;padding:12px;gap:12px}
   .onenon-sidebar{width:100%}
   .onenon-main{overflow-y:visible}
@@ -1888,13 +1892,13 @@ function App() {
             onFocus={e => e.target.style.width='240px'}
             onBlur={e => e.target.style.width='160px'}
           />
-          <button className="btn btn-ghost" onClick={handleAiSuggest} disabled={aiLoading}>
+          <button className="btn btn-ghost header-desktop-only" onClick={handleAiSuggest} disabled={aiLoading}>
             {aiLoading ? '...' : '✦ AI priority'}
           </button>
           <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Task</button>
           <button className="btn btn-ghost" style={{fontSize:'12px',padding:'6px 10px'}} onClick={() => setQuickCapture(true)} title="Cmd+K">⚡</button>
-          <button className="btn btn-ghost" style={{fontSize:'12px'}} onClick={() => setModal({ type: 'settings' })}>⚙</button>
-          <button className="btn btn-ghost" style={{fontSize:'12px'}} onClick={async () => {
+          <button className="btn btn-ghost header-desktop-only" style={{fontSize:'12px'}} onClick={() => setModal({ type: 'settings' })}>⚙</button>
+          <button className="btn btn-ghost header-desktop-only" style={{fontSize:'12px'}} onClick={async () => {
             await apiFetch('logout', 'POST');
             window.location.href = '/tasks/login.php';
           }}>Odhlásit</button>
