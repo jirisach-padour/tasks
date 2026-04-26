@@ -384,6 +384,8 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
               </button>
             </div>
             <button class="mbtn mbtn-primary" style="width:100%;margin-top:10px;font-size:11px;height:30px" onclick="toast('Formulář nové schůzky — dostupné v reálné apce')">+ Nová schůzka</button>
+            <!-- profil vybrané osoby + dokončené úkoly -->
+            <div id="onenonProfile" style="margin-top:12px"></div>
           </div>
           <!-- main: záznamy vybrané osoby -->
           <div class="onenon-main" id="onenonMain">
@@ -655,20 +657,26 @@ function filterMatrix(type) {
 // ── 1on1 ──────────────────────────────────────────
 const ONENON_DATA = {
   martin: {
+    profile: {performance:4, potential:'high', mgmt_effort:'low', strength:'Empatie se zákazníky, klidný pod tlakem', development:'Delegování — sklony řešit vše sám'},
+    completedItems: ['Follow-up e-mail zákazníkovi Notino','Sdílet šablonu pro eskalace','Přečíst článek o FCR metrikách'],
     notes: [
-      {date:'2026-04-22', mood:4, tags:['výkon','SLA'], text:'Probírali SLA metriky za Q1. Martin má dobré výsledky, FCR se zlepšilo na 74%.',
+      {date:'2026-04-22', mood:4, tags:['výkon','feedback'], text:'Probírali Q1 výsledky. Zlepšení FCR na 74 %. Pochvala za zvládnutí výpadku API.',
        actions:[{text:'Připravit podklady pro Q2 review', done:false},{text:'Sdílet šablonu pro eskalace', done:true}]},
-      {date:'2026-04-08', mood:3, tags:['feedback'], text:'Probírali zpětnou vazbu od zákazníků — konkrétně případ Notino. Domluven follow-up.',
+      {date:'2026-04-08', mood:3, tags:['rozvoj'], text:'Řešili delegování. Martin má tendenci řešit vše sám — domluven experiment: 1 týden předávat Q3 tasky kolegům.',
        actions:[{text:'Follow-up e-mail zákazníkovi', done:true}]},
     ]
   },
   jana: {
+    profile: {performance:5, potential:'high', mgmt_effort:'low', strength:'Rychlé učení, iniciativa', development:'Prezentační dovednosti'},
+    completedItems: ['Vytvořit plán mentoringu','Absolvovat onboarding junior agentů'],
     notes: [
-      {date:'2026-04-14', mood:5, tags:['rozvoj'], text:'Jana projevila zájem o mentoring juniorních agentů. Domluven pilotní projekt.',
-       actions:[{text:'Vytvořit plán mentoringu', done:false}]},
+      {date:'2026-04-14', mood:5, tags:['rozvoj'], text:'Jana projevila zájem o mentoring juniorních agentů. Domluven pilotní projekt na Q2.',
+       actions:[{text:'Vytvořit plán mentoringu', done:true}]},
     ]
   },
   pavel: {
+    profile: {performance:3, potential:'medium', mgmt_effort:'high', strength:'Technické znalosti produktu', development:'Komunikace se zákazníky při eskalacích'},
+    completedItems: [],
     notes: [
       {date:'2026-03-21', mood:3, tags:['osobní'], text:'Krátká schůzka. Pavel řešil osobní situaci, domluvena flexibilita na 2 týdny.',
        actions:[{text:'Zkontrolovat situaci po 2 týdnech', done:false}]},
@@ -690,6 +698,33 @@ function renderOnenon() {
   const main = document.getElementById('onenonMain');
   const data = ONENON_DATA[selectedPerson];
   const names = {martin:'Martin K.',jana:'Jana S.',pavel:'Pavel H.'};
+
+  // Levý panel: profil osoby
+  const p = data.profile;
+  const badgeColor = {low:'#4CAF50',medium:'#F5A623',high:'#E05C4E'};
+  const potLabel = {low:'Nízký',medium:'Střední',high:'Vysoký'};
+  const effortLabel = {low:'Nízká',medium:'Střední',high:'Vysoká'};
+  const profileHtml =
+    '<div style="background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:7px;padding:10px 12px;margin-bottom:12px;font-size:12px">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-text);margin-bottom:8px">Profil</div>' +
+      (p.performance ? '<div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="color:var(--grey-text)">Výkon</span><span style="color:#F5A623">' + '★'.repeat(p.performance) + '☆'.repeat(5-p.performance) + '</span></div>' : '') +
+      (p.potential ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="color:var(--grey-text)">Potenciál</span><span style="background:' + badgeColor[p.potential] + ';color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px">' + (potLabel[p.potential]||p.potential) + '</span></div>' : '') +
+      (p.mgmt_effort ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="color:var(--grey-text)">Náročnost</span><span style="background:' + badgeColor[p.mgmt_effort] + ';color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px">' + (effortLabel[p.mgmt_effort]||p.mgmt_effort) + '</span></div>' : '') +
+      (p.strength ? '<div style="margin-bottom:5px"><div style="color:var(--grey-text);font-size:10px;margin-bottom:1px">Silná stránka</div>' + p.strength + '</div>' : '') +
+      (p.development ? '<div><div style="color:var(--grey-text);font-size:10px;margin-bottom:1px">Oblast rozvoje</div>' + p.development + '</div>' : '') +
+    '</div>';
+
+  // Dokončené úkoly (místo SLA)
+  const completed = data.completedItems || [];
+  const completedHtml = completed.length
+    ? '<div style="background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:7px;padding:10px 12px;font-size:12px">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-text);margin-bottom:8px">Dokončené úkoly</div>' +
+        completed.map(t => '<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--grey-border)"><span style="color:#2E7D3F;font-size:11px">✓</span><span>' + t + '</span></div>').join('') +
+      '</div>'
+    : '<div style="background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:7px;padding:10px 12px;font-size:12px;color:var(--grey-text)">Žádné dokončené úkoly</div>';
+
+  document.getElementById('onenonProfile').innerHTML = profileHtml + completedHtml;
+
   let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
     '<div style="font-size:13px;font-weight:700;color:var(--navy)">' + names[selectedPerson] + '</div>' +
     '<button class="mbtn mbtn-primary" style="font-size:11px;height:28px;padding:0 12px" onclick="toast(\'Formulář nové schůzky — dostupné v reálné apce\')">+ Schůzka</button>' +
