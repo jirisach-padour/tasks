@@ -753,10 +753,24 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete }) {
   );
 }
 
+// ---- Panel height hook ----
+const PANEL_HEIGHTS = [200, 320, 480, 9999];
+const PANEL_HEIGHT_LABELS = ['S', 'M', 'L', '∞'];
+function usePanelHeight(key, defaultIdx) {
+  const stored = parseInt(localStorage.getItem('panelH_' + key) || defaultIdx, 10);
+  const [idx, setIdx] = useState(isNaN(stored) ? defaultIdx : stored);
+  function cycle() {
+    const next = (idx + 1) % PANEL_HEIGHTS.length;
+    setIdx(next);
+    localStorage.setItem('panelH_' + key, next);
+  }
+  return [PANEL_HEIGHTS[idx] === 9999 ? 'none' : PANEL_HEIGHTS[idx] + 'px', PANEL_HEIGHT_LABELS[idx], cycle];
+}
+
 // ---- Daktela Panel ----
 function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, onCreateTask, assignedMap }) {
-  const [showAssigned, setShowAssigned] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [maxH, sizeLabel, cycleSize] = usePanelHeight('daktela', 1);
 
   async function handleRefresh() {
     if (!token) { onConnectClick(); return; }
@@ -771,11 +785,16 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
     return d.toLocaleDateString('cs-CZ', {day:'numeric',month:'numeric'}) + ' ' + d.toLocaleTimeString('cs-CZ', {hour:'2-digit',minute:'2-digit'});
   }
 
+  const am = assignedMap || {};
+  const free = tickets.filter(t => !am[t.name]);
+  const assigned = tickets.filter(t => am[t.name]);
+
   return (
     <div className="panel">
       <div className="section-title">
         Daktela tickety
         <span style={{display:'flex',gap:6,alignItems:'center'}}>
+          <button onClick={cycleSize} title="Výška panelu" style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'10px',color:'var(--grey-text)',padding:'1px 6px',fontWeight:700,fontFamily:'var(--font)'}}>{sizeLabel}</button>
           <button onClick={handleRefresh} disabled={refreshing} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)',padding:0}} title="Obnovit z Daktely">{refreshing ? '...' : '↻'}</button>
           {!token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--navy)',fontWeight:700,textDecoration:'underline',padding:0}}>Připojit</button>}
         </span>
@@ -786,41 +805,30 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
           <button className="btn btn-secondary" style={{width:'100%',fontSize:'12px'}} onClick={onConnectClick}>Připojit Daktelu</button>
         </div>
       )}
-      {(() => {
-        const am = assignedMap || {};
-        const free = tickets.filter(t => !am[t.name]);
-        const assigned = tickets.filter(t => am[t.name]);
-        return (
-          <div className="tickets-scroll">
-            {free.map(t => (
-              <div key={t.name} className="ticket-row">
-                <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
-                <a className="ticket-title" href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" title={t.title + ' (' + t.name + ')'}>{t.title}</a>
-                <button className="ticket-add-btn" onClick={() => onCreateTask(t)}>+ Task</button>
+      <div className="tickets-scroll" style={{maxHeight:maxH}}>
+        {free.length === 0 && assigned.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné otevřené tickety</div>}
+        {free.map(t => (
+          <div key={t.name} className="ticket-row">
+            <span className={'stage-pill stage-' + (t.stage || 'OPEN')}>{t.stage || 'OPEN'}</span>
+            <a className="ticket-title" href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" title={t.title + ' (' + t.name + ')'}>{t.title}</a>
+            <button className="ticket-add-btn" onClick={() => onCreateTask(t)}>+ Task</button>
+          </div>
+        ))}
+        {assigned.length > 0 && (
+          <>
+            <div style={{fontSize:'10px',fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',color:'var(--grey-text)',padding:'8px 0 4px',borderTop:'1px solid var(--grey-border)',marginTop:4}}>
+              Přiřazené ({assigned.length})
+            </div>
+            {assigned.map(t => (
+              <div key={t.name} className="ticket-row" style={{fontSize:'11px'}}>
+                <span className={'stage-pill stage-' + (t.stage || 'OPEN')} style={{flexShrink:0}}>{t.stage || 'OPEN'}</span>
+                <a href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--navy)',textDecoration:'none',fontWeight:500}}>{t.title}</a>
+                <span style={{color:'var(--grey-text)',flexShrink:0,whiteSpace:'nowrap',fontSize:'10px'}}>→ {am[t.name]}</span>
               </div>
             ))}
-            {free.length === 0 && assigned.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné otevřené tickety</div>}
-            {assigned.length > 0 && (
-              <>
-                <button onClick={() => setShowAssigned(v => !v)} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',padding:'6px 0 2px',width:'100%',textAlign:'left',fontFamily:'var(--font)'}}>
-                  {showAssigned ? '▾' : '▸'} Přiřazené ({assigned.length})
-                </button>
-                {showAssigned && (
-                  <div style={{background:'var(--grey-bg)',borderRadius:6,padding:'6px 8px',marginTop:4}}>
-                    {assigned.map(t => (
-                      <div key={t.name} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 0',borderBottom:'1px solid var(--grey-border)',fontSize:'12px'}}>
-                        <span className={'stage-pill stage-' + (t.stage || 'OPEN')} style={{flexShrink:0}}>{t.stage || 'OPEN'}</span>
-                        <a href={'https://daktela.daktela.com/tickets/update/' + t.name} target="_blank" rel="noreferrer" style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',color:'var(--navy)',textDecoration:'none',fontWeight:500}}>{t.title}</a>
-                        <span style={{color:'var(--grey-text)',flexShrink:0,whiteSpace:'nowrap'}}>→ {am[t.name]}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        );
-      })()}
+          </>
+        )}
+      </div>
       <div style={{fontSize:'11px',color:'var(--grey-text)',marginTop:8,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <span>Obnoveno: {formatRefreshed(refreshedAt)}</span>
         {token && <button onClick={onConnectClick} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)',textDecoration:'underline',padding:0}}>přihlásit znovu</button>}
@@ -831,6 +839,7 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
 
 // ---- Calendar Panel ----
 function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTask }) {
+  const [maxH, sizeLabel, cycleSize] = usePanelHeight('calendar', 1);
   const dayGroups = events.reduce((acc, e) => {
     const key = e.dayLabel + '|' + e.date;
     if (!acc.find(g => g.key === key)) acc.push({ key, label: e.dayLabel, date: e.date, events: [] });
@@ -842,14 +851,17 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
     <div className="panel">
       <div className="section-title">
         Kalendář
-        {connected
-          ? <button onClick={onDisconnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)'}}>Odpojit</button>
-          : <button onClick={onConnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--navy)',fontWeight:700}}>Propojit</button>
-        }
+        <span style={{display:'flex',gap:6,alignItems:'center'}}>
+          {connected && <button onClick={cycleSize} title="Výška panelu" style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'10px',color:'var(--grey-text)',padding:'1px 6px',fontWeight:700,fontFamily:'var(--font)'}}>{sizeLabel}</button>}
+          {connected
+            ? <button onClick={onDisconnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)'}}>Odpojit</button>
+            : <button onClick={onConnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--navy)',fontWeight:700}}>Propojit</button>
+          }
+        </span>
       </div>
       {!connected && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Propoj Google Calendar pro zobrazení událostí.</div>}
       {connected && events.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné nadcházející události</div>}
-      {connected && <div className="cal-scroll">{dayGroups.map(group => (
+      {connected && <div className="cal-scroll" style={{maxHeight:maxH}}>{dayGroups.map(group => (
         <div key={group.key} className="cal-day-section">
           <div className="cal-day-header">{group.label}</div>
           {group.events.map((e, i) => (
