@@ -30,6 +30,8 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .tab:hover:not(.active){color:rgba(255,255,255,.85)}
 /* Layout */
 .layout{display:grid;grid-template-columns:clamp(220px,18%,300px) 1fr clamp(220px,18%,300px);gap:16px;margin-top:16px;padding-bottom:80px;align-items:start}
+.layout.onenon-mode{grid-template-columns:clamp(220px,18%,300px) 1fr}
+.layout.onenon-mode #sidebarRight{display:none}
 /* Panel */
 .panel{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .panel+.panel{margin-top:14px}
@@ -1134,7 +1136,49 @@ function PersonProfile({ profile }) {
   );
 }
 
-function OneOnOneView({ daktelaToken }) {
+function OneOnOneContextPanel({ ctx }) {
+  if (!ctx || !ctx.person) {
+    return (
+      <div className="panel" style={{color:'var(--grey-text)',fontSize:12,textAlign:'center',padding:20}}>
+        Vyber osobu pro zobrazení kontextu
+      </div>
+    );
+  }
+  const { person, profile, lastNote, openItems } = ctx;
+  const badgeColor = { low: '#4CAF50', medium: '#F5A623', high: '#E05C4E' };
+  const potentialLabel = { low: 'Nízký', medium: 'Střední', high: 'Vysoký' };
+  const effortLabel = { low: 'Nízká', medium: 'Střední', high: 'Vysoká' };
+  return (
+    <div className="panel">
+      <div style={{fontWeight:700,fontSize:14,color:'var(--navy)',marginBottom:12}}>{person}</div>
+      {lastNote && (
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',color:'var(--grey-text)',marginBottom:4}}>Poslední 1on1</div>
+          <div style={{fontSize:12,color:'var(--navy)'}}>{lastNote.meeting_date}</div>
+          {lastNote.mood > 0 && <div style={{color:'#F5A623',fontSize:13,marginTop:2}}>{'★'.repeat(lastNote.mood)}{'☆'.repeat(5-lastNote.mood)}</div>}
+          {(lastNote.tags || []).length > 0 && <div style={{marginTop:4}}>{lastNote.tags.map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}</div>}
+        </div>
+      )}
+      {openItems > 0 && (
+        <div style={{marginBottom:12,background:'#FFF4E0',border:'1px solid #F5A623',borderRadius:6,padding:'6px 10px',fontSize:12}}>
+          <span style={{fontWeight:700,color:'#A06000'}}>Otevřené action items: {openItems}</span>
+        </div>
+      )}
+      {profile && (
+        <div>
+          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',color:'var(--grey-text)',marginBottom:6}}>Profil</div>
+          {profile.performance > 0 && <div style={{fontSize:12,marginBottom:5,display:'flex',justifyContent:'space-between'}}><span style={{color:'var(--grey-text)'}}>Výkon</span><span style={{color:'#F5A623'}}>{'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</span></div>}
+          {profile.potential && <div style={{fontSize:12,marginBottom:5,display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{color:'var(--grey-text)'}}>Potenciál</span><span style={{background:badgeColor[profile.potential]||'#888',color:'#fff',fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:10}}>{potentialLabel[profile.potential]||profile.potential}</span></div>}
+          {profile.mgmt_effort && <div style={{fontSize:12,marginBottom:5,display:'flex',justifyContent:'space-between',alignItems:'center'}}><span style={{color:'var(--grey-text)'}}>Náročnost</span><span style={{background:badgeColor[profile.mgmt_effort]||'#888',color:'#fff',fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:10}}>{effortLabel[profile.mgmt_effort]||profile.mgmt_effort}</span></div>}
+          {profile.strength && <div style={{fontSize:12,marginBottom:5}}><div style={{color:'var(--grey-text)',fontSize:10,marginBottom:1}}>Silná stránka</div>{profile.strength}</div>}
+          {profile.development && <div style={{fontSize:12,marginBottom:5}}><div style={{color:'var(--grey-text)',fontSize:10,marginBottom:1}}>Oblast rozvoje</div>{profile.development}</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OneOnOneView({ daktelaToken, onContextChange }) {
   const [people, setPeople] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
   const [selectedDesc, setSelectedDesc] = React.useState('');
@@ -1170,9 +1214,15 @@ function OneOnOneView({ daktelaToken }) {
   async function loadNotes(person) {
     setSelected(person);
     const d = await apiFetch('onenon', 'GET', null, { person });
-    setNotes(d.notes || []);
+    const fetchedNotes = d.notes || [];
+    const fetchedProfile = d.profile || null;
+    setNotes(fetchedNotes);
     setSelectedDesc(d.description || '');
-    setSelectedProfile(d.profile || null);
+    setSelectedProfile(fetchedProfile);
+    if (onContextChange) {
+      const openItems = fetchedNotes.reduce((s, n) => s + (n.action_items || []).filter(i => !i.done).length, 0);
+      onContextChange({ person, profile: fetchedProfile, lastNote: fetchedNotes[0] || null, openItems });
+    }
   }
 
   async function handleDeletePerson(name) {
@@ -1554,6 +1604,13 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'work' | 'personal' | 'history'
   const [modal, setModal] = useState(null); // null | {type, ...}
+  const [onenonCtx, setOnenonCtx] = useState(null);
+
+  useEffect(() => {
+    const layout = document.getElementById('layout');
+    if (layout) layout.classList.toggle('onenon-mode', activeTab === 'onenon');
+    if (activeTab !== 'onenon') setOnenonCtx(null);
+  }, [activeTab]);
 
   const [daktelaToken, setDaktelaToken] = useState(() => sessionStorage.getItem('daktela_token') || '');
   const [daktelaTickets, setDaktelaTickets] = useState([]);
@@ -1824,18 +1881,20 @@ function App() {
         document.getElementById('tabBar')
       )}
 
-      {/* Levý sidebar: KPI + Checklist */}
+      {/* Levý sidebar: KPI + Checklist nebo 1on1 kontext */}
       {ReactDOM.createPortal(
-        <>
-          <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
-          <ChecklistPanel
-            items={checklistItems}
-            todayDone={clTodayDone}
-            onAdd={handleAddCl}
-            onToggle={handleToggleCl}
-            onDelete={handleDeleteCl}
-          />
-        </>,
+        activeTab === 'onenon'
+          ? <OneOnOneContextPanel ctx={onenonCtx} />
+          : <>
+              <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
+              <ChecklistPanel
+                items={checklistItems}
+                todayDone={clTodayDone}
+                onAdd={handleAddCl}
+                onToggle={handleToggleCl}
+                onDelete={handleDeleteCl}
+              />
+            </>,
         document.getElementById('sidebarLeft')
       )}
 
@@ -1869,7 +1928,7 @@ function App() {
           : activeTab === 'history'
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : activeTab === 'onenon'
-          ? <OneOnOneView daktelaToken={daktelaToken} />
+          ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} />
           : (
             <>
               <div className="matrix">
