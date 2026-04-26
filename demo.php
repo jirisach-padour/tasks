@@ -208,6 +208,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
   <a href="#demo">Demo</a>
   <a href="#features">Co umí</a>
   <a href="#integrations">Integrace</a>
+  <a href="#security">Bezpečnost</a>
   <a href="#how">Jak funguje</a>
 </nav>
 
@@ -523,6 +524,47 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 
 <hr class="divider">
 
+<!-- SECURITY -->
+<section class="section" id="security">
+  <div class="section-header">
+    <h2>Bezpečnost</h2>
+    <p>Co tato ukázková stránka dělá a co ne — a jak je zabezpečena reálná aplikace.</p>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+    <div style="background:#E3F5E8;border:1px solid #a8d9b4;border-radius:10px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:#1a5c2a;margin-bottom:12px">Tato ukázková stránka (demo.php)</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#1a5c2a">
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Čistý HTML soubor — žádná PHP logika, žádné databázové dotazy</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Všechna data jsou <strong>pevně zapsaná</strong> přímo v kódu stránky — fiktivní jména, fiktivní tasky</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Veškerá interaktivita běží <strong>jen v tvém prohlížeči</strong> — nic se neposílá na server</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Po zavření záložky zmizí vše — stránka neukládá žádná cookies ani localStorage</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Přístup bez přihlášení je záměrný — stránka neobsahuje žádná citlivá data</span></div>
+      </div>
+    </div>
+    <div style="background:#E0E8F5;border:1px solid #a8bcd9;border-radius:10px;padding:20px">
+      <div style="font-size:13px;font-weight:700;color:#1B3468;margin-bottom:12px">Reálná aplikace (/tasks/)</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#1B3468">
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Přístup jen po přihlášení — vlastní heslo s bcrypt hashem, bez třetích stran</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Session cookie: HttpOnly, Secure, SameSite=Lax — nelze číst z JavaScriptu</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Secrets (hesla, API klíče) mimo webroot v <code style="background:rgba(0,0,0,.08);padding:1px 4px;border-radius:3px">/etc/tasks/secrets.php</code> — git je nevidí</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>HTTPS povinné — server odmítá nešifrované spojení</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Brute-force throttling na přihlašování — 1s zpoždění při nesprávném hesle</span></div>
+        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Google OAuth token uložen jen v DB, nikoli v cookie nebo URL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#F4F5F7;border:1px solid var(--grey-border);border-radius:10px;padding:16px 20px;font-size:12px;color:var(--grey-text);line-height:1.7">
+    <strong style="color:var(--navy)">Shrnutí:</strong>
+    Tato stránka je veřejná ukázka bez jakýchkoli reálných dat — klidně ji pošli komukoliv.
+    Reálná aplikace na <code style="background:rgba(0,0,0,.06);padding:1px 5px;border-radius:3px">/tasks/</code> je za přihlášením a tvá data jsou viditelná pouze tobě.
+    Obě stránky jsou na stejném serveru, ale jsou od sebe zcela odděleny — demo nemá přístup k databázi ani session reálné aplikace.
+  </div>
+</section>
+
+<hr class="divider">
+
 <!-- HOW IT WORKS -->
 <section class="section" id="how">
   <div class="section-header">
@@ -794,7 +836,7 @@ document.addEventListener('keydown', e => {
 // ── NAV ───────────────────────────────────────────
 window.addEventListener('scroll', () => {
   let cur = '';
-  ['demo','features','integrations','how'].forEach(id => {
+  ['demo','features','integrations','security','how'].forEach(id => {
     const el = document.getElementById(id);
     if (el && window.scrollY >= el.offsetTop - 80) cur = id;
   });
