@@ -1399,57 +1399,113 @@ function OneOnOneModal({ note, agents, existingPeople, onSave, onClose }) {
 
 // ---- SettingsModal ----
 function SettingsModal({ onClose }) {
-  const [oldPass, setOldPass] = React.useState('');
+  // Sekce: uživatelské jméno
   const [newUser, setNewUser] = React.useState('');
+  const [userOldPass, setUserOldPass] = React.useState('');
+  const [userSaving, setUserSaving] = React.useState(false);
+  const [userMsg, setUserMsg] = React.useState(null); // {ok, text}
+
+  // Sekce: heslo
+  const [oldPass, setOldPass] = React.useState('');
   const [newPass, setNewPass] = React.useState('');
   const [newPass2, setNewPass2] = React.useState('');
-  const [saving, setSaving] = React.useState(false);
+  const [passSaving, setPassSaving] = React.useState(false);
+  const [passMsg, setPassMsg] = React.useState(null);
+
+  // Viditelnost hesel
+  const [showUserOld, setShowUserOld] = React.useState(false);
   const [showOld, setShowOld] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
 
-  async function handleSave() {
-    if (newPass && newPass !== newPass2) { toast('Hesla se neshodují'); return; }
-    if (!oldPass) { toast('Zadej stávající heslo'); return; }
-    setSaving(true);
+  async function handleUserSave() {
+    if (!newUser.trim()) { setUserMsg({ok:false, text:'Zadej nové uživatelské jméno'}); return; }
+    if (!userOldPass) { setUserMsg({ok:false, text:'Zadej stávající heslo'}); return; }
+    setUserSaving(true); setUserMsg(null);
     try {
-      await apiFetch('settings', 'POST', { old_password: oldPass, new_username: newUser, new_password: newPass });
-      toast('Uloženo');
-      onClose();
-    } catch(e) { toast('Chyba: ' + e.message); }
-    setSaving(false);
+      await apiFetch('settings', 'POST', { old_password: userOldPass, new_username: newUser.trim(), new_password: '' });
+      setUserMsg({ok:true, text:'Uživatelské jméno změněno'});
+      setNewUser(''); setUserOldPass('');
+    } catch(e) { setUserMsg({ok:false, text: e.message || 'Chyba'}); }
+    setUserSaving(false);
   }
+
+  async function handlePassSave() {
+    if (!oldPass) { setPassMsg({ok:false, text:'Zadej stávající heslo'}); return; }
+    if (newPass.length < 8) { setPassMsg({ok:false, text:'Nové heslo musí mít alespoň 8 znaků'}); return; }
+    if (newPass !== newPass2) { setPassMsg({ok:false, text:'Hesla se neshodují'}); return; }
+    setPassSaving(true); setPassMsg(null);
+    try {
+      await apiFetch('settings', 'POST', { old_password: oldPass, new_username: '', new_password: newPass });
+      setPassMsg({ok:true, text:'Heslo změněno'});
+      setOldPass(''); setNewPass(''); setNewPass2('');
+    } catch(e) { setPassMsg({ok:false, text: e.message || 'Chyba'}); }
+    setPassSaving(false);
+  }
+
+  function pwInput(val, set, show, setShow, placeholder, autocomplete) {
+    return (
+      <div style={{position:'relative'}}>
+        <input type={show ? 'text' : 'password'} value={val} onChange={e => set(e.target.value)}
+          placeholder={placeholder} autocomplete={autocomplete}
+          style={{width:'100%',paddingRight:36}} />
+        <button type="button" onClick={() => setShow(v => !v)}
+          style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>
+          {show ? '🙈' : '👁'}
+        </button>
+      </div>
+    );
+  }
+
+  function Feedback({msg}) {
+    if (!msg) return null;
+    return <div style={{fontSize:12,marginTop:6,color:msg.ok ? '#2a7a2a' : 'var(--red)',fontWeight:500}}>{msg.text}</div>;
+  }
+
+  const sectionStyle = {background:'var(--grey-bg)',borderRadius:8,padding:'16px 18px',marginBottom:16};
+  const labelStyle = {display:'block',fontSize:11,fontWeight:600,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:5};
+  const fgStyle = {marginBottom:12};
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
-        <h2>Nastavení účtu</h2>
-        <div className="form-group">
-          <label>Stávající heslo</label>
-          <div style={{position:'relative'}}>
-            <input type={showOld ? 'text' : 'password'} value={oldPass} onChange={e => setOldPass(e.target.value)} placeholder="Povinné" style={{paddingRight:36}} />
-            <button type="button" onClick={() => setShowOld(v => !v)} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>{showOld ? '🙈' : '👁'}</button>
-          </div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
+          <h2 style={{margin:0}}>Nastavení účtu</h2>
+          <button className="btn btn-ghost" onClick={onClose} style={{fontSize:18,lineHeight:1,padding:'2px 8px'}}>×</button>
         </div>
-        <div className="form-group">
-          <label>Nové uživatelské jméno <span style={{fontWeight:400,color:'var(--grey-text)'}}>(nechej prázdné pro zachování)</span></label>
-          <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Nové jméno..." />
-        </div>
-        <div className="form-group">
-          <label>Nové heslo <span style={{fontWeight:400,color:'var(--grey-text)'}}>(min. 8 znaků, nechej prázdné pro zachování)</span></label>
-          <div style={{position:'relative'}}>
-            <input type={showNew ? 'text' : 'password'} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Nové heslo..." style={{paddingRight:36}} />
-            <button type="button" onClick={() => setShowNew(v => !v)} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>{showNew ? '🙈' : '👁'}</button>
+
+        <div style={sectionStyle}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:'var(--navy)'}}>Uživatelské jméno</div>
+          <div style={fgStyle}>
+            <label style={labelStyle}>Nové uživatelské jméno</label>
+            <input value={newUser} onChange={e => setNewUser(e.target.value)}
+              placeholder="Nové jméno..." autocomplete="username" autocapitalize="off" autocorrect="off" />
           </div>
-        </div>
-        {newPass && (
-          <div className="form-group">
-            <label>Potvrdit nové heslo</label>
-            <input type={showNew ? 'text' : 'password'} value={newPass2} onChange={e => setNewPass2(e.target.value)} placeholder="Znovu nové heslo..." />
+          <div style={fgStyle}>
+            <label style={labelStyle}>Stávající heslo (potvrzení)</label>
+            {pwInput(userOldPass, setUserOldPass, showUserOld, setShowUserOld, 'Heslo pro potvrzení', 'current-password')}
           </div>
-        )}
-        <div className="form-actions">
-          <button className="btn" onClick={onClose}>Zrušit</button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Ukládám...' : 'Uložit'}</button>
+          <Feedback msg={userMsg} />
+          <button className="btn btn-primary" onClick={handleUserSave} disabled={userSaving || !newUser.trim()}
+            style={{marginTop:4,width:'100%'}}>{userSaving ? 'Ukládám...' : 'Změnit uživatelské jméno'}</button>
+        </div>
+
+        <div style={sectionStyle}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:'var(--navy)'}}>Heslo</div>
+          <div style={fgStyle}>
+            <label style={labelStyle}>Stávající heslo</label>
+            {pwInput(oldPass, setOldPass, showOld, setShowOld, 'Stávající heslo', 'current-password')}
+          </div>
+          <div style={fgStyle}>
+            <label style={labelStyle}>Nové heslo</label>
+            {pwInput(newPass, setNewPass, showNew, setShowNew, 'Min. 8 znaků', 'new-password')}
+          </div>
+          <div style={fgStyle}>
+            <label style={labelStyle}>Potvrdit nové heslo</label>
+            {pwInput(newPass2, setNewPass2, showNew, setShowNew, 'Znovu nové heslo', 'new-password')}
+          </div>
+          <Feedback msg={passMsg} />
+          <button className="btn btn-primary" onClick={handlePassSave} disabled={passSaving || !oldPass || !newPass}
+            style={{marginTop:4,width:'100%'}}>{passSaving ? 'Ukládám...' : 'Změnit heslo'}</button>
         </div>
       </div>
     </div>
