@@ -32,6 +32,10 @@
 - [x] **1on1 záložka — skrýt pravý sidebar** — na 1on1 záložce schovat pravý sidebar (tickety + kalendář nejsou relevantní při vedení rozhovoru); zvážit jestli i levý (KPI + checklist) nebo jen pravý
 - [x] **Favicon** — ikonka v záhlaví tabu prohlížeče; návrh: stylizované "T" v navy barvě nebo jednoduchá ikona matice
 
+## Otevřené — nové funkce (2026-04-26 #2)
+
+- [ ] **Alert na urgentní tasky** — upozornění v hlavičce nebo sidebaru pokud jsou v Q1 tasky s prošlým nebo dnešním deadlinem; inspirace z demo stránky kde to vypadalo užitečně
+
 ## Nápady / budoucí rozvoj
 
 - [ ] Push notifikace / reminder pro overdue tasky
