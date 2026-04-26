@@ -1,6 +1,6 @@
 <?php
 $method = $_SERVER['REQUEST_METHOD'];
-$body   = json_decode(file_get_contents('php://input'), true) ?? [];
+$body   = getJsonBody();
 $action = $_GET['action'] ?? '';
 
 // Cache — čti nebo obnov DB cache ticketů
@@ -52,7 +52,7 @@ if ($action === 'daktela_cache') {
                 [$t['name'] ?? '', $t['title'] ?? '', $t['stage'] ?? '', $t['sla_deadline'] ?? '']
             );
         }
-        $now = date('Y-m-d H:i:s');
+        $now = (new DateTimeImmutable('now', new DateTimeZone('Europe/Prague')))->format('Y-m-d H:i:s');
         DB::q("UPDATE daktela_cache_meta SET refreshed_at=?, ticket_count=? WHERE id=1", [$now, count($items)]);
         $tickets = DB::q("SELECT * FROM daktela_cache ORDER BY title ASC")->fetchAll();
         echo json_encode(['tickets' => $tickets, 'refreshed_at' => $now, 'count' => count($tickets)]);
@@ -94,7 +94,7 @@ if (!$token || !$endpoint) {
 }
 
 // Bezpečnostní whitelist endpointů
-$allowed = ['tickets', 'tickets/', 'activities', 'users'];
+$allowed = ['tickets', 'tickets/', 'activities', 'users', 'groups'];
 $safe = false;
 foreach ($allowed as $a) {
     if (str_starts_with(ltrim($endpoint, '/'), $a)) { $safe = true; break; }

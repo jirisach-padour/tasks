@@ -1,7 +1,7 @@
 <?php
 // Voláno z api.php — DB a auth již inicializovány
 $method = $_SERVER['REQUEST_METHOD'];
-$body   = json_decode(file_get_contents('php://input'), true) ?? [];
+$body   = getJsonBody();
 
 switch ($method) {
     case 'GET':
@@ -117,22 +117,45 @@ switch ($method) {
             $orig = DB::q("SELECT * FROM tasks WHERE id = ?", [$id])->fetch();
             $rec  = $orig['recurrence'] ?? 'none';
             if ($rec !== 'none' && $orig['due_date']) {
-                $base = new DateTime($orig['due_date']);
+                $recDay = isset($orig['recurrence_day']) && $orig['recurrence_day'] !== null ? (int)$orig['recurrence_day'] : null;
+                $dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                $base = new DateTime('today');
+
                 if ($rec === 'weekly') {
-                    $base->modify('+7 days');
+                    if ($recDay !== null) {
+                        // Příští výskyt zvoleného dne týdne (0=Ne, 1=Po, ..., 6=So)
+                        $base->modify('next ' . $dayNames[$recDay]);
+                    } else {
+                        $base = new DateTime($orig['due_date']);
+                        $base->modify('+7 days');
+                    }
                 } elseif ($rec === 'monthly') {
-                    $base->modify('+1 month');
+                    if ($recDay !== null) {
+                        // Příští výskyt zvoleného dne měsíce (1–31)
+                        $d = (int)$recDay;
+                        if ((int)date('d') < $d) {
+                            $base->setDate((int)date('Y'), (int)date('n'), $d);
+                        } else {
+                            $base->modify('+1 month');
+                            $base->setDate((int)$base->format('Y'), (int)$base->format('n'), $d);
+                        }
+                    } else {
+                        $base = new DateTime($orig['due_date']);
+                        $base->modify('+1 month');
+                    }
                 } elseif ($rec === 'custom') {
+                    $base = new DateTime($orig['due_date']);
                     $interval = max(1, (int)($orig['recurrence_interval'] ?? 1));
                     $unit = in_array($orig['recurrence_unit'], ['days','weeks','months']) ? $orig['recurrence_unit'] : 'days';
                     $base->modify("+$interval $unit");
                 }
+
                 DB::q(
-                    "INSERT INTO tasks (title, description, ai_context, quadrant, type, due_date, daktela_tickets, recurrence, recurrence_interval, recurrence_unit)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO tasks (title, description, ai_context, quadrant, type, due_date, daktela_tickets, recurrence, recurrence_day, recurrence_interval, recurrence_unit)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                     [$orig['title'], $orig['description'], $orig['ai_context'], $orig['quadrant'], $orig['type'],
                      $base->format('Y-m-d'), $orig['daktela_tickets'], $rec,
-                     $orig['recurrence_interval'] ?? 1, $orig['recurrence_unit'] ?? 'weeks']
+                     $recDay, $orig['recurrence_interval'] ?? 1, $orig['recurrence_unit'] ?? 'weeks']
                 );
             }
         }

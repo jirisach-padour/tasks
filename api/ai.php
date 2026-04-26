@@ -1,5 +1,5 @@
 <?php
-$body = json_decode(file_get_contents('php://input'), true) ?? [];
+$body = getJsonBody();
 
 if (!defined('ANTHROPIC_API_KEY') || ANTHROPIC_API_KEY === 'PLACEHOLDER_ANTHROPIC_KEY') {
     http_response_code(503);
@@ -28,26 +28,49 @@ try {
 
 // Sestav prompt
 $taskList = '';
+$today = date('Y-m-d');
 foreach ($tasks as $t) {
-    $daktela = $t['daktela_tickets'] && $t['daktela_tickets'] !== '[]' ? ' [Daktela tickety připojeny]' : '';
-    $context = $t['ai_context'] ? "\n   Kontext: " . $t['ai_context'] : '';
-    $taskList .= "- ID {$t['id']}: {$t['title']} (typ: {$t['type']}, aktuální kvadrant: {$t['quadrant']}, deadline: " . ($t['due_date'] ?: 'není') . "){$daktela}{$context}\n";
+    $daktela = $t['daktela_tickets'] && $t['daktela_tickets'] !== '[]' ? ' [má přiřazené Daktela tickety]' : '';
+    $context = $t['ai_context'] ? "\n   Kontext od uživatele: " . $t['ai_context'] : '';
+    $deadline = $t['due_date'] ?: 'není';
+    $daysLeft = $t['due_date'] ? (int)((strtotime($t['due_date']) - strtotime($today)) / 86400) : null;
+    $deadlineStr = $t['due_date'] ? $deadline . " (za {$daysLeft} dní)" : 'není';
+    $taskList .= "- ID {$t['id']}: {$t['title']} (typ: {$t['type']}, aktuální kvadrant: {$t['quadrant']}, deadline: {$deadlineStr}){$daktela}{$context}\n";
 }
 $calStr = $calEvents ? implode(', ', $calEvents) : 'žádné';
 
 $systemPrompt = <<<SYS
-Jsi asistent pro osobní prioritizaci Jiřího Šacha, manažera L1 support týmu v Daktela.
-Eisenhower matice: urgent_important (urgentní+důležité), important (důležité), urgent (urgentní), other (ostatní/backlog).
-Odpovídej stručně v češtině. Vrať JSON pole suggestions.
+Jsi asistent pro osobní prioritizaci Jiřího Šacha. Jiří je manažer L1 support týmu v Daktela (SaaS zákaznická podpora). Jeho klíčové odpovědnosti:
+- SLA compliance: tickety musí být zodpovězeny v dohodnutých lhůtách, eskalace jsou citlivé
+- 1on1 schůzky s agenty L1 týmu: příprava, action items, hodnocení
+- Operativní rozhodnutí: incident management, reporty, hiring
+- Strategické úkoly: procesy, dokumentace, rozvoj týmu
+
+Eisenhower matice:
+- urgent_important: deadline do 2 dní NEBO blokuje tým/zákazníka NEBO SLA/eskalace riziko
+- important: strategické, bez bezprostředního deadline, důležité pro rozvoj nebo tým
+- urgent: časově citlivé ale delegovatelné nebo rutinní operativní úkoly
+- other: nice-to-have, backlog, nízká hodnota
+
+Pravidla pro hodnocení:
+- Daktela tickety na tasku = zákaznická nebo SLA citlivost → zvažuj urgent_important
+- ai_context od uživatele je klíčový vstup — vždy ho zohledni
+- Deadline za ≤2 dny = urgentní, za ≤7 dní = zvažuj, za >14 dní = ne urgentní
+- 1on1 příprava před schůzkou v kalendáři = important nebo urgent_important
+- Osobní tasky (typ: personal) patří většinou do important nebo other pokud nemají deadline
+
+Odpovídej v češtině. Vrať pouze JSON, žádný text navíc.
 SYS;
 
 $userPrompt = <<<USR
-Moje dnešní tasky:
+Dnešní datum: {$today}
+
+Moje otevřené tasky:
 {$taskList}
 
-Dnešní kalendář: {$calStr}
+Dnešní a zítřejší kalendář: {$calStr}
 
-Pro každý task navrhni vhodný kvadrant a 1 větu zdůvodnění. Vrať JSON:
+Pro každý task navrhni vhodný kvadrant a 1–2 věty zdůvodnění (konkrétní, ne obecné). Vrať JSON:
 {"suggestions": [{"id": 1, "quadrant": "urgent_important", "reason": "..."}]}
 USR;
 

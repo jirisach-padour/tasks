@@ -92,6 +92,16 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .cal-item:last-child{border-bottom:none}
 .cal-time{color:var(--grey-text);font-weight:600;min-width:36px;flex-shrink:0}
 .cal-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-day-label{font-size:10px;color:var(--grey-text);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;margin-top:6px}
+.cal-item-btn{background:none;border:1px solid var(--grey-border);border-radius:3px;cursor:pointer;font-size:10px;color:var(--grey-text);padding:1px 4px;flex-shrink:0;opacity:0;transition:opacity .15s}
+.cal-item:hover .cal-item-btn{opacity:1}
+.cal-day-section{margin-bottom:8px}
+.cal-day-header{font-size:10px;color:var(--navy);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:8px 0 3px;padding-bottom:3px;border-bottom:1px solid var(--grey-border)}
+.cal-day-section:first-child .cal-day-header{margin-top:2px}
+.cal-event-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--grey-border);font-size:12px;position:relative}
+.cal-event-row:last-child{border-bottom:none}
+.cal-task-btn{background:none;border:1px solid var(--grey-border);border-radius:3px;cursor:pointer;font-size:10px;color:var(--navy);padding:1px 5px;flex-shrink:0;opacity:0;transition:opacity .15s;margin-left:auto}
+.cal-event-row:hover .cal-task-btn{opacity:1}
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background .15s}
 .btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-hover)}
@@ -156,6 +166,46 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .qc-hint{font-size:11px;color:var(--grey-text);margin-top:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Toast */
+.onenon-layout{display:flex;gap:20px;padding:20px;height:100%}
+.onenon-sidebar{width:220px;flex-shrink:0}
+.onenon-dashboard{background:var(--grey-bg);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px}
+.onenon-dashboard-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.onenon-warn{color:#C94F42;font-weight:700}
+.onenon-person-item{padding:8px 12px;border-radius:6px;cursor:pointer;margin-bottom:4px;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;background:var(--grey-bg);color:var(--navy);border:none;width:100%;text-align:left}
+.onenon-person-item.active{background:var(--navy);color:#fff}
+.onenon-person-warn{width:8px;height:8px;border-radius:50%;background:#E05C4E;flex-shrink:0}
+.onenon-person-row{display:flex;align-items:center;gap:2px;margin-bottom:4px}
+.onenon-person-row.active .onenon-person-item-btn{background:var(--navy);color:#fff}
+.onenon-person-item-btn{padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;background:var(--grey-bg);color:var(--navy);border:none;flex:1;text-align:left}
+.onenon-person-edit-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--grey-text);padding:4px 6px;border-radius:4px;opacity:0;flex-shrink:0}
+.onenon-person-row:hover .onenon-person-edit-btn{opacity:1}
+.onenon-person-edit-form{background:var(--grey-bg);border-radius:6px;padding:8px;margin-bottom:6px}
+.onenon-person-edit-form input{width:100%;margin-bottom:4px;font-size:12px;padding:5px 8px;border:1px solid var(--grey-border);border-radius:4px;box-sizing:border-box;background:var(--surface);color:var(--text)}
+.onenon-person-edit-form textarea{width:100%;font-size:12px;padding:5px 8px;border:1px solid var(--grey-border);border-radius:4px;box-sizing:border-box;resize:vertical;background:var(--surface);color:var(--text);font-family:inherit}
+.onenon-person-desc{font-size:13px;color:var(--grey-text);margin-bottom:14px;line-height:1.5;white-space:pre-wrap;font-style:italic}
+.onenon-main{flex:1;min-width:0;overflow-y:auto}
+.onenon-note-card{background:#fff;border:1px solid var(--grey-border);border-radius:8px;padding:16px;margin-bottom:12px}
+.onenon-note-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.onenon-note-date{font-weight:700;color:var(--navy);font-size:13px}
+.onenon-note-meta{display:flex;align-items:center;gap:10px}
+.onenon-note-actions{display:flex;gap:8px}
+.onenon-mood{color:#F5A623;font-size:14px;letter-spacing:1px}
+.onenon-tag-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin:2px 3px 2px 0;background:#EEF2FF;color:#3B5BDB}
+.onenon-action-item{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px}
+.onenon-action-check{width:14px;height:14px;border-radius:3px;border:2px solid var(--navy);background:none;display:inline-block;flex-shrink:0}
+.onenon-action-check.done{border-color:var(--grey-text);background:var(--grey-bg)}
+.onenon-action-text{color:var(--text)}
+.onenon-action-text.done{color:var(--grey-text);text-decoration:line-through}
+.onenon-mood-btn{background:none;border:none;cursor:pointer;font-size:20px;padding:2px;opacity:.35;transition:opacity .1s}
+.onenon-mood-btn.active,.onenon-mood-btn:hover{opacity:1}
+.onenon-tag-toggle{font-size:11px;padding:3px 10px;border-radius:10px;border:1px solid var(--grey-border);background:none;cursor:pointer;color:var(--grey-text);font-weight:600}
+.onenon-tag-toggle.active{background:#EEF2FF;border-color:#3B5BDB;color:#3B5BDB}
+.onenon-ai-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.sr-section-label{font-size:11px;font-weight:700;color:var(--grey-text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.sr-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid var(--grey-border);background:var(--grey-bg)}
+.sr-task-title{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--navy)}
+.sr-task-title.done{text-decoration:line-through;color:var(--grey-text)}
+.sr-quadrant-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;flex-shrink:0}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:400;pointer-events:none;opacity:0;transition:opacity .2s}
 .toast.show{opacity:1}
 /* Responsive */
@@ -247,7 +297,7 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
 }
 
 // ---- TaskModal ----
-function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, onSave, onClose, onDelete }) {
+function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, assignedMap, onSave, onClose, onDelete }) {
   const initial = task || {};
   const [title, setTitle] = useState(initial.title || '');
   const [description, setDescription] = useState(initial.description || '');
@@ -256,12 +306,13 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
   const [type, setType] = useState(initial.type || defaultType || 'work');
   const [dueDate, setDueDate] = useState(initial.due_date || '');
   const [daktelaTickets, setDaktelaTickets] = useState(() => {
-    if (initial.daktela_tickets) {
-      try { return JSON.parse(initial.daktela_tickets); } catch(e) { return []; }
-    }
+    const dt = initial.daktela_tickets;
+    if (Array.isArray(dt)) return dt;
+    if (dt) { try { return JSON.parse(dt); } catch(e) { return []; } }
     return defaultTickets || [];
   });
   const [recurrence, setRecurrence] = useState(initial.recurrence || 'none');
+  const [recurrenceDay, setRecurrenceDay] = useState(initial.recurrence_day !== undefined && initial.recurrence_day !== null ? initial.recurrence_day : null);
   const [recurrenceInterval, setRecurrenceInterval] = useState(initial.recurrence_interval || 1);
   const [recurrenceUnit, setRecurrenceUnit] = useState(initial.recurrence_unit || 'weeks');
   const [saving, setSaving] = useState(false);
@@ -276,13 +327,14 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     }
   }
 
-  const attachable = (availableTickets || []).filter(t => !daktelaTickets.includes(t.name));
+  const assignedElsewhere = assignedMap || {};
+  const attachable = (availableTickets || []).filter(t => !daktelaTickets.includes(t.name) && (!assignedElsewhere[t.name] || (task && assignedElsewhere[t.name] === task.title)));
 
   async function handleSave() {
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence, recurrence_interval: recurrenceInterval, recurrence_unit: recurrenceUnit });
+      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence, recurrence_day: recurrenceDay, recurrence_interval: recurrenceInterval, recurrence_unit: recurrenceUnit });
       onClose();
     } catch(e) { toast('Chyba: ' + e.message); }
     setSaving(false);
@@ -327,12 +379,16 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
           <label>Daktela tickety</label>
           {daktelaTickets.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:8}}>
-              {daktelaTickets.map(name => (
-                <span key={name} style={{display:'inline-flex',alignItems:'center',gap:4,background:'#FFF4E0',color:'#A06000',fontSize:'11px',fontWeight:700,padding:'3px 8px',borderRadius:20}}>
-                  <a href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" style={{color:'#A06000',textDecoration:'none'}}>{name}</a>
-                  <button onClick={() => removeTicket(name)} style={{background:'none',border:'none',cursor:'pointer',color:'#A06000',fontSize:'13px',lineHeight:1,padding:0,marginLeft:2}}>×</button>
-                </span>
-              ))}
+              {daktelaTickets.map(name => {
+                const ticketInfo = (availableTickets || []).find(t => t.name === name);
+                const ticketTitle = ticketInfo ? ticketInfo.title : name;
+                return (
+                  <span key={name} title={ticketTitle} style={{display:'inline-flex',alignItems:'center',gap:4,background:'#FFF4E0',color:'#A06000',fontSize:'11px',fontWeight:700,padding:'3px 8px',borderRadius:20,cursor:'default'}}>
+                    <a href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" style={{color:'#A06000',textDecoration:'none'}}>{name}</a>
+                    <button onClick={() => removeTicket(name)} style={{background:'none',border:'none',cursor:'pointer',color:'#A06000',fontSize:'13px',lineHeight:1,padding:0,marginLeft:2}} title="Odebrat ticket">×</button>
+                  </span>
+                );
+              })}
             </div>
           )}
           {attachable.length > 0 && (
@@ -350,12 +406,37 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
         </div>
         <div className="form-group">
           <label>Opakování</label>
-          <select value={recurrence} onChange={e => setRecurrence(e.target.value)}>
+          <select value={recurrence} onChange={e => { setRecurrence(e.target.value); setRecurrenceDay(null); }}>
             <option value="none">Nikdy</option>
             <option value="weekly">Týdně</option>
             <option value="monthly">Měsíčně</option>
             <option value="custom">Vlastní</option>
           </select>
+          {recurrence === 'weekly' && (
+            <div style={{marginTop:6}}>
+              <div style={{fontSize:'11px',color:'var(--grey-text)',marginBottom:4}}>Den v týdnu (volitelné)</div>
+              <div style={{display:'flex',gap:4}}>
+                {['Ne','Po','Út','St','Čt','Pá','So'].map((d, i) => (
+                  <button key={i} type="button" onClick={() => setRecurrenceDay(recurrenceDay === i ? null : i)}
+                    style={{padding:'3px 6px',border:'1px solid '+(recurrenceDay===i?'var(--navy)':'var(--grey-border)'),borderRadius:4,cursor:'pointer',fontSize:'11px',fontWeight:recurrenceDay===i?700:400,background:recurrenceDay===i?'var(--navy)':'none',color:recurrenceDay===i?'#fff':'var(--navy)'}}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+              {recurrenceDay !== null && <div style={{fontSize:'11px',color:'var(--grey-text)',marginTop:4}}>Opakuje se každý {['neděli','pondělí','úterý','středu','čtvrtek','pátek','sobotu'][recurrenceDay]}</div>}
+            </div>
+          )}
+          {recurrence === 'monthly' && (
+            <div style={{marginTop:6}}>
+              <div style={{fontSize:'11px',color:'var(--grey-text)',marginBottom:4}}>Den v měsíci (volitelné)</div>
+              <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                <input type="number" min="1" max="31" value={recurrenceDay !== null ? recurrenceDay : ''} placeholder="1–31"
+                  onChange={e => { const v = parseInt(e.target.value); setRecurrenceDay(v >= 1 && v <= 31 ? v : null); }}
+                  style={{width:70,padding:'4px 8px',border:'1px solid var(--grey-border)',borderRadius:4,fontSize:'13px'}} />
+                {recurrenceDay !== null && <span style={{fontSize:'11px',color:'var(--grey-text)'}}>Opakuje se každý {recurrenceDay}. den v měsíci</span>}
+              </div>
+            </div>
+          )}
           {recurrence === 'custom' && (
             <div style={{display:'flex',gap:8,marginTop:6,alignItems:'center'}}>
               <span style={{fontSize:'12px',color:'var(--grey-text)'}}>Každých</span>
@@ -370,7 +451,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
         </div>
         <div className="modal-actions" style={{justifyContent:'space-between'}}>
           <div>
-            {task && <button className="btn" style={{color:'#E05C4E',border:'1px solid #E05C4E',background:'none'}} onClick={() => { if(window.confirm('Opravdu smazat task?')) { onDelete(task.id); onClose(); } }}>Smazat</button>}
+            {task && <button className="btn" style={{color:'#E05C4E',border:'1px solid #E05C4E',background:'none'}} onClick={() => onDelete(task)}>Smazat</button>}
           </div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
@@ -740,10 +821,13 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
 }
 
 // ---- Calendar Panel ----
-function CalendarPanel({ events, connected, onConnect, onDisconnect }) {
-  const today = new Date().toISOString().split('T')[0];
-  const todayEvents = events.filter(e => e.date === today);
-  const tmrEvents   = events.filter(e => e.date !== today);
+function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTask }) {
+  const dayGroups = events.reduce((acc, e) => {
+    const key = e.dayLabel + '|' + e.date;
+    if (!acc.find(g => g.key === key)) acc.push({ key, label: e.dayLabel, date: e.date, events: [] });
+    acc.find(g => g.key === key).events.push(e);
+    return acc;
+  }, []);
 
   return (
     <div className="panel">
@@ -755,29 +839,19 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect }) {
         }
       </div>
       {!connected && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Propoj Google Calendar pro zobrazení událostí.</div>}
-      {connected && todayEvents.length === 0 && tmrEvents.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Dnes žádné události</div>}
-      {connected && todayEvents.length > 0 && (
-        <>
-          <div style={{fontSize:'10px',color:'var(--grey-text)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Dnes</div>
-          {todayEvents.map((e, i) => (
-            <div key={i} className="cal-item">
-              <span className="cal-time">{e.time}</span>
+      {connected && events.length === 0 && <div style={{fontSize:'12px',color:'var(--grey-text)'}}>Žádné nadcházející události</div>}
+      {connected && dayGroups.map(group => (
+        <div key={group.key} className="cal-day-section">
+          <div className="cal-day-header">{group.label}</div>
+          {group.events.map((e, i) => (
+            <div key={i} className="cal-event-row">
+              <span className="cal-time">{e.time || 'celý den'}</span>
               <span className="cal-title">{e.title}</span>
+              <button className="cal-task-btn" onClick={() => onCreateTask(e)}>+ Task</button>
             </div>
           ))}
-        </>
-      )}
-      {connected && tmrEvents.length > 0 && (
-        <>
-          <div style={{fontSize:'10px',color:'var(--grey-text)',fontWeight:700,textTransform:'uppercase',letterSpacing:'.4px',marginTop:10,marginBottom:4}}>Zítra</div>
-          {tmrEvents.map((e, i) => (
-            <div key={i} className="cal-item">
-              <span className="cal-time">{e.time}</span>
-              <span className="cal-title">{e.title}</span>
-            </div>
-          ))}
-        </>
-      )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -896,12 +970,14 @@ function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onTo
   const lq = query.toLowerCase();
 
   useEffect(() => {
-    if (query.length < 2) { setDbTasks([]); return; }
+    if (query.length < 2) { setDbTasks([]); setLoading(false); return; }
+    let cancelled = false;
     setLoading(true);
     apiFetch('tasks', 'GET', null, { search: query })
-      .then(d => setDbTasks(d.tasks || []))
+      .then(d => { if (!cancelled) setDbTasks(d.tasks || []); })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [query]);
 
   const clMatches = checklistItems.filter(i => i.title.toLowerCase().includes(lq));
@@ -914,23 +990,23 @@ function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onTo
 
   return (
     <div className="panel">
-      {loading && <div style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:8}}>Hledám...</div>}
+      {loading && <div className="sr-section-label">Hledám...</div>}
       {dbTasks.length > 0 && (
         <>
-          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:8}}>Tasky ({dbTasks.length})</div>
+          <div className="sr-section-label">Tasky ({dbTasks.length})</div>
           {dbTasks.map(t => (
-            <div key={t.id} onClick={() => onEditTask(t)} style={{display:'flex',alignItems:'center',gap:8,padding:'7px 8px',borderRadius:6,cursor:'pointer',marginBottom:4,border:'1px solid var(--grey-border)',background:'var(--grey-bg)'}}>
-              <span style={{fontSize:'10px',fontWeight:700,padding:'2px 7px',borderRadius:4,background: Q_BG[t.quadrant] || '#F4F5F7',color: Q_COLOR[t.quadrant] || '#5E6778',whiteSpace:'nowrap',flexShrink:0}}>{Q_LABELS[t.quadrant] || t.quadrant}</span>
-              <span style={{fontSize:'13px',flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textDecoration: t.status === 'done' ? 'line-through' : 'none',color: t.status === 'done' ? 'var(--grey-text)' : 'var(--navy)'}}>{t.title}</span>
+            <div key={t.id} onClick={() => onEditTask(t)} className="sr-item">
+              <span className="sr-quadrant-badge" style={{background: Q_BG[t.quadrant] || '#F4F5F7',color: Q_COLOR[t.quadrant] || '#5E6778'}}>{Q_LABELS[t.quadrant] || t.quadrant}</span>
+              <span className={'sr-task-title' + (t.status === 'done' ? ' done' : '')}>{t.title}</span>
             </div>
           ))}
         </>
       )}
       {clMatches.length > 0 && (
         <>
-          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.5px',margin:'12px 0 8px'}}>Checklist ({clMatches.length})</div>
+          <div className="sr-section-label" style={{margin:'12px 0 8px'}}>Checklist ({clMatches.length})</div>
           {clMatches.map(i => (
-            <div key={i.id} onClick={() => onToggleCl(i, !i.done)} style={{display:'flex',alignItems:'center',gap:8,padding:'6px 8px',borderRadius:6,cursor:'pointer',marginBottom:4,border:'1px solid var(--grey-border)',background:'var(--grey-bg)'}}>
+            <div key={i.id} onClick={() => onToggleCl(i, !i.done)} className="sr-item">
               <input type="checkbox" checked={!!i.done} readOnly style={{accentColor:'var(--red)',width:14,height:14,flexShrink:0}} />
               <span style={{fontSize:'13px',textDecoration: i.done ? 'line-through' : 'none',color: i.done ? 'var(--grey-text)' : 'var(--navy)'}}>{i.title}</span>
             </div>
@@ -956,13 +1032,107 @@ function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onTo
 }
 
 // ---- OneOnOneView ----
-function OneOnOneView() {
+function PersonEditForm({ person, onSave, onCancel, onDelete }) {
+  const [name, setName] = React.useState(person.name);
+  const initProfile = person.profile || {};
+  const [perf, setPerf] = React.useState(initProfile.performance || 0);
+  const [potential, setPotential] = React.useState(initProfile.potential || '');
+  const [mgmtEffort, setMgmtEffort] = React.useState(initProfile.mgmt_effort || '');
+  const [strength, setStrength] = React.useState(initProfile.strength || '');
+  const [development, setDevelopment] = React.useState(initProfile.development || '');
+  const [commStyle, setCommStyle] = React.useState(initProfile.comm_style || '');
+  const [motivation, setMotivation] = React.useState(initProfile.motivation || '');
+  const [notes, setNotes] = React.useState(initProfile.notes || '');
+
+  function handleSave() {
+    const n = name.trim();
+    if (!n) return;
+    const profile = { performance: perf, potential, mgmt_effort: mgmtEffort, strength: strength.trim(), development: development.trim(), comm_style: commStyle.trim(), motivation: motivation.trim(), notes: notes.trim() };
+    onSave(n, profile);
+  }
+
+  const btnOpt = (val, cur, set) => (
+    <button onClick={() => set(cur === val ? '' : val)} style={{fontSize:11,padding:'2px 8px',borderRadius:4,cursor:'pointer',border:'1px solid',background: cur === val ? 'var(--navy)' : 'none',color: cur === val ? '#fff' : 'var(--navy)',borderColor:'var(--navy)'}}>
+      {val === 'low' ? 'Nízký' : val === 'medium' ? 'Střední' : 'Vysoký'}
+    </button>
+  );
+
+  return (
+    <div className="onenon-person-edit-form">
+      <input value={name} onChange={e => setName(e.target.value)} placeholder="Jméno" autoFocus style={{marginBottom:10}} />
+      <div style={{fontSize:11,color:'var(--grey-text)',fontWeight:600,marginBottom:4}}>Výkon</div>
+      <div style={{display:'flex',gap:3,marginBottom:8}}>
+        {[1,2,3,4,5].map(i => (
+          <span key={i} onClick={() => setPerf(perf === i ? 0 : i)} style={{cursor:'pointer',fontSize:16,color: i <= perf ? '#F5A623' : '#ccc'}}>{'★'}</span>
+        ))}
+      </div>
+      <div style={{fontSize:11,color:'var(--grey-text)',fontWeight:600,marginBottom:4}}>Potenciál</div>
+      <div style={{display:'flex',gap:4,marginBottom:8}}>{btnOpt('low',potential,setPotential)}{btnOpt('medium',potential,setPotential)}{btnOpt('high',potential,setPotential)}</div>
+      <div style={{fontSize:11,color:'var(--grey-text)',fontWeight:600,marginBottom:4}}>Manažerská náročnost</div>
+      <div style={{display:'flex',gap:4,marginBottom:8}}>{btnOpt('low',mgmtEffort,setMgmtEffort)}{btnOpt('medium',mgmtEffort,setMgmtEffort)}{btnOpt('high',mgmtEffort,setMgmtEffort)}</div>
+      <input value={strength} onChange={e => setStrength(e.target.value)} placeholder="Silná stránka" style={{marginBottom:6}} />
+      <input value={development} onChange={e => setDevelopment(e.target.value)} placeholder="Oblast rozvoje" style={{marginBottom:6}} />
+      <input value={commStyle} onChange={e => setCommStyle(e.target.value)} placeholder="Styl komunikace" style={{marginBottom:6}} />
+      <input value={motivation} onChange={e => setMotivation(e.target.value)} placeholder="Motivace" style={{marginBottom:6}} />
+      <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Volné poznámky..." rows={3} style={{marginBottom:6}} />
+      <div style={{display:'flex',gap:6,marginTop:4}}>
+        <button className="btn btn-primary" style={{fontSize:11,flex:1}} onClick={handleSave}>Uložit</button>
+        <button className="btn btn-secondary" style={{fontSize:11}} onClick={onCancel}>Zrušit</button>
+        <button className="btn" style={{fontSize:11,color:'#E05C4E',border:'1px solid #E05C4E',background:'none'}} onClick={onDelete}>Smazat</button>
+      </div>
+    </div>
+  );
+}
+
+function PersonProfile({ profile }) {
+  if (!profile) return null;
+  const labels = { potential: { low: 'Nízký', medium: 'Střední', high: 'Vysoký' }, mgmt_effort: { low: 'Nízká', medium: 'Střední', high: 'Vysoká' } };
+  const badgeColor = { low: '#4CAF50', medium: '#F5A623', high: '#E05C4E' };
+  const badge = (val, map) => val && labels[map] && labels[map][val]
+    ? <span style={{background: badgeColor[val] || '#888',color:'#fff',fontSize:10,fontWeight:700,padding:'1px 7px',borderRadius:10,marginLeft:4}}>{labels[map][val]}</span>
+    : null;
+  const row = (label, val) => val ? <div style={{fontSize:12,marginBottom:3}}><span style={{color:'var(--grey-text)',minWidth:130,display:'inline-block'}}>{label}:</span>{val}</div> : null;
+  return (
+    <div className="onenon-person-desc" style={{fontStyle:'normal'}}>
+      {profile.performance > 0 && <div style={{fontSize:12,marginBottom:3}}><span style={{color:'var(--grey-text)',minWidth:130,display:'inline-block'}}>Výkon:</span>{'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</div>}
+      {profile.potential && <div style={{fontSize:12,marginBottom:3}}><span style={{color:'var(--grey-text)',minWidth:130,display:'inline-block'}}>Potenciál:</span>{badge(profile.potential,'potential')}</div>}
+      {profile.mgmt_effort && <div style={{fontSize:12,marginBottom:3}}><span style={{color:'var(--grey-text)',minWidth:130,display:'inline-block'}}>Náročnost na řízení:</span>{badge(profile.mgmt_effort,'mgmt_effort')}</div>}
+      {row('Silná stránka', profile.strength)}
+      {row('Oblast rozvoje', profile.development)}
+      {row('Styl komunikace', profile.comm_style)}
+      {row('Motivace', profile.motivation)}
+      {row('Poznámky', profile.notes)}
+    </div>
+  );
+}
+
+function OneOnOneView({ daktelaToken }) {
   const [people, setPeople] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
+  const [selectedDesc, setSelectedDesc] = React.useState('');
+  const [selectedProfile, setSelectedProfile] = React.useState(null);
   const [notes, setNotes] = React.useState([]);
   const [modal, setModal] = React.useState(null);
+  const [daktelaAgents, setDaktelaAgents] = React.useState([]);
+  const [editingPerson, setEditingPerson] = React.useState(null);
 
   React.useEffect(() => { loadPeople(); }, []);
+
+  React.useEffect(() => {
+    if (!daktelaToken) return;
+    apiFetch('daktela', 'POST', { accessToken: daktelaToken, endpoint: 'groups', params: { 'filter[0][field]': 'name', 'filter[0][operator]': 'eq', 'filter[0][value]': 'groups_62715929ce76e354293456' } })
+      .then(gd => {
+        const memberNames = ((gd.result && gd.result.data && gd.result.data[0] && gd.result.data[0].membersName) || []);
+        return apiFetch('daktela', 'POST', { accessToken: daktelaToken, endpoint: 'users', params: { take: 200, fields: ['name', 'alias', 'title', 'status'] } })
+          .then(ud => {
+            const allUsers = (ud.result && ud.result.data) || [];
+            const agents = allUsers
+              .filter(u => u.status !== 'DELETED' && memberNames.includes(u.name))
+              .map(u => ({ name: u.name, label: u.title || u.alias || u.name }));
+            setDaktelaAgents(agents);
+          });
+      }).catch(() => {});
+  }, [daktelaToken]);
 
   async function loadPeople() {
     const d = await apiFetch('onenon', 'GET');
@@ -973,13 +1143,33 @@ function OneOnOneView() {
     setSelected(person);
     const d = await apiFetch('onenon', 'GET', null, { person });
     setNotes(d.notes || []);
+    setSelectedDesc(d.description || '');
+    setSelectedProfile(d.profile || null);
   }
 
-  async function handleSave({ id, person, meeting_date, notes: txt, action_items }) {
-    if (id) {
-      await apiFetch('onenon', 'PUT', { notes: txt, action_items }, { id });
+  async function handleDeletePerson(name) {
+    if (!window.confirm('Smazat osobu ' + name + ' včetně všech zápisů z 1on1?')) return;
+    await apiFetch('onenon', 'DELETE', null, { person: name });
+    setEditingPerson(null);
+    if (selected === name) { setSelected(null); setNotes([]); setSelectedDesc(''); setSelectedProfile(null); }
+    loadPeople();
+  }
+
+  async function handleUpdatePerson(oldName, newName, profile) {
+    const d = await apiFetch('onenon', 'PUT', { old_name: oldName, new_name: newName, profile }, { sub: 'update_person' });
+    setEditingPerson(null);
+    await loadPeople();
+    if (selected === oldName) {
+      setSelected(d.name || newName);
+      loadNotes(d.name || newName);
+    }
+  }
+
+  async function handleSave(data) {
+    if (data.id) {
+      await apiFetch('onenon', 'PUT', { notes: data.notes, action_items: data.action_items, mood: data.mood, tags: data.tags }, { id: data.id });
     } else {
-      await apiFetch('onenon', 'POST', { person, meeting_date, notes: txt, action_items });
+      await apiFetch('onenon', 'POST', { person: data.person, meeting_date: data.meeting_date, notes: data.notes, action_items: data.action_items, mood: data.mood, tags: data.tags });
     }
     loadPeople();
     if (selected) loadNotes(selected);
@@ -999,36 +1189,72 @@ function OneOnOneView() {
     loadNotes(selected);
   }
 
+  const totalOpen = people.reduce((s, p) => s + (p.open_items || 0), 0);
+  const warnPeople = people.filter(p => (p.days_since || 0) > 30);
+
+  function renderMood(mood) {
+    if (!mood) return null;
+    return <span className="onenon-mood">{'★'.repeat(mood)}{'☆'.repeat(5 - mood)}</span>;
+  }
+
   return (
-    <div style={{display:'flex',gap:20,padding:'20px',height:'100%'}}>
-      <div style={{width:220,flexShrink:0}}>
-        <div className="section-title" style={{marginBottom:12}}>Lidé</div>
-        {people.map(p => (
-          <div key={p.person} onClick={() => loadNotes(p.person)}
-            style={{padding:'8px 12px',borderRadius:6,cursor:'pointer',marginBottom:4,
-              background: selected === p.person ? 'var(--navy)' : 'var(--grey-bg)',
-              color: selected === p.person ? '#fff' : 'var(--navy)',
-              fontWeight:600,fontSize:13}}>
-            {p.person} <span style={{opacity:.6,fontWeight:400}}>({p.count})</span>
+    <div className="onenon-layout">
+      <div className="onenon-sidebar">
+        {(totalOpen > 0 || warnPeople.length > 0) && (
+          <div className="onenon-dashboard">
+            {totalOpen > 0 && <div className="onenon-dashboard-row"><span>Otevřené action items:</span><span className="onenon-warn">{totalOpen}</span></div>}
+            {warnPeople.length > 0 && <div className="onenon-dashboard-row" style={{marginTop:4}}><span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span><span>{warnPeople.map(p => p.person).join(', ')}</span></div>}
           </div>
-        ))}
+        )}
+        <div className="section-title" style={{marginBottom:8}}>Lidé</div>
+        {people.map(p => {
+          const isEditing = editingPerson && editingPerson.name === p.person;
+          return (
+            <div key={p.person}>
+              {isEditing ? (
+                <PersonEditForm
+                  person={editingPerson}
+                  onSave={(newName, profile) => handleUpdatePerson(p.person, newName, profile)}
+                  onCancel={() => setEditingPerson(null)}
+                  onDelete={() => handleDeletePerson(p.person)}
+                />
+              ) : (
+                <div className={'onenon-person-row' + (selected === p.person ? ' active' : '')}>
+                  <button className="onenon-person-item-btn" onClick={() => loadNotes(p.person)}>
+                    <span>{p.person} <span style={{opacity:.6,fontWeight:400}}>({p.count})</span></span>
+                    {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní bez 1on1'} />}
+                  </button>
+                  <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '' }); }}>✎</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
         <button className="btn btn-primary" style={{width:'100%',marginTop:12,fontSize:12}}
           onClick={() => setModal({ person: selected || '' })}>+ Nová schůzka</button>
       </div>
-      <div style={{flex:1,minWidth:0}}>
+      <div className="onenon-main">
         {!selected && <div style={{color:'var(--grey-text)',fontSize:13}}>Vyber osobu vlevo</div>}
         {selected && (
           <>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:selectedDesc ? 6 : 16}}>
               <div className="section-title">{selected}</div>
               <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
             </div>
+            {selectedDesc && <div className="onenon-person-desc">{selectedDesc}</div>}
+            {selectedProfile && <PersonProfile profile={selectedProfile} />}
             {notes.length === 0 && <div style={{color:'var(--grey-text)',fontSize:13}}>Zatím žádné záznamy</div>}
             {notes.map(n => (
-              <div key={n.id} style={{background:'#fff',border:'1px solid var(--grey-border)',borderRadius:8,padding:16,marginBottom:12}}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>
-                  <div style={{fontWeight:700,color:'var(--navy)',fontSize:13}}>{n.meeting_date}</div>
-                  <div style={{display:'flex',gap:8}}>
+              <div key={n.id} className="onenon-note-card">
+                <div className="onenon-note-header">
+                  <div>
+                    <div className="onenon-note-date">{n.meeting_date}</div>
+                    <div className="onenon-note-meta">
+                      {renderMood(n.mood)}
+                      {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
+                    </div>
+                  </div>
+                  <div className="onenon-note-actions">
                     <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'var(--grey-text)'}}>Upravit</button>
                     <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'#E05C4E'}}>Smazat</button>
                   </div>
@@ -1038,13 +1264,9 @@ function OneOnOneView() {
                   <div>
                     <div style={{fontSize:11,fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Action items</div>
                     {(n.action_items || []).map((it, idx) => (
-                      <div key={idx} onClick={() => toggleActionItem(n, idx)}
-                        style={{display:'flex',alignItems:'center',gap:8,padding:'4px 0',cursor:'pointer',fontSize:13,
-                          color: it.done ? 'var(--grey-text)' : 'var(--text)',
-                          textDecoration: it.done ? 'line-through' : 'none'}}>
-                        <span style={{width:14,height:14,borderRadius:3,border:'2px solid '+(it.done?'var(--grey-text)':'var(--navy)'),
-                          background:it.done?'var(--grey-bg)':'none',display:'inline-block',flexShrink:0}}/>
-                        {it.text}
+                      <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, idx)}>
+                        <span className={'onenon-action-check' + (it.done ? ' done' : '')} />
+                        <span className={'onenon-action-text' + (it.done ? ' done' : '')}>{it.text}</span>
                       </div>
                     ))}
                   </div>
@@ -1054,22 +1276,47 @@ function OneOnOneView() {
           </>
         )}
       </div>
-      {modal !== null && <OneOnOneModal note={modal} onSave={handleSave} onClose={() => setModal(null)} />}
+      {modal !== null && <OneOnOneModal note={modal} agents={daktelaAgents} existingPeople={people.map(p => p.person)} onSave={handleSave} onClose={() => setModal(null)} />}
     </div>
   );
 }
 
-function OneOnOneModal({ note, onSave, onClose }) {
+const ONENON_TAGS = ['výkon', 'SLA', 'osobní', 'rozvoj', 'feedback'];
+
+function OneOnOneModal({ note, agents, existingPeople, onSave, onClose }) {
+  const [personMode, setPersonMode] = React.useState(note.person ? 'known' : 'select');
   const [person, setPerson] = React.useState(note.person || '');
+  const [manualPerson, setManualPerson] = React.useState('');
   const [date, setDate] = React.useState(note.meeting_date || new Date().toISOString().split('T')[0]);
   const [txt, setTxt] = React.useState(note.notes || '');
   const [items, setItems] = React.useState(note.action_items || []);
   const [newItem, setNewItem] = React.useState('');
+  const [mood, setMood] = React.useState(note.mood || null);
+  const [tags, setTags] = React.useState(note.tags || []);
+
+  // Sloučit Daktela agenty + existující osoby do jednoho seznamu
+  const allOptions = [...new Set([...existingPeople, ...agents.map(a => a.label)])].sort();
 
   function addItem() {
     if (!newItem.trim()) return;
     setItems(prev => [...prev, { text: newItem.trim(), done: false }]);
     setNewItem('');
+  }
+
+  function toggleTag(t) {
+    setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  }
+
+  function resolvedPerson() {
+    if (note.person) return note.person;
+    if (personMode === 'manual') return manualPerson.trim();
+    return person;
+  }
+
+  function handleSave() {
+    const p = resolvedPerson();
+    if (!p) { toast('Zadej jméno osoby'); return; }
+    onSave({ id: note.id, person: p, meeting_date: date, notes: txt, action_items: items, mood, tags });
   }
 
   return (
@@ -1079,7 +1326,20 @@ function OneOnOneModal({ note, onSave, onClose }) {
         {!note.id && (
           <div className="form-group">
             <label>Osoba</label>
-            <input value={person} onChange={e => setPerson(e.target.value)} placeholder="Jméno" autoFocus />
+            {personMode !== 'manual' ? (
+              <div style={{display:'flex',gap:6}}>
+                <select value={person} onChange={e => setPerson(e.target.value)} style={{flex:1}}>
+                  <option value="">-- Vyber osobu --</option>
+                  {allOptions.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+                <button type="button" className="btn" style={{fontSize:12,flexShrink:0}} onClick={() => { setPersonMode('manual'); }}>Jiný...</button>
+              </div>
+            ) : (
+              <div style={{display:'flex',gap:6}}>
+                <input value={manualPerson} onChange={e => setManualPerson(e.target.value)} placeholder="Jméno osoby" autoFocus style={{flex:1}} />
+                <button type="button" className="btn" style={{fontSize:12,flexShrink:0}} onClick={() => setPersonMode('select')}>←</button>
+              </div>
+            )}
           </div>
         )}
         <div className="form-group">
@@ -1087,8 +1347,29 @@ function OneOnOneModal({ note, onSave, onClose }) {
           <input type="date" value={date} onChange={e => setDate(e.target.value)} />
         </div>
         <div className="form-group">
+          <label>Nálada schůzky</label>
+          <div className="onenon-ai-row">
+            {[1,2,3,4,5].map(v => (
+              <button key={v} type="button" className={'onenon-mood-btn' + (mood === v ? ' active' : '')}
+                onClick={() => setMood(mood === v ? null : v)} title={v + '/5'}>
+                {mood && v <= mood ? '★' : '☆'}
+              </button>
+            ))}
+            {mood && <span style={{fontSize:12,color:'var(--grey-text)',alignSelf:'center'}}>{mood}/5</span>}
+          </div>
+        </div>
+        <div className="form-group">
+          <label>Tagy</label>
+          <div className="onenon-ai-row">
+            {ONENON_TAGS.map(t => (
+              <button key={t} type="button" className={'onenon-tag-toggle' + (tags.includes(t) ? ' active' : '')}
+                onClick={() => toggleTag(t)}>{t}</button>
+            ))}
+          </div>
+        </div>
+        <div className="form-group">
           <label>Poznámky</label>
-          <textarea value={txt} onChange={e => setTxt(e.target.value)} rows={5} placeholder="Co jsme řešili..." />
+          <textarea value={txt} onChange={e => setTxt(e.target.value)} rows={4} placeholder="Co jsme řešili..." />
         </div>
         <div className="form-group">
           <label>Action items</label>
@@ -1107,9 +1388,68 @@ function OneOnOneModal({ note, onSave, onClose }) {
             <button onClick={addItem} className="btn btn-secondary" style={{fontSize:12}}>Přidat</button>
           </div>
         </div>
-        <div className="modal-actions">
-          <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
-          <button className="btn btn-primary" onClick={() => onSave({ id: note.id, person, meeting_date: date, notes: txt, action_items: items })}>Uložit</button>
+        <div className="form-actions">
+          <button className="btn" onClick={onClose}>Zrušit</button>
+          <button className="btn btn-primary" onClick={handleSave}>Uložit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- SettingsModal ----
+function SettingsModal({ onClose }) {
+  const [oldPass, setOldPass] = React.useState('');
+  const [newUser, setNewUser] = React.useState('');
+  const [newPass, setNewPass] = React.useState('');
+  const [newPass2, setNewPass2] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [showOld, setShowOld] = React.useState(false);
+  const [showNew, setShowNew] = React.useState(false);
+
+  async function handleSave() {
+    if (newPass && newPass !== newPass2) { toast('Hesla se neshodují'); return; }
+    if (!oldPass) { toast('Zadej stávající heslo'); return; }
+    setSaving(true);
+    try {
+      await apiFetch('settings', 'POST', { old_password: oldPass, new_username: newUser, new_password: newPass });
+      toast('Uloženo');
+      onClose();
+    } catch(e) { toast('Chyba: ' + e.message); }
+    setSaving(false);
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <h2>Nastavení účtu</h2>
+        <div className="form-group">
+          <label>Stávající heslo</label>
+          <div style={{position:'relative'}}>
+            <input type={showOld ? 'text' : 'password'} value={oldPass} onChange={e => setOldPass(e.target.value)} placeholder="Povinné" style={{paddingRight:36}} />
+            <button type="button" onClick={() => setShowOld(v => !v)} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>{showOld ? '🙈' : '👁'}</button>
+          </div>
+        </div>
+        <div className="form-group">
+          <label>Nové uživatelské jméno <span style={{fontWeight:400,color:'var(--grey-text)'}}>(nechej prázdné pro zachování)</span></label>
+          <input value={newUser} onChange={e => setNewUser(e.target.value)} placeholder="Nové jméno..." />
+        </div>
+        <div className="form-group">
+          <label>Nové heslo <span style={{fontWeight:400,color:'var(--grey-text)'}}>(min. 8 znaků, nechej prázdné pro zachování)</span></label>
+          <div style={{position:'relative'}}>
+            <input type={showNew ? 'text' : 'password'} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Nové heslo..." style={{paddingRight:36}} />
+            <button type="button" onClick={() => setShowNew(v => !v)} style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>{showNew ? '🙈' : '👁'}</button>
+          </div>
+        </div>
+        {newPass && (
+          <div className="form-group">
+            <label>Potvrdit nové heslo</label>
+            <input type={showNew ? 'text' : 'password'} value={newPass2} onChange={e => setNewPass2(e.target.value)} placeholder="Znovu nové heslo..." />
+          </div>
+        )}
+        <div className="form-actions">
+          <button className="btn" onClick={onClose}>Zrušit</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Ukládám...' : 'Uložit'}</button>
         </div>
       </div>
     </div>
@@ -1237,10 +1577,11 @@ function App() {
   }
 
   async function handleDeleteTask(task) {
-    if (!confirm('Smazat task "' + task.title + '"?')) return;
+    if (!confirm('Smazat task "' + task.title + '"?')) return false;
     await apiFetch('tasks', 'DELETE', null, { id: task.id });
     setTasks(prev => prev.filter(t => t.id !== task.id));
     toast('Task smazán');
+    return true;
   }
 
   // Checklist
@@ -1374,6 +1715,7 @@ function App() {
           </button>
           <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Task</button>
           <button className="btn btn-ghost" style={{fontSize:'12px',padding:'6px 10px'}} onClick={() => setQuickCapture(true)} title="Cmd+K">⚡</button>
+          <button className="btn btn-ghost" style={{fontSize:'12px'}} onClick={() => setModal({ type: 'settings' })}>⚙</button>
           <button className="btn btn-ghost" style={{fontSize:'12px'}} onClick={async () => {
             await apiFetch('logout', 'POST');
             window.location.href = '/tasks/login.php';
@@ -1415,6 +1757,7 @@ function App() {
             connected={calConnected}
             onConnect={handleCalConnect}
             onDisconnect={handleCalDisconnect}
+            onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
           />
           <ChecklistPanel
             items={checklistItems}
@@ -1434,7 +1777,7 @@ function App() {
           : activeTab === 'history'
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : activeTab === 'onenon'
-          ? <OneOnOneView />
+          ? <OneOnOneView daktelaToken={daktelaToken} />
           : (
             <>
               <div className="matrix">
@@ -1472,8 +1815,9 @@ function App() {
           defaultType={(modal.defaults || {}).type}
           defaultTickets={(modal.defaults || {}).daktela_tickets}
           availableTickets={daktelaTickets}
+          assignedMap={(() => { const m = {}; tasks.forEach(task => { try { (task.daktela_tickets || []).forEach(n => { m[n] = task.title; }); } catch(e){} }); return m; })()}
           onSave={handleSaveTask}
-          onDelete={id => { handleDeleteTask({ id }); setModal(null); }}
+          onDelete={async t => { const done = await handleDeleteTask(t); if (done) setModal(null); }}
           onClose={() => setModal(null)}
         />
       )}
@@ -1482,6 +1826,9 @@ function App() {
           onConnected={token => { setDaktelaToken(token); sessionStorage.setItem('daktela_token', token); refreshDaktelaCache(token); }}
           onClose={() => setModal(null)}
         />
+      )}
+      {modal?.type === 'settings' && (
+        <SettingsModal onClose={() => setModal(null)} />
       )}
       {modal?.type === 'ai' && (
         <AiSuggestModal

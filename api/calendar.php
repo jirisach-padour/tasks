@@ -7,16 +7,17 @@ function getCalendarToken(): ?string {
     if (strtotime($row['expires_at']) > time() + 60) return $row['access_token'];
     if (!$row['refresh_token']) return null;
 
-    $resp = @file_get_contents('https://oauth2.googleapis.com/token', false, stream_context_create(['http' => [
-        'method'  => 'POST',
-        'header'  => 'Content-Type: application/x-www-form-urlencoded',
-        'content' => http_build_query([
-            'refresh_token' => $row['refresh_token'],
-            'client_id'     => GOOGLE_CLIENT_ID,
-            'client_secret' => GOOGLE_CLIENT_SECRET,
-            'grant_type'    => 'refresh_token',
-        ]),
-    ]]));
+    $ch = curl_init('https://oauth2.googleapis.com/token');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query(['refresh_token' => $row['refresh_token'], 'client_id' => GOOGLE_CLIENT_ID, 'client_secret' => GOOGLE_CLIENT_SECRET, 'grant_type' => 'refresh_token']),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    $resp = curl_exec($ch);
+    curl_close($ch);
     $data = $resp ? json_decode($resp, true) : null;
     if (!isset($data['access_token'])) return null;
 
@@ -29,10 +30,16 @@ function getCalendarToken(): ?string {
 function fetchEvents(string $token): array {
     $tz      = 'Europe/Prague';
     $today   = (new DateTime('today',    new DateTimeZone($tz)))->format(DateTime::RFC3339);
-    $dayAfter = (new DateTime('tomorrow +1 day', new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $end7    = (new DateTime('today +7 days', new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $todayDate = (new DateTime('today', new DateTimeZone($tz)))->format('Y-m-d');
+    $tomorrowDate = (new DateTime('tomorrow', new DateTimeZone($tz)))->format('Y-m-d');
+    $dayLabels = ['Ne','Po','Út','St','Čt','Pá','So'];
     $url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?'
-        . http_build_query(['timeMin'=>$today,'timeMax'=>$dayAfter,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>20,'fields'=>'items(id,summary,start,end)']);
-    $resp = @file_get_contents($url, false, stream_context_create(['http'=>['header'=>'Authorization: Bearer '.$token]]));
+        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>30,'fields'=>'items(id,summary,start,end)']);
+    $ch2 = curl_init($url);
+    curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token], CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => true]);
+    $resp = curl_exec($ch2);
+    curl_close($ch2);
     if (!$resp) return [];
     $data = json_decode($resp, true);
     $events = [];
@@ -42,7 +49,9 @@ function fetchEvents(string $token): array {
         $allDay   = !isset($e['start']['dateTime']);
         $date     = substr($startRaw, 0, 10);
         $time     = $allDay ? '' : substr($startRaw, 11, 5);
-        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw];
+        $dow      = (int)(new DateTime($date, new DateTimeZone($tz)))->format('w');
+        $label    = $date === $todayDate ? 'Dnes' : ($date === $tomorrowDate ? 'Zítra' : $dayLabels[$dow] . ' ' . substr($date, 8, 2) . '.' . substr($date, 5, 2) . '.');
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label];
     }
     return $events;
 }

@@ -9,7 +9,8 @@ function e(mixed $v): string {
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', 1);
 ini_set('session.cookie_samesite', 'Strict');
-ini_set('session.gc_maxlifetime', 28800);
+ini_set('session.gc_maxlifetime', 2592000); // 30 dní
+session_set_cookie_params(['lifetime' => 2592000, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Strict']);
 session_start();
 
 $error = '';
@@ -76,7 +77,10 @@ body{font-family:var(--font);font-size:14px;background:var(--navy);min-height:10
       </div>
       <div class="field">
         <label for="password">Heslo</label>
-        <input type="password" id="password" name="password" autocomplete="current-password">
+        <div style="position:relative">
+          <input type="password" id="password" name="password" autocomplete="current-password" style="width:100%;padding-right:40px">
+          <button type="button" id="togglePass" onclick="var i=document.getElementById('password');var b=document.getElementById('togglePass');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--grey-text);line-height:1;padding:0">👁</button>
+        </div>
       </div>
       <button type="submit" class="btn-login">Přihlásit se</button>
     </form>

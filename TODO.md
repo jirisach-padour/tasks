@@ -2,20 +2,29 @@
 
 ## Otevřené — bugs
 
-- [ ] **Double modal při mazání tasku** — dialog `window.confirm()` se zobrazí 2x, podruhé vypíše "undefined"; task se smaže ale UX je rozbité — zjistit příčinu (pravděpodobně onDelete je volán z TaskCard i TaskModal současně)
-- [ ] **Odebrání ticketu z detailu uloženého tasku** — × tlačítko v TaskModal existuje, ale ověřit jestli save správně posílá aktualizovaný daktela_tickets array a zobrazuje přiřazené tickety při editaci existujícího tasku
-- [ ] **Čas poslední aktualizace ticketů v Prague time** — "Obnoveno: {timestamp}" v DaktelaPanel zobrazuje UTC čas; opravit na Europe/Prague zobrazení
+- [x] **Přihlašování — občas nepřihlásí** — po odeslání formuláře zůstane na login stránce bez chybové hlášky; zjistit příčinu (session race, cookie rejection, redirect issue)
+- [x] **Tlačítko zobrazit/skrýt heslo** — ikona oko v password inputu
+- [x] **Double modal při mazání tasku** — dialog `window.confirm()` se zobrazí 2x, podruhé vypíše "undefined"; task se smaže ale UX je rozbité — zjistit příčinu (pravděpodobně onDelete je volán z TaskCard i TaskModal současně)
+- [x] **Odebrání ticketu z detailu uloženého tasku** — × tlačítko v TaskModal existuje, ale ověřit jestli save správně posílá aktualizovaný daktela_tickets array a zobrazuje přiřazené tickety při editaci existujícího tasku
+- [x] **Čas poslední aktualizace ticketů v Prague time** — "Obnoveno: {timestamp}" v DaktelaPanel zobrazuje UTC čas; opravit na Europe/Prague zobrazení
 
 ## Otevřené — nové funkce
 
-- [ ] **Google Calendar — vymyslet práci s kalendářem** — aktuálně jen read-only přehled dnes/zítra; zvážit: import eventu jako tasku, blokace časových slotů, kontext pro AI, připomenutí
-- [ ] **1on1 tab — dokončit a navrhnout strukturu** — aktuální implementace je základní; zvážit:
+- [x] **Persistent session (30 dní)** — prodloužit session lifetime z 8h na 30 dní (gc_maxlifetime + cookie lifetime), session se prodlužuje při každé aktivitě; nejméně práce, pro osobní app dostačující
+- [x] **Změna přihlašovacích údajů** — formulář pro změnu uživatelského jména a hesla (v nastavení nebo samostatná stránka)
+- [x] **Vyladit AI prompt pro návrh priorit** — system prompt neobsahuje kontext role (SLA, eskalace, 1on1), chybí instrukce jak pracovat s ai_context polem a relativitou deadlinů
+- [x] **Google Calendar — vylepšení** — aktuálně jen read-only přehled dnes/zítra; zvážit: import eventu jako tasku, blokace časových slotů, kontext pro AI, připomenutí
+- [x] **1on1 tab — dokončeno** — aktuální implementace je základní; zvážit:
   - automatické natažení agentů L1 skupiny ze Daktely (API sachj)
   - hodnocení nálady 1–5 per schůzka
   - tagy: výkon / SLA / osobní / rozvoj / feedback
   - dashboard: kdy byl poslední 1on1 (highlight >30 dní), počet otevřených action items
   - mobile-friendly edit během schůzky
-- [ ] **Opakování — konkrétní den ze kalendáře** — při weekly/monthly opakování vybrat konkrétní den (např. každý pátek, každý 1. v měsíci); propojit s Google Calendar jako start datum
+- [x] **Opakování — konkrétní den ze kalendáře** — při weekly/monthly opakování vybrat konkrétní den (např. každý pátek, každý 1. v měsíci); propojit s Google Calendar jako start datum
+
+## Otevřené — bugs (2026-04-26)
+
+- [ ] **1on1 — profil osoby se nenačte do editace** — po uložení profilu, zavření formuláře a opětovném otevření (✎) jsou políčka prázdná;  objekt nemá  z  state (people list vrací profile, ale při setEditingPerson se nepředává)
 
 ## Nápady / budoucí rozvoj
 

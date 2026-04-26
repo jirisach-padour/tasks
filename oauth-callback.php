@@ -56,12 +56,15 @@ if (!isset($data['access_token'])) {
 
 $expiresAt = date('Y-m-d H:i:s', time() + ($data['expires_in'] ?? 3600));
 
-// Ulož tokeny (vždy jen jeden řádek)
+// Ulož tokeny (vždy jen jeden řádek) — transakce aby při selhání INSERT zůstal starý token
+$pdo = DB::get();
+$pdo->beginTransaction();
 DB::q("DELETE FROM calendar_tokens");
 DB::q(
     "INSERT INTO calendar_tokens (access_token, refresh_token, expires_at) VALUES (?, ?, ?)",
     [$data['access_token'], $data['refresh_token'] ?? null, $expiresAt]
 );
+$pdo->commit();
 
 header('Location: /tasks/index.php?calendar=connected');
 exit;
