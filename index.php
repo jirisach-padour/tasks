@@ -232,7 +232,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
   .sidebar-left{display:none}
-  .sidebar-left.open{position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
+  .sidebar-left.open{display:block;position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
   .header-desktop-only{display:none}
