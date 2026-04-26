@@ -35,9 +35,9 @@ if ($content === false) {
 
 // Nahraď username pokud zadán
 if ($newUser !== '') {
-    $content = preg_replace(
+    $content = preg_replace_callback(
         "/define\('APP_USER',\s*'[^']*'\);/",
-        "define('APP_USER', '" . addslashes($newUser) . "');",
+        function() use ($newUser) { return "define('APP_USER', '" . addcslashes($newUser, "'\\") . "');"; },
         $content
     );
 }

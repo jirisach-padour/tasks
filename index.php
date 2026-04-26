@@ -1853,6 +1853,14 @@ function App() {
     { key: 'onenon', label: '1on1', count: null },
   ];
 
+  const assignedMap = React.useMemo(() => {
+    const m = {};
+    tasks.forEach(task => {
+      (task.daktela_tickets || []).forEach(n => { m[n] = task.title; });
+    });
+    return m;
+  }, [tasks]);
+
   return (
     <>
       {/* Header actions */}
@@ -1923,7 +1931,7 @@ function App() {
             onConnectClick={() => setModal({ type: 'daktela' })}
             onRefresh={refreshDaktelaCache}
             onCreateTask={handleDaktelaCreateTask}
-            assignedMap={(() => { const m = {}; tasks.forEach(task => { try { (task.daktela_tickets || []).forEach(n => { m[n] = task.title; }); } catch(e){} }); return m; })()}
+            assignedMap={assignedMap}
           />
           <CalendarPanel
             events={calEvents}
@@ -1981,7 +1989,7 @@ function App() {
           defaultType={(modal.defaults || {}).type}
           defaultTickets={(modal.defaults || {}).daktela_tickets}
           availableTickets={daktelaTickets}
-          assignedMap={(() => { const m = {}; tasks.forEach(task => { try { (task.daktela_tickets || []).forEach(n => { m[n] = task.title; }); } catch(e){} }); return m; })()}
+          assignedMap={assignedMap}
           onSave={handleSaveTask}
           onDelete={async t => { const done = await handleDeleteTask(t); if (done) setModal(null); }}
           onClose={() => setModal(null)}

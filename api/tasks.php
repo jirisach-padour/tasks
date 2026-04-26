@@ -29,9 +29,10 @@ switch ($method) {
 
         // Fulltext search
         if ($search = trim($_GET['search'] ?? '')) {
-            $like = '%' . $search . '%';
+            $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $search);
+            $like = '%' . $escaped . '%';
             $rows = DB::q(
-                "SELECT * FROM tasks WHERE (title LIKE ? OR description LIKE ? OR ai_context LIKE ?) ORDER BY status ASC, quadrant ASC LIMIT 50",
+                "SELECT * FROM tasks WHERE (title LIKE ? ESCAPE '\\' OR description LIKE ? ESCAPE '\\' OR ai_context LIKE ? ESCAPE '\\') ORDER BY status ASC, quadrant ASC LIMIT 50",
                 [$like, $like, $like]
             )->fetchAll();
             foreach ($rows as &$r) {
@@ -133,11 +134,14 @@ switch ($method) {
                     if ($recDay !== null) {
                         // Příští výskyt zvoleného dne měsíce (1–31)
                         $d = (int)$recDay;
-                        if ((int)date('d') < $d) {
+                        // Clamp den na počet dní v cílovém měsíci (e.g. 31 → 28 v únoru)
+                        $daysThis = (int)(new DateTime('last day of this month'))->format('d');
+                        if ((int)date('d') < $d && $d <= $daysThis) {
                             $base->setDate((int)date('Y'), (int)date('n'), $d);
                         } else {
                             $base->modify('+1 month');
-                            $base->setDate((int)$base->format('Y'), (int)$base->format('n'), $d);
+                            $daysNext = (int)(new DateTime('last day of ' . $base->format('Y-m')))->format('d');
+                            $base->setDate((int)$base->format('Y'), (int)$base->format('n'), min($d, $daysNext));
                         }
                     } else {
                         $base = new DateTime($orig['due_date']);

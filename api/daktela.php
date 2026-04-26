@@ -110,7 +110,7 @@ $params['accessToken'] = $token;
 $qs = '?' . buildQuery($params);
 $url = 'https://daktela.daktela.com/api/v6/' . ltrim($endpoint, '/') . '.json' . $qs;
 ini_set('memory_limit', '256M');
-error_log('DAKTELA_PROXY URL: ' . $url);
+error_log('DAKTELA_PROXY endpoint: ' . $endpoint);
 $resp = daktelaRequest('GET', $url, $token);
 error_log('DAKTELA_PROXY count raw: ' . (isset($resp['result']['data']) ? count($resp['result']['data']) : 'no data'));
 // Zkrátit odpověď — ponechat jen result.data pole + serverové filtrování
