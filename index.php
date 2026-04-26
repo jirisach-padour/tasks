@@ -17,7 +17,7 @@ requireAuth();
 body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy)}
 /* Header */
 .app-header{background:var(--navy);padding:12px 0 0}
-.container{max-width:1280px;margin:0 auto;padding:0 20px}
+.container{max-width:1600px;margin:0 auto;padding:0 24px}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px}
 .app-header h1{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.2px}
 .header-desc{color:rgba(255,255,255,.55);font-size:12px;margin-top:2px}
@@ -29,7 +29,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .tab.active{color:#fff;border-bottom:3px solid var(--red)}
 .tab:hover:not(.active){color:rgba(255,255,255,.85)}
 /* Layout */
-.layout{display:grid;grid-template-columns:240px 1fr 240px;gap:16px;margin-top:16px;padding-bottom:80px;align-items:start}
+.layout{display:grid;grid-template-columns:clamp(220px,18%,300px) 1fr clamp(220px,18%,300px);gap:16px;margin-top:16px;padding-bottom:80px;align-items:start}
 /* Panel */
 .panel{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
 .panel+.panel{margin-top:14px}
@@ -90,10 +90,10 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .ticket-title{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ticket-add-btn{font-size:11px;padding:3px 8px;background:var(--grey-bg);border:1px solid var(--grey-border);border-radius:4px;cursor:pointer;color:var(--navy);font-weight:600;white-space:nowrap;flex-shrink:0}
 .ticket-add-btn:hover{background:var(--grey-border)}
-.tickets-scroll{max-height:200px;overflow-y:auto}
+.tickets-scroll{max-height:320px;overflow-y:auto}
 .tickets-scroll::-webkit-scrollbar{width:3px}
 .tickets-scroll::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:2px}
-.cal-scroll{max-height:180px;overflow-y:auto}
+.cal-scroll{max-height:280px;overflow-y:auto}
 .cal-scroll::-webkit-scrollbar{width:3px}
 .cal-scroll::-webkit-scrollbar-thumb{background:var(--grey-border);border-radius:2px}
 /* Calendar */
