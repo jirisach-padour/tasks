@@ -1998,8 +1998,8 @@ function App() {
         document.getElementById('mainContent')
       )}
 
-      {/* Modals */}
-      {modal?.type === 'task' && (
+      {/* Modals — portal do body kvůli stacking context na mobilu */}
+      {modal?.type === 'task' && ReactDOM.createPortal(
         <TaskModal
           task={modal.task || null}
           defaultQuadrant={(modal.defaults || {}).quadrant}
@@ -2010,37 +2010,43 @@ function App() {
           onSave={handleSaveTask}
           onDelete={async t => { const done = await handleDeleteTask(t); if (done) setModal(null); }}
           onClose={() => setModal(null)}
-        />
+        />,
+        document.body
       )}
-      {modal?.type === 'daktela' && (
+      {modal?.type === 'daktela' && ReactDOM.createPortal(
         <DaktelaAuthModal
           onConnected={token => { setDaktelaToken(token); sessionStorage.setItem('daktela_token', token); refreshDaktelaCache(token); }}
           onClose={() => setModal(null)}
-        />
+        />,
+        document.body
       )}
-      {modal?.type === 'settings' && (
-        <SettingsModal onClose={() => setModal(null)} />
+      {modal?.type === 'settings' && ReactDOM.createPortal(
+        <SettingsModal onClose={() => setModal(null)} />,
+        document.body
       )}
-      {modal?.type === 'ai' && (
+      {modal?.type === 'ai' && ReactDOM.createPortal(
         <AiSuggestModal
           suggestions={modal.suggestions}
           tasks={tasks}
           onApply={handleApplyAi}
           onClose={() => setModal(null)}
-        />
+        />,
+        document.body
       )}
 
-      {quickCapture && (
+      {quickCapture && ReactDOM.createPortal(
         <QuickCapture
           onSave={handleAddTask}
           onClose={() => setQuickCapture(false)}
-        />
+        />,
+        document.body
       )}
 
-      {loading && (
+      {loading && ReactDOM.createPortal(
         <div className="loading-overlay">
           <div className="spinner"></div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
