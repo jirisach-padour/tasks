@@ -1224,7 +1224,7 @@ function OneOnOneView({ daktelaToken }) {
                     <span>{p.person} <span style={{opacity:.6,fontWeight:400}}>({p.count})</span></span>
                     {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní bez 1on1'} />}
                   </button>
-                  <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '' }); }}>✎</button>
+                  <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null }); }}>✎</button>
                 </div>
               )}
             </div>

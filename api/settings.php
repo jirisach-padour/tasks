@@ -50,9 +50,9 @@ if ($newPass !== '') {
         exit;
     }
     $hash = password_hash($newPass, PASSWORD_BCRYPT);
-    $content = preg_replace(
+    $content = preg_replace_callback(
         "/define\('APP_PASS_HASH',\s*'[^']*'\);/",
-        "define('APP_PASS_HASH', '" . $hash . "');",
+        function() use ($hash) { return "define('APP_PASS_HASH', '" . $hash . "');"; },
         $content
     );
 }

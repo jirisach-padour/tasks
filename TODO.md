@@ -24,7 +24,7 @@
 
 ## Otevřené — bugs (2026-04-26)
 
-- [ ] **1on1 — profil osoby se nenačte do editace** — po uložení profilu, zavření formuláře a opětovném otevření (✎) jsou políčka prázdná;  objekt nemá  z  state (people list vrací profile, ale při setEditingPerson se nepředává)
+- [x] **1on1 — profil osoby se nenačte do editace** — po uložení profilu, zavření formuláře a opětovném otevření (✎) jsou políčka prázdná;  objekt nemá  z  state (people list vrací profile, ale při setEditingPerson se nepředává)
 
 ## Nápady / budoucí rozvoj
 
@@ -57,3 +57,5 @@
 - [x] Daktela tickety DB cache (bez tokenu po refresh stránky)
 - [x] AI návrh priorit (Claude Sonnet 4.6)
 - [x] Daktela nested filter formát (správný filter[filters][N] formát)
+
+- [ ] **Settings — redesign UX** — aktuální SettingsModal je generický formulář; inspirovat se dobrými systémy (např. GitHub/Linear settings): sekce Účet s avatar/jménem nahoře, inline editace jednotlivých polí (ne celý formulář najednou), potvrzení změny hesla přes současné heslo + nové heslo + zopakovat, success/error feedback přímo u pole (ne alert), tlačítka Uložit jen u změněného pole

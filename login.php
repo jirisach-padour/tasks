@@ -8,9 +8,9 @@ function e(mixed $v): string {
 
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', 1);
-ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.cookie_samesite', 'Lax');
 ini_set('session.gc_maxlifetime', 2592000); // 30 dní
-session_set_cookie_params(['lifetime' => 2592000, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Strict']);
+session_set_cookie_params(['lifetime' => 2592000, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
 session_start();
 
 $error = '';
@@ -73,7 +73,7 @@ body{font-family:var(--font);font-size:14px;background:var(--navy);min-height:10
     <form method="POST" autocomplete="on">
       <div class="field">
         <label for="username">Uživatelské jméno</label>
-        <input type="text" id="username" name="username" value="<?= e($_POST['username'] ?? '') ?>" autofocus autocomplete="username">
+        <input type="text" id="username" name="username" value="<?= e($_POST['username'] ?? '') ?>" autofocus autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="field">
         <label for="password">Heslo</label>

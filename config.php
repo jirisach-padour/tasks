@@ -9,9 +9,9 @@ require_once $secrets;
 function requireAuth(): void {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.cookie_secure', 1);
-    ini_set('session.cookie_samesite', 'Strict');
+    ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.gc_maxlifetime', 2592000); // 30 dní
-    session_set_cookie_params(['lifetime' => 2592000, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Strict']);
+    session_set_cookie_params(['lifetime' => 2592000, 'path' => '/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
     session_start();
     if (empty($_SESSION['authenticated'])) {
         if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
