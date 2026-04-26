@@ -154,6 +154,8 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .fab{display:none;position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:100;align-items:center;justify-content:center;font-family:var(--font)}
 /* Sidebar hamburger (tablet) */
 .sidebar-toggle{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--font)}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:149}
+.sidebar-backdrop.active{display:block}
 /* Loading */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.6);z-index:300;display:flex;align-items:center;justify-content:center}
 .spinner{width:32px;height:32px;border:3px solid var(--grey-border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
@@ -227,7 +229,8 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 }
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
-  .sidebar-left{display:none}.sidebar-left.open{display:block}
+  .sidebar-left{display:none}
+  .sidebar-left.open{position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
 }
@@ -265,6 +268,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 <main class="container">
   <div id="app-root" style="position:absolute;width:0;height:0;overflow:visible"></div>
   <div class="layout" id="layout">
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
     <aside class="sidebar-left" id="sidebarLeft"></aside>
     <div id="mainContent"></div>
     <aside class="sidebar-right" id="sidebarRight"></aside>
@@ -1689,9 +1693,14 @@ function App() {
     document.getElementById('fab').onclick = () => setModal({ type: 'task' });
 
     // Sidebar toggle
-    document.getElementById('sidebarToggle').onclick = () => {
-      document.getElementById('sidebarLeft').classList.toggle('open');
-    };
+    const backdrop = document.getElementById('sidebarBackdrop');
+    const sidebar = document.getElementById('sidebarLeft');
+    function toggleSidebar(){
+      sidebar.classList.toggle('open');
+      backdrop.classList.toggle('active');
+    }
+    document.getElementById('sidebarToggle').onclick = toggleSidebar;
+    backdrop.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('active'); };
 
     // Cmd+K = quick capture
     function handleKeyDown(e) {
