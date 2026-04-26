@@ -233,6 +233,9 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
   .sidebar-left.open{position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
   .sidebar-toggle{display:inline-flex;align-items:center}
   .fab{display:flex}
+  .onenon-layout{flex-direction:column;padding:12px;gap:12px}
+  .onenon-sidebar{width:100%}
+  .onenon-main{overflow-y:visible}
 }
 @media(max-width:600px){
   .matrix{grid-template-columns:1fr}
@@ -615,11 +618,20 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
   }
 
   const cardClass = 'task-card' + (isOverdue ? ' overdue' : '');
+  const touchStartPos = useRef(null);
 
   return (
     <div
       className={cardClass}
       onClick={() => !editing && onEdit(task)}
+      onTouchStart={e => { touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }}
+      onTouchEnd={e => {
+        if (!touchStartPos.current || editing) return;
+        const dx = Math.abs(e.changedTouches[0].clientX - touchStartPos.current.x);
+        const dy = Math.abs(e.changedTouches[0].clientY - touchStartPos.current.y);
+        touchStartPos.current = null;
+        if (dx < 10 && dy < 10) { e.preventDefault(); onEdit(task); }
+      }}
       draggable
       onDragStart={e => { e.dataTransfer.setData('taskId', task.id); e.currentTarget.classList.add('dragging'); if (onDragStart) onDragStart(task); }}
       onDragEnd={e => e.currentTarget.classList.remove('dragging')}
