@@ -26,6 +26,12 @@
 
 - [x] **1on1 — profil osoby se nenačte do editace** — po uložení profilu, zavření formuláře a opětovném otevření (✎) jsou políčka prázdná;  objekt nemá  z  state (people list vrací profile, ale při setEditingPerson se nepředává)
 
+
+## Otevřené — nové funkce (2026-04-26)
+
+- [ ] **1on1 záložka — skrýt pravý sidebar** — na 1on1 záložce schovat pravý sidebar (tickety + kalendář nejsou relevantní při vedení rozhovoru); zvážit jestli i levý (KPI + checklist) nebo jen pravý
+- [ ] **Favicon** — ikonka v záhlaví tabu prohlížeče; návrh: stylizované "T" v navy barvě nebo jednoduchá ikona matice
+
 ## Nápady / budoucí rozvoj
 
 - [ ] Push notifikace / reminder pro overdue tasky
