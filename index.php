@@ -8,6 +8,7 @@ requireAuth();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tasks</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B3468'/><rect x='6' y='6' width='9' height='9' rx='2' fill='%23E05C4E'/><rect x='17' y='6' width='9' height='9' rx='2' fill='rgba(255,255,255,0.4)'/><rect x='6' y='17' width='9' height='9' rx='2' fill='rgba(255,255,255,0.4)'/><rect x='17' y='17' width='9' height='9' rx='2' fill='rgba(255,255,255,0.15)'/></svg>">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -16,11 +17,11 @@ requireAuth();
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(--navy)}
 /* Header */
-.app-header{background:var(--navy);padding:12px 0 0}
+.app-header{background:linear-gradient(135deg,#1B3468 0%,#152a52 100%);padding:12px 0 0}
 .container{max-width:1600px;margin:0 auto;padding:0 24px}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px}
-.app-header h1{color:#fff;font-size:20px;font-weight:700;letter-spacing:-.2px}
-.header-desc{color:rgba(255,255,255,.55);font-size:12px;margin-top:2px}
+.app-header h1{color:#fff;font-size:18px;font-weight:700;letter-spacing:-.2px}
+.header-desc{color:rgba(255,255,255,.5);font-size:11px;margin-top:1px}
 .header-actions{display:flex;gap:8px;align-items:center}
 /* Tabs */
 .tab-bar{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -243,7 +244,17 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
     <div class="header-inner">
       <div style="display:flex;align-items:center;gap:12px">
         <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-        <h1>Tasks</h1>
+        <svg width="26" height="26" viewBox="0 0 32 32" style="flex-shrink:0;border-radius:5px">
+          <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.12)"/>
+          <rect x="6" y="6" width="9" height="9" rx="2" fill="#E05C4E"/>
+          <rect x="17" y="6" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
+          <rect x="6" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
+          <rect x="17" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.18)"/>
+        </svg>
+        <div>
+          <h1>Tasks</h1>
+          <p class="header-desc">Jiří Šach · Prioritizace</p>
+        </div>
       </div>
       <div class="header-actions" id="headerActions"></div>
     </div>
@@ -1178,7 +1189,7 @@ function OneOnOneContextPanel({ ctx }) {
   );
 }
 
-function OneOnOneView({ daktelaToken, onContextChange }) {
+function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [people, setPeople] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
   const [selectedDesc, setSelectedDesc] = React.useState('');
@@ -1284,6 +1295,12 @@ function OneOnOneView({ daktelaToken, onContextChange }) {
             {warnPeople.length > 0 && <div className="onenon-dashboard-row" style={{marginTop:4}}><span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span><span>{warnPeople.map(p => p.person).join(', ')}</span></div>}
           </div>
         )}
+        {!daktelaToken && (
+          <div style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:6,padding:'8px 10px',marginBottom:10,fontSize:12}}>
+            <div style={{color:'var(--grey-text)',marginBottom:6}}>Pro načtení agentů připoj Daktelu.</div>
+            <button className="btn btn-secondary" style={{width:'100%',fontSize:11}} onClick={onConnectDaktela}>Připojit Daktelu</button>
+          </div>
+        )}
         <div className="section-title" style={{marginBottom:8}}>Lidé</div>
         {people.map(p => {
           const isEditing = editingPerson && editingPerson.name === p.person;
@@ -1319,8 +1336,6 @@ function OneOnOneView({ daktelaToken, onContextChange }) {
               <div className="section-title">{selected}</div>
               <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
             </div>
-            {selectedDesc && <div className="onenon-person-desc">{selectedDesc}</div>}
-            {selectedProfile && <PersonProfile profile={selectedProfile} />}
             {notes.length === 0 && <div style={{color:'var(--grey-text)',fontSize:13}}>Zatím žádné záznamy</div>}
             {notes.map(n => (
               <div key={n.id} className="onenon-note-card">
@@ -1928,7 +1943,7 @@ function App() {
           : activeTab === 'history'
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : activeTab === 'onenon'
-          ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} />
+          ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
           : (
             <>
               <div className="matrix">
