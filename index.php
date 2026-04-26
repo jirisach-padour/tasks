@@ -227,25 +227,13 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 }
 @media(max-width:900px){
   .layout{grid-template-columns:1fr}
-  .sidebar-left{display:none}
-  .sidebar-left.open{position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
-  .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:149}
-  .sidebar-backdrop.active{display:block}
+  .sidebar-left{display:none}.sidebar-left.open{display:block}
   .sidebar-toggle{display:inline-flex;align-items:center}
-  .fab{display:flex;bottom:calc(20px + env(safe-area-inset-bottom,0px))}
-  .layout{padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
-  .task-card{min-height:44px}
-  .task-del{padding:6px 8px}
-  .task-checkbox{width:20px;height:20px}
-  .cl-item{padding:10px 2px}
-  .container{padding:0 12px}
+  .fab{display:flex}
 }
 @media(max-width:600px){
   .matrix{grid-template-columns:1fr}
   .form-row{grid-template-columns:1fr}
-  .modal-overlay{align-items:flex-end;padding:0}
-  .modal{border-radius:12px 12px 0 0;padding:20px 16px;max-height:85vh}
-  .qc-overlay{padding-top:60px}
 }
 </style>
 </head>
@@ -277,7 +265,6 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 <main class="container">
   <div id="app-root" style="position:absolute;width:0;height:0;overflow:visible"></div>
   <div class="layout" id="layout">
-    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
     <aside class="sidebar-left" id="sidebarLeft"></aside>
     <div id="mainContent"></div>
     <aside class="sidebar-right" id="sidebarRight"></aside>
@@ -1702,14 +1689,9 @@ function App() {
     document.getElementById('fab').onclick = () => setModal({ type: 'task' });
 
     // Sidebar toggle
-    const backdrop = document.getElementById('sidebarBackdrop');
-    const sidebar = document.getElementById('sidebarLeft');
-    function toggleSidebar(){
-      sidebar.classList.toggle('open');
-      backdrop.classList.toggle('active');
-    }
-    document.getElementById('sidebarToggle').onclick = toggleSidebar;
-    backdrop.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('active'); };
+    document.getElementById('sidebarToggle').onclick = () => {
+      document.getElementById('sidebarLeft').classList.toggle('open');
+    };
 
     // Cmd+K = quick capture
     function handleKeyDown(e) {
