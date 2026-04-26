@@ -299,8 +299,8 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
         <div class="demo-panel">
           <div class="dp-title">KPI — dnes</div>
           <div class="kpi-mini">
-            <div class="kpi-box"><div class="val">87<small style="font-size:11px">%</small></div><div class="lbl">SLA</div></div>
-            <div class="kpi-box"><div class="val">4.2<small style="font-size:9px">h</small></div><div class="lbl">First resp.</div></div>
+            <div class="kpi-box"><div class="val">14</div><div class="lbl">Hotovo</div></div>
+            <div class="kpi-box"><div class="val">3</div><div class="lbl">Otevřeno</div></div>
           </div>
           <div class="dp-title" style="margin-top:4px">Checklist dnešku</div>
           <div class="cl-item done"><input type="checkbox" checked onclick="return false"> <span>Denní standup</span></div>
@@ -550,7 +550,22 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
         <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Secrets (hesla, API klíče) mimo webroot v <code style="background:rgba(0,0,0,.08);padding:1px 4px;border-radius:3px">/etc/tasks/secrets.php</code> — git je nevidí</span></div>
         <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>HTTPS povinné — server odmítá nešifrované spojení</span></div>
         <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Brute-force throttling na přihlašování — 1s zpoždění při nesprávném hesle</span></div>
-        <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Google OAuth token uložen jen v DB, nikoli v cookie nebo URL</span></div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #c0d0e8">
+        <div style="font-size:11px;font-weight:700;color:#1B3468;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Daktela integrace</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#1B3468">
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Přihlašuje se <strong>tvým vlastním Daktela loginem a heslem</strong> — stejně jako do Daktely v prohlížeči</span></div>
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Přihlašovací údaje putují přímo na Daktela API přes HTTPS — aplikace je nikde neukládá</span></div>
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Výsledný přístupový token se ukládá jen do session (platí do zavření prohlížeče)</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid #c0d0e8">
+        <div style="font-size:11px;font-weight:700;color:#1B3468;margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Google Kalendář</div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#1B3468">
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Propojení přes OAuth 2.0 — přihlašuješ se přes Google, aplikace nikdy nevidí tvé Google heslo</span></div>
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>Oprávnění je <strong>pouze pro čtení</strong> — aplikace zobrazuje události, nemůže nic vytvořit, upravit ani smazat</span></div>
+          <div style="display:flex;gap:8px"><span style="font-weight:800;flex-shrink:0">✓</span><span>OAuth token uložen jen v databázi, nikoli v cookie nebo URL</span></div>
+        </div>
       </div>
     </div>
   </div>
