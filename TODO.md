@@ -73,3 +73,21 @@
 ## Otevřené — nové funkce (2026-04-27)
 
 - [ ] **Rychlý checklist — editace položek** — možnost editovat text již vytvořené položky v rychlém checklistu (aktuálně lze jen přidat/odškrtnout/smazat)
+
+## Otevřené — nové funkce: Denní plán
+
+- [ ] **Záložka / panel Dnes** — uspořádaný seznam tasků plánovaných na dnešek, s drag & drop řazením (daily_order INT NULL v DB)
+- [ ] **Přetažení z matice do Dnes** — přidá task do denního plánu + nastaví deadline na dnešek
+- [ ] **Odškrtnutí v Dnes** — odškrtne task globálně (zrcadlí stav v matici)
+- [ ] **Reset Dnes ráno** — při otevření nového dne zobrazit dialog: co přesunout dál, co zahodit
+
+## Otevřené — nové funkce: AI asistent
+
+- [ ] **AI kontext z DB (fáze 1)** — rozšířit AI prompt o 1on1 záznamy, profily lidí, Daktela cache; umožnit dotazy jako připrav podklady pro 1on1 s Václavem
+- [ ] **Chat okýnko (fáze 2)** — Copilot-style sidebar pro přirozené dotazy nad vlastními daty (tasky, kalendář, 1on1, profily)
+
+## Otevřené — nové funkce: Samoučení přes MCP
+
+- [ ] **Denní cron — aktualizace personal context** — skript na hetzner-personal jednou denně přečte stav DB (tasky, 1on1, Daktela cache), pošle Claude API, ten přepíše ~/personal-context-portfolio/projects/tasks-context.md; auto-commit hook pushne na GitHub → MCP server stáhne při příštím použití
+- [ ] **Obsah tasks-context.md** — aktuální priority, kdo co řeší, trend z 1on1 (mood, action items), vzorce chování (co se opakovaně přesouvá, kde se tráví čas)
+- [ ] **Samoučení** — při každém průchodu porovnat předchozí stav souboru s novým stavem DB (naplánováno vs. splněno), postupně zpřesňovat komentáře a odhady
