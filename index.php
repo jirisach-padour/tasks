@@ -153,6 +153,11 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 /* Daktela auth modal */
 .daktela-connect{text-align:center;padding:8px 0}
 /* Floating + button (mobile) */
+.todo-footer-link{display:block;text-align:center;padding:10px 0 16px;font-size:11px;color:var(--grey-text);opacity:.6;cursor:pointer;user-select:none;text-decoration:none}.todo-footer-link:hover{opacity:1;color:var(--navy)}
+.todo-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;display:flex;align-items:center;justify-content:center}
+.todo-modal-box{background:#fff;border-radius:10px;width:min(720px,95vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.todo-modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--grey-border);font-weight:600;font-size:15px}
+.todo-modal-body{overflow-y:auto;padding:18px 22px;font-size:13px;line-height:1.7;white-space:pre-wrap;font-family:monospace}
 .fab{display:none;position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:100;align-items:center;justify-content:center;font-family:var(--font)}
 /* Sidebar hamburger (tablet) */
 .sidebar-toggle{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--font)}
@@ -284,6 +289,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
   </div>
 </main>
 
+<a class="todo-footer-link" id="todoFooterLink">TODO</a>
 <button class="fab" id="fab">+</button>
 <div id="modals"></div>
 <div class="toast" id="toast"></div>
@@ -1701,6 +1707,7 @@ function App() {
 
     // FAB
     document.getElementById('fab').onclick = () => setModal({ type: 'task' });
+    document.getElementById('todoFooterLink').onclick = () => setModal({ type: 'todo' });
 
     // Sidebar toggle
     const backdrop = document.getElementById('sidebarBackdrop');
@@ -2054,6 +2061,11 @@ function App() {
         document.body
       )}
 
+      {modal?.type === 'todo' && ReactDOM.createPortal(
+        <TodoModal onClose={() => setModal(null)} />,
+        document.body
+      )}
+
       {quickCapture && ReactDOM.createPortal(
         <QuickCapture
           onSave={handleAddTask}
@@ -2069,6 +2081,27 @@ function App() {
         document.body
       )}
     </>
+  );
+}
+
+function TodoModal({ onClose }) {
+  const [content, setContent] = React.useState('Načítám...');
+  React.useEffect(() => {
+    fetch('api.php?action=todo')
+      .then(r => r.json())
+      .then(d => setContent(d.content || '(prázdné)'))
+      .catch(() => setContent('Chyba načítání'));
+  }, []);
+  return (
+    <div className="todo-modal-overlay" onClick={onClose}>
+      <div className="todo-modal-box" onClick={e => e.stopPropagation()}>
+        <div className="todo-modal-header">
+          <span>TODO.md</span>
+          <button className="btn-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="todo-modal-body">{content}</div>
+      </div>
+    </div>
   );
 }
 
