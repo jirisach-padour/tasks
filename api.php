@@ -17,6 +17,10 @@ match($action) {
     'ai_suggest'     => require __DIR__ . '/api/ai.php',
     'onenon'         => require __DIR__ . '/api/onenon.php',
     'settings'        => require __DIR__ . '/api/settings.php',
+    'todo'           => (function() {
+        $md = file_get_contents(__DIR__ . '/TODO.md');
+        echo json_encode(['content' => $md]);
+    })(),
     'logout'         => (function() {
         session_destroy();
         echo json_encode(['ok' => true]);
