@@ -69,3 +69,7 @@
 - [x] Daktela nested filter formát (správný filter[filters][N] formát)
 
 - [x] **Settings — redesign UX** — aktuální SettingsModal je generický formulář; inspirovat se dobrými systémy (např. GitHub/Linear settings): sekce Účet s avatar/jménem nahoře, inline editace jednotlivých polí (ne celý formulář najednou), potvrzení změny hesla přes současné heslo + nové heslo + zopakovat, success/error feedback přímo u pole (ne alert), tlačítka Uložit jen u změněného pole
+
+## Otevřené — nové funkce (2026-04-27)
+
+- [ ] **Rychlý checklist — editace položek** — možnost editovat text již vytvořené položky v rychlém checklistu (aktuálně lze jen přidat/odškrtnout/smazat)
