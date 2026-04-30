@@ -878,8 +878,14 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
 }
 
 // ---- Calendar Panel ----
-function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTask }) {
+function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTask, onRefresh }) {
   const [maxH, sizeLabel, cycleSize] = usePanelHeight('calendar', 1);
+  const [refreshing, setRefreshing] = React.useState(false);
+  async function handleRefresh() {
+    setRefreshing(true);
+    try { await onRefresh(); } catch(e) {}
+    setRefreshing(false);
+  }
   const dayGroups = events.reduce((acc, e) => {
     const key = e.dayLabel + '|' + e.date;
     if (!acc.find(g => g.key === key)) acc.push({ key, label: e.dayLabel, date: e.date, events: [] });
@@ -893,6 +899,7 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
         Kalendář
         <span style={{display:'flex',gap:6,alignItems:'center'}}>
           {connected && <button onClick={cycleSize} title="Výška panelu" style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'10px',color:'var(--grey-text)',padding:'1px 6px',fontWeight:700,fontFamily:'var(--font)'}}>{sizeLabel}</button>}
+          {connected && <button onClick={handleRefresh} disabled={refreshing} style={{background:'none',border:'none',cursor:'pointer',fontSize:'12px',color:'var(--grey-text)',padding:0}} title="Obnovit kalendář">{refreshing ? '...' : '↻'}</button>}
           {connected
             ? <button onClick={onDisconnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--grey-text)'}}>Odpojit</button>
             : <button onClick={onConnect} style={{background:'none',border:'none',cursor:'pointer',fontSize:'11px',color:'var(--navy)',fontWeight:700}}>Propojit</button>
@@ -1958,6 +1965,7 @@ function App() {
                   connected={calConnected}
                   onConnect={handleCalConnect}
                   onDisconnect={handleCalDisconnect}
+                  onRefresh={loadCalendar}
                   onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
                 />
               </div>
@@ -1982,6 +1990,7 @@ function App() {
             connected={calConnected}
             onConnect={handleCalConnect}
             onDisconnect={handleCalDisconnect}
+            onRefresh={loadCalendar}
             onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
           />
         </>,
