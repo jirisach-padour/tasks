@@ -113,7 +113,7 @@ switch ($method) {
         $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
-                $data[$f] = $f === 'daktela_tickets' ? json_encode($body[$f]) : ($body[$f] ?: null);
+                if ($f === 'daktela_tickets') { $data[$f] = json_encode($body[$f]); } elseif ($f === 'daily_order') { $data[$f] = $body[$f] === null ? null : (int)$body[$f]; } else { $data[$f] = $body[$f] ?: null; }
             }
         }
         // Dokončení tasku
