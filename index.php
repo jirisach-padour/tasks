@@ -741,13 +741,46 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask,
 }
 
 // ---- Checklist Panel ----
-function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete }) {
+function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete, onEdit }) {
   const [newTitle, setNewTitle] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editVal, setEditVal] = useState('');
 
   async function handleAdd() {
     if (!newTitle.trim()) return;
     await onAdd(newTitle);
     setNewTitle('');
+  }
+
+  function startEdit(i) {
+    setEditingId(i.id);
+    setEditVal(i.title);
+  }
+
+  async function commitEdit(i) {
+    const val = editVal.trim();
+    if (val && val !== i.title) await onEdit(i, val);
+    setEditingId(null);
+  }
+
+  function renderItem(i, isDone) {
+    return (
+      <div key={i.id} className="cl-item">
+        <input type="checkbox" checked={isDone} onChange={() => onToggle(i, !isDone)} />
+        {editingId === i.id
+          ? <input
+              className="cl-item-edit"
+              value={editVal}
+              autoFocus
+              onChange={e => setEditVal(e.target.value)}
+              onBlur={() => commitEdit(i)}
+              onKeyDown={e => { if (e.key === 'Enter') commitEdit(i); if (e.key === 'Escape') setEditingId(null); }}
+            />
+          : <span className={'cl-item-title' + (isDone ? ' done' : '')} onDoubleClick={() => !isDone && startEdit(i)}>{i.title}</span>
+        }
+        <button className="cl-del" onClick={() => onDelete(i)}>×</button>
+      </div>
+    );
   }
 
   const open = items.filter(i => !i.done);
@@ -759,20 +792,8 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete }) {
         Rychlý checklist
         {todayDone > 0 && <span className="badge badge-work">{todayDone} dnes</span>}
       </div>
-      {open.map(i => (
-        <div key={i.id} className="cl-item">
-          <input type="checkbox" checked={false} onChange={() => onToggle(i, true)} />
-          <span className="cl-item-title">{i.title}</span>
-          <button className="cl-del" onClick={() => onDelete(i)}>×</button>
-        </div>
-      ))}
-      {done.length > 0 && done.map(i => (
-        <div key={i.id} className="cl-item">
-          <input type="checkbox" checked={true} onChange={() => onToggle(i, false)} />
-          <span className="cl-item-title done">{i.title}</span>
-          <button className="cl-del" onClick={() => onDelete(i)}>×</button>
-        </div>
-      ))}
+      {open.map(i => renderItem(i, false))}
+      {done.length > 0 && done.map(i => renderItem(i, true))}
       <div className="cl-add-row">
         <input
           value={newTitle}
@@ -1791,6 +1812,11 @@ function App() {
     setChecklistItems(prev => prev.filter(i => i.id !== item.id));
   }
 
+  async function handleEditCl(item, newTitle) {
+    const result = await apiFetch('checklist', 'PUT', { title: newTitle }, { id: item.id });
+    setChecklistItems(prev => prev.map(i => i.id === item.id ? result.item : i));
+  }
+
   // Daktela → create task
   function handleDaktelaCreateTask(ticket) {
     setModal({
@@ -1877,6 +1903,8 @@ function App() {
   const workCount = openTasks.filter(t => t.type === 'work').length;
   const personalCount = openTasks.filter(t => t.type === 'personal').length;
   const q1Count = openTasks.filter(t => t.quadrant === 'urgent_important').length;
+  const q1Today = new Date().toISOString().slice(0, 10);
+  const q1DeadlineCount = openTasks.filter(t => t.quadrant === 'urgent_important' && t.due_date && t.due_date <= q1Today).length;
 
   const TABS = [
     { key: 'all', label: 'Vše', count: openTasks.length },
@@ -1930,8 +1958,8 @@ function App() {
               {t.label}{t.count !== null && t.count > 0 ? ' (' + t.count + ')' : ''}
             </button>
           ))}
-          {q1Count >= 3 && (
-            <span className="q1-alert" title={q1Count + ' urgentních+důležitých tasků!'} style={{marginLeft:8}}>{q1Count}</span>
+          {q1DeadlineCount > 0 && (
+            <span className="q1-alert" title={q1DeadlineCount + ' Q1 tasků s dnešním nebo prošlým deadlinem!'} style={{marginLeft:8}}>{q1DeadlineCount}</span>
           )}
         </div>,
         document.getElementById('tabBar')
@@ -1949,6 +1977,7 @@ function App() {
                 onAdd={handleAddCl}
                 onToggle={handleToggleCl}
                 onDelete={handleDeleteCl}
+                onEdit={handleEditCl}
               />
               <div className="sidebar-mobile-panels">
                 <DaktelaPanel
