@@ -34,7 +34,7 @@
 
 ## Otevřené — nové funkce (2026-04-26 #2)
 
-- [ ] **Alert na urgentní tasky** — upozornění v hlavičce nebo sidebaru pokud jsou v Q1 tasky s prošlým nebo dnešním deadlinem; inspirace z demo stránky kde to vypadalo užitečně
+- [x] **Alert na urgentní tasky** — upozornění v hlavičce nebo sidebaru pokud jsou v Q1 tasky s prošlým nebo dnešním deadlinem; inspirace z demo stránky kde to vypadalo užitečně
 
 ## Nápady / budoucí rozvoj
 
@@ -72,12 +72,12 @@
 
 ## Otevřené — nové funkce (2026-04-27)
 
-- [ ] **Rychlý checklist — editace položek** — možnost editovat text již vytvořené položky v rychlém checklistu (aktuálně lze jen přidat/odškrtnout/smazat)
+- [x] **Rychlý checklist — editace položek** — možnost editovat text již vytvořené položky v rychlém checklistu (aktuálně jen přidat/odškrtnout/smazat); double-click pro editaci
 
 ## Otevřené — nové funkce: Denní plán
 
-- [ ] **Záložka / panel Dnes** — uspořádaný seznam tasků plánovaných na dnešek, s drag & drop řazením (daily_order INT NULL v DB)
-- [ ] **Přetažení z matice do Dnes** — přidá task do denního plánu + nastaví deadline na dnešek
+- [x] **Záložka / panel Dnes** — uspořádaný seznam tasků plánovaných na dnešek, s drag & drop řazením (daily_order INT NULL v DB)
+- [x] **Přetažení z matice do Dnes** — tlačítko +D na každém tasku v matici přidá task do záložky Dnes
 - [ ] **Odškrtnutí v Dnes** — odškrtne task globálně (zrcadlí stav v matici)
 - [ ] **Reset Dnes ráno** — při otevření nového dne zobrazit dialog: co přesunout dál, co zahodit
 
