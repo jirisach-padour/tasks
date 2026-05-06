@@ -181,7 +181,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .task-title-input{font-size:13px;font-weight:500;width:100%;border:none;border-bottom:1px solid var(--navy);background:transparent;outline:none;font-family:var(--font);padding:0;color:var(--navy)}
 /* Q1 alert badge */
 .q1-alert{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#E63327;color:#fff;font-size:10px;font-weight:700;border-radius:50%;margin-left:6px;animation:pulse 1.5s ease-in-out infinite;cursor:pointer;position:relative;flex-shrink:0}
-.q1-popover{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--grey-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:260px;max-width:340px;z-index:9999;overflow:hidden}
+.q1-popover{position:fixed;background:#fff;border:1px solid var(--grey-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:260px;max-width:340px;z-index:9999;overflow:hidden}
 .q1-popover-header{padding:8px 12px;font-size:11px;font-weight:700;color:#E63327;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--grey-border);background:#FEF8F8}
 .q1-popover-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--grey-border);transition:background .1s}
 .q1-popover-item:last-child{border-bottom:none}
@@ -1050,6 +1050,7 @@ function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder })
 // ---- Q1AlertBadge ----
 function Q1AlertBadge({ tasks, onEditTask }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const ref = useRef(null);
   const today = new Date().toISOString().slice(0, 10);
 
@@ -1060,11 +1061,19 @@ function Q1AlertBadge({ tasks, onEditTask }) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
+  function handleToggle() {
+    if (!open && ref.current) {
+      const r = ref.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 6, left: Math.min(r.right - 260, window.innerWidth - 348) });
+    }
+    setOpen(v => !v);
+  }
+
   return (
-    <span ref={ref} className="q1-alert" onClick={() => setOpen(v => !v)} title="Q1 tasky s deadlinem — klikni pro detail">
+    <span ref={ref} className="q1-alert" onClick={handleToggle} title="Q1 tasky s deadlinem — klikni pro detail">
       {tasks.length}
-      {open && (
-        <div className="q1-popover" onClick={e => e.stopPropagation()}>
+      {open && ReactDOM.createPortal(
+        <div className="q1-popover" style={{top: pos.top, left: pos.left}} onClick={e => e.stopPropagation()}>
           <div className="q1-popover-header">Urgentní tasky s deadlinem</div>
           {tasks.map(t => {
             const daysUntil = Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000);
@@ -1077,7 +1086,8 @@ function Q1AlertBadge({ tasks, onEditTask }) {
               </div>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </span>
   );
