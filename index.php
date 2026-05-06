@@ -605,7 +605,7 @@ function AiSuggestModal({ suggestions, tasks, onApply, onClose }) {
 }
 
 // ---- TaskCard ----
-function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragStart }) {
+function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragStart, onAddToDaily }) {
   const tickets = task.daktela_tickets || [];
   const [editing, setEditing] = useState(false);
   const [editVal, setEditVal] = useState(task.title);
@@ -683,12 +683,15 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
         </div>
       </div>
       <button className="task-del" onClick={e => { e.stopPropagation(); onDelete(task); }} title="Smazat">×</button>
+      {onAddToDaily && (
+        <button className="task-del" title="Přidat do Dnes" onClick={e => { e.stopPropagation(); onAddToDaily(task); }} style={{color:'var(--navy)',fontSize:'11px',fontWeight:700,marginLeft:'-2px'}}>+D</button>
+      )}
     </div>
   );
 }
 
 // ---- Quadrant ----
-function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask, onInlineEdit, onMoveTask }) {
+function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask, onInlineEdit, onMoveTask, onAddToDaily }) {
   const [addTitle, setAddTitle] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const visible = tasks.filter(t =>
@@ -726,7 +729,7 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask,
         <div className="q-label">{q.label} {visible.length > 0 && <span style={{fontSize:'10px',fontWeight:400,color:'var(--grey-text)'}}>({visible.length})</span>}</div>
       </div>
       {visible.map(t => (
-        <TaskCard key={t.id} task={t} onToggleDone={onToggleDone} onEdit={onEdit} onDelete={onDelete} onInlineEdit={onInlineEdit} />
+        <TaskCard key={t.id} task={t} onToggleDone={onToggleDone} onEdit={onEdit} onDelete={onDelete} onInlineEdit={onInlineEdit} onAddToDaily={onAddToDaily} />
       ))}
       <div className="add-inline">
         <input
@@ -942,6 +945,97 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
           ))}
         </div>
       ))}</div>}
+    </div>
+  );
+}
+
+// ---- DnesView ----
+function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder }) {
+  const [dragId, setDragId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
+
+  const dnesTasks = tasks
+    .filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined)
+    .sort((a, b) => a.daily_order - b.daily_order);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  function handleDragStart(id) { setDragId(id); }
+  function handleDragOver(e, id) { e.preventDefault(); setDragOverId(id); }
+  function handleDrop(e, targetId) {
+    e.preventDefault();
+    setDragOverId(null);
+    if (dragId && dragId !== targetId) onReorder(dragId, targetId);
+    setDragId(null);
+  }
+  function handleDragEnd() { setDragId(null); setDragOverId(null); }
+
+  if (dnesTasks.length === 0) {
+    return (
+      <div style={{padding:'40px 24px',textAlign:'center',color:'var(--grey-text)'}}>
+        <div style={{fontSize:'32px',marginBottom:'12px'}}>📋</div>
+        <div style={{fontWeight:600,marginBottom:'6px'}}>Denní plán je prázdný</div>
+        <div style={{fontSize:'13px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{padding:'16px 0'}}>
+      <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',letterSpacing:'0.05em',textTransform:'uppercase',padding:'0 24px 12px'}}>
+        Dnes — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}
+      </div>
+      {dnesTasks.map((t, idx) => {
+        const isOverdue = t.due_date && t.due_date < today;
+        const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000) : null;
+        const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
+        return (
+          <div
+            key={t.id}
+            draggable
+            onDragStart={() => handleDragStart(t.id)}
+            onDragOver={e => handleDragOver(e, t.id)}
+            onDrop={e => handleDrop(e, t.id)}
+            onDragEnd={handleDragEnd}
+            style={{
+              display:'flex',alignItems:'center',gap:'10px',
+              padding:'10px 24px',
+              borderBottom:'1px solid var(--grey-border)',
+              background: dragOverId === t.id ? '#EBF0FF' : 'transparent',
+              opacity: dragId === t.id ? 0.4 : 1,
+              cursor:'grab',
+            }}
+          >
+            <span style={{color:'var(--grey-text)',fontSize:'12px',fontWeight:700,width:'18px',flexShrink:0}}>{idx + 1}</span>
+            <input
+              type="checkbox"
+              checked={false}
+              style={{accentColor:'var(--red)',width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
+              onChange={() => onToggleDone(t)}
+            />
+            <span
+              onClick={() => onEdit(t)}
+              style={{flex:1,fontSize:'14px',cursor:'pointer',color: isOverdue ? '#c0392b' : 'inherit',fontWeight: isOverdue ? 600 : 'normal'}}
+            >{t.title}</span>
+            {t.due_date && (
+              <span style={{fontSize:'11px',fontWeight:700,padding:'1px 6px',borderRadius:'4px',
+                background: isOverdue ? '#FEE8E7' : isSoon ? '#FFF4E0' : '#F4F5F7',
+                color: isOverdue ? '#E63327' : isSoon ? '#A06000' : 'var(--grey-text)',
+                flexShrink:0}}>
+                {isOverdue ? 'Prošlé' : daysUntil === 0 ? 'Dnes' : daysUntil + 'd'}
+              </span>
+            )}
+            <span className={'badge ' + (t.type === 'personal' ? 'badge-personal' : 'badge-work')} style={{flexShrink:0}}>
+              {t.type === 'personal' ? 'osobní' : 'práce'}
+            </span>
+            <button
+              title="Odebrat z denního plánu"
+              onClick={() => onRemoveFromDaily(t)}
+              style={{background:'none',border:'none',cursor:'pointer',color:'var(--grey-border)',fontSize:'14px',flexShrink:0,padding:'0 2px'}}
+            >×</button>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1838,6 +1932,36 @@ function App() {
   }
 
   // Drag & drop přesun
+  async function handleAddToDaily(task) {
+    const maxOrder = tasks.reduce((m, t) => (t.daily_order !== null && t.daily_order !== undefined) ? Math.max(m, t.daily_order) : m, 0);
+    const result = await apiFetch('tasks', 'PUT', { daily_order: maxOrder + 1 }, { id: task.id });
+    setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
+    toast('Přidáno do Dnes');
+  }
+
+  async function handleRemoveFromDaily(task) {
+    const result = await apiFetch('tasks', 'PUT', { daily_order: null }, { id: task.id });
+    setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
+  }
+
+  async function handleDnesReorder(dragId, targetId) {
+    const dnesSorted = tasks
+      .filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined)
+      .sort((a, b) => a.daily_order - b.daily_order);
+    const fromIdx = dnesSorted.findIndex(t => t.id === dragId);
+    const toIdx   = dnesSorted.findIndex(t => t.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const reordered = [...dnesSorted];
+    const [moved] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, moved);
+    const updates = reordered.map((t, i) => ({ id: t.id, daily_order: i + 1 }));
+    setTasks(prev => prev.map(t => {
+      const u = updates.find(u => u.id === t.id);
+      return u ? { ...t, daily_order: u.daily_order } : t;
+    }));
+    await Promise.all(updates.map(u => apiFetch('tasks', 'PUT', { daily_order: u.daily_order }, { id: u.id })));
+  }
+
   async function handleMoveTask(taskId, newQuadrant) {
     const task = tasks.find(t => t.id === taskId);
     if (!task || task.quadrant === newQuadrant) return;
@@ -1907,10 +2031,13 @@ function App() {
   const q1Today = new Date().toISOString().slice(0, 10);
   const q1DeadlineCount = openTasks.filter(t => t.quadrant === 'urgent_important' && t.due_date && t.due_date <= q1Today).length;
 
+  const dnesCount = openTasks.filter(t => t.daily_order !== null && t.daily_order !== undefined).length;
+
   const TABS = [
     { key: 'all', label: 'Vše', count: openTasks.length },
     { key: 'work', label: 'Pracovní', count: workCount },
     { key: 'personal', label: 'Osobní', count: personalCount },
+    { key: 'dnes', label: 'Dnes', count: dnesCount },
     { key: 'history', label: 'Historie', count: null },
     { key: 'onenon', label: '1on1', count: null },
   ];
@@ -2035,6 +2162,8 @@ function App() {
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : activeTab === 'onenon'
           ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
+          : activeTab === 'dnes'
+          ? <DnesView tasks={tasks} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} />
           : (
             <>
               <div className="matrix">
@@ -2050,6 +2179,7 @@ function App() {
                     onAddTask={handleAddTask}
                     onInlineEdit={handleInlineEdit}
                     onMoveTask={handleMoveTask}
+                    onAddToDaily={handleAddToDaily}
                   />
                 ))}
               </div>
