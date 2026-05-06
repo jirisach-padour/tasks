@@ -180,7 +180,14 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 /* Inline edit */
 .task-title-input{font-size:13px;font-weight:500;width:100%;border:none;border-bottom:1px solid var(--navy);background:transparent;outline:none;font-family:var(--font);padding:0;color:var(--navy)}
 /* Q1 alert badge */
-.q1-alert{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#E63327;color:#fff;font-size:10px;font-weight:700;border-radius:50%;margin-left:6px;animation:pulse 1.5s ease-in-out infinite}
+.q1-alert{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:#E63327;color:#fff;font-size:10px;font-weight:700;border-radius:50%;margin-left:6px;animation:pulse 1.5s ease-in-out infinite;cursor:pointer;position:relative;flex-shrink:0}
+.q1-popover{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--grey-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:260px;max-width:340px;z-index:9999;overflow:hidden}
+.q1-popover-header{padding:8px 12px;font-size:11px;font-weight:700;color:#E63327;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--grey-border);background:#FEF8F8}
+.q1-popover-item{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--grey-border);transition:background .1s}
+.q1-popover-item:last-child{border-bottom:none}
+.q1-popover-item:hover{background:#FEF8F8}
+.q1-popover-title{flex:1;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q1-popover-deadline{font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 /* Quick capture modal */
 .qc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:flex-start;justify-content:center;padding-top:120px}
@@ -1037,6 +1044,42 @@ function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder })
         );
       })}
     </div>
+  );
+}
+
+// ---- Q1AlertBadge ----
+function Q1AlertBadge({ tasks, onEditTask }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const today = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <span ref={ref} className="q1-alert" onClick={() => setOpen(v => !v)} title="Q1 tasky s deadlinem — klikni pro detail">
+      {tasks.length}
+      {open && (
+        <div className="q1-popover" onClick={e => e.stopPropagation()}>
+          <div className="q1-popover-header">Urgentní tasky s deadlinem</div>
+          {tasks.map(t => {
+            const daysUntil = Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000);
+            const isOverdue = daysUntil < 0;
+            const label = isOverdue ? 'Prošlé ' + Math.abs(daysUntil) + 'd' : daysUntil === 0 ? 'Dnes' : 'Za ' + daysUntil + 'd';
+            return (
+              <div key={t.id} className="q1-popover-item" onClick={() => { onEditTask(t); setOpen(false); }}>
+                <span className="q1-popover-title">{t.title}</span>
+                <span className="q1-popover-deadline" style={{background: isOverdue ? '#FEE8E7' : '#FFF4E0', color: isOverdue ? '#E63327' : '#A06000'}}>{label}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </span>
   );
 }
 
@@ -2029,7 +2072,7 @@ function App() {
   const personalCount = openTasks.filter(t => t.type === 'personal').length;
   const q1Count = openTasks.filter(t => t.quadrant === 'urgent_important').length;
   const q1Today = new Date().toISOString().slice(0, 10);
-  const q1DeadlineCount = openTasks.filter(t => t.quadrant === 'urgent_important' && t.due_date && t.due_date <= q1Today).length;
+  const q1DeadlineTasks = openTasks.filter(t => t.quadrant === 'urgent_important' && t.due_date && t.due_date <= q1Today);
 
   const dnesCount = openTasks.filter(t => t.daily_order !== null && t.daily_order !== undefined).length;
 
@@ -2086,8 +2129,8 @@ function App() {
               {t.label}{t.count !== null && t.count > 0 ? ' (' + t.count + ')' : ''}
             </button>
           ))}
-          {q1DeadlineCount > 0 && (
-            <span className="q1-alert" title={q1DeadlineCount + ' Q1 tasků s dnešním nebo prošlým deadlinem!'} style={{marginLeft:8}}>{q1DeadlineCount}</span>
+          {q1DeadlineTasks.length > 0 && (
+            <Q1AlertBadge tasks={q1DeadlineTasks} onEditTask={handleEditTask} />
           )}
         </div>,
         document.getElementById('tabBar')
