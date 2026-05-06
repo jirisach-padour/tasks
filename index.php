@@ -86,6 +86,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .cl-add-row input{flex:1;height:30px;padding:0 8px;border:1px solid var(--grey-border);border-radius:6px;font-size:13px;font-family:var(--font);outline:none}
 .cl-add-row input:focus{border-color:var(--navy)}
 .cl-add-row button{height:30px;padding:0 14px;background:var(--red);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+.cl-item-edit{flex:1;font-size:13px;font-family:var(--font);border:1px solid var(--navy);border-radius:4px;padding:0 4px;height:22px;outline:none;min-width:0}
 /* Daktela tickets */
 .ticket-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--grey-border)}
 .ticket-row:last-child{border-bottom:none}
