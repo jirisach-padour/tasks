@@ -56,6 +56,16 @@ switch ($method) {
             break;
         }
 
+        // Denní plán
+        if (!empty($_GET['daily'])) {
+            $rows = DB::q("SELECT * FROM tasks WHERE status = 'open' AND daily_order IS NOT NULL ORDER BY daily_order, created_at")->fetchAll();
+            foreach ($rows as &$r) {
+                $r['daktela_tickets'] = $r['daktela_tickets'] ? json_decode($r['daktela_tickets']) : [];
+            }
+            echo json_encode(['tasks' => $rows]);
+            break;
+        }
+
         $typeWhere = $type ? 'AND type = ?' : '';
         $params = $type ? [$type] : [];
         $rows = DB::q(
@@ -100,7 +110,7 @@ switch ($method) {
         if (!$id) { http_response_code(400); echo json_encode(['error' => 'Chybí id']); break; }
 
         $data = [];
-        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit'];
+        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 $data[$f] = $f === 'daktela_tickets' ? json_encode($body[$f]) : ($body[$f] ?: null);
