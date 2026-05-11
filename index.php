@@ -201,6 +201,17 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .onenon-dashboard{background:var(--grey-bg);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px}
 .onenon-dashboard-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .onenon-warn{color:#C94F42;font-weight:700}
+.onenon-ai-badge{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;background:#E74C3C;color:#fff;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;line-height:1}
+.onenon-ai-badge:hover{background:#C0392B}
+.onenon-ai-popover{position:absolute;top:28px;right:0;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto;background:#fff;border:1px solid #ddd;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:1000;padding:6px 0}
+.onenon-ai-group{border-bottom:1px solid #f0f0f0}
+.onenon-ai-group:last-child{border-bottom:none}
+.onenon-ai-group-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-weight:700;font-size:13px;color:#1a1a2e;cursor:pointer;background:#F8F9FA}
+.onenon-ai-group-header:hover{background:#eef0f3}
+.onenon-ai-count{background:#E74C3C;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px}
+.onenon-ai-item{display:flex;align-items:flex-start;padding:5px 14px 5px 24px;font-size:13px;color:#333;cursor:pointer;gap:6px}
+.onenon-ai-item:hover{background:#FFF4E0}
+.onenon-ai-dot{width:6px;height:6px;border-radius:50%;background:#E74C3C;flex-shrink:0;margin-top:5px}
 .onenon-person-item{padding:8px 12px;border-radius:6px;cursor:pointer;margin-bottom:4px;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between;background:var(--grey-bg);color:var(--navy);border:none;width:100%;text-align:left}
 .onenon-person-item.active{background:var(--navy);color:#fff}
 .onenon-person-warn{width:8px;height:8px;border-radius:50%;background:#E05C4E;flex-shrink:0}
@@ -1047,6 +1058,42 @@ function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder })
   );
 }
 
+// ---- ActionItemsPopover (1on1 open action items) ----
+function ActionItemsPopover({ people, onSelectPerson }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const groups = people.filter(p => (p.open_action_items || []).length > 0);
+  const total = groups.reduce((s, p) => s + p.open_action_items.length, 0);
+  useEffect(() => {
+    if (!open) return;
+    function h(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+  if (total === 0) return null;
+  return (
+    <span ref={ref} style={{position:'relative',display:'inline-block'}}>
+      <span className="onenon-ai-badge" onClick={() => setOpen(v => !v)}>{total}</span>
+      {open && (
+        <div className="onenon-ai-popover">
+          {groups.map(p => (
+            <div key={p.person} className="onenon-ai-group">
+              <div className="onenon-ai-group-header" onClick={() => { onSelectPerson(p.person); setOpen(false); }}>
+                {p.person}<span className="onenon-ai-count">{p.open_action_items.length}</span>
+              </div>
+              {p.open_action_items.map((text, i) => (
+                <div key={i} className="onenon-ai-item" onClick={() => { onSelectPerson(p.person); setOpen(false); }}>
+                  <span className="onenon-ai-dot" />{text}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
+
 // ---- Q1AlertBadge ----
 function Q1AlertBadge({ tasks, onEditTask }) {
   const [open, setOpen] = useState(false);
@@ -1487,7 +1534,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
       <div className="onenon-sidebar">
         {(totalOpen > 0 || warnPeople.length > 0) && (
           <div className="onenon-dashboard">
-            {totalOpen > 0 && <div className="onenon-dashboard-row"><span>Otevřené action items:</span><span className="onenon-warn">{totalOpen}</span></div>}
+            {totalOpen > 0 && <div className="onenon-dashboard-row"><span>Otevřené action items:</span><ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} /></div>}
             {warnPeople.length > 0 && <div className="onenon-dashboard-row" style={{marginTop:4}}><span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span><span>{warnPeople.map(p => p.person).join(', ')}</span></div>}
           </div>
         )}
