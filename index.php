@@ -195,6 +195,73 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .qc-modal input{width:100%;font-size:16px;border:none;outline:none;font-family:var(--font);color:var(--navy);padding:4px 0}
 .qc-hint{font-size:11px;color:var(--grey-text);margin-top:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
+/* Stale task */
+.task-card.stale-mid{background:#FAFAFA;border-color:#e8e8e8}
+.task-card.stale-old{background:#F6F6F6;border-color:#e0e0e0;opacity:.88}
+.stale-bar{position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 0 7px;pointer-events:none}
+.stale-bar.mid{background:linear-gradient(90deg,#F5A623 0%,transparent 100%);width:40%}
+.stale-bar.old{background:linear-gradient(90deg,#ccc 0%,transparent 100%);width:70%}
+.stale-age{font-size:10px;color:#bbb;font-weight:600;padding:1px 5px;background:#f0f0f0;border-radius:4px}
+.stale-age.warn{color:#c94f42;background:#fee8e7}
+/* Task description */
+.task-desc{font-size:11px;color:var(--grey-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}
+/* Dnes timeline */
+.dnes-split{display:grid;grid-template-columns:150px 1fr;height:100%;min-height:400px}
+.dnes-timeline-col{border-right:1px solid var(--grey-border);padding:12px 8px 12px 12px;overflow-y:auto}
+.dnes-timeline-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey-text);margin-bottom:10px}
+.dnes-time-row{display:flex;align-items:center;gap:5px;margin-bottom:1px}
+.dnes-time-val{font-size:10px;color:#bbb;width:30px;flex-shrink:0}
+.dnes-time-line{flex:1;height:1px;background:#eeee;margin-top:1px}
+.dnes-cal-block{margin:3px 0 6px 35px;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:default}
+.dnes-cal-block.work{background:#EBF4FF;border-left:3px solid var(--navy);color:var(--navy)}
+.dnes-cal-block.all-day{background:#F0EBF8;border-left:3px solid #7B5EA7;color:#5a3e8a}
+.dnes-free{font-size:11px;color:var(--green);font-weight:700;padding:3px 8px 5px 35px;display:flex;align-items:center;gap:4px}
+.dnes-tasks-col{padding:12px 16px;overflow-y:auto}
+@media(max-width:700px){.dnes-split{grid-template-columns:1fr}.dnes-timeline-col{display:none}}
+/* Morning ritual */
+.morning-ritual{background:linear-gradient(135deg,var(--navy) 0%,#2a4a8a 100%);border-radius:12px;padding:20px;color:#fff;margin:16px}
+.morning-title{font-size:18px;font-weight:800;margin-bottom:3px}
+.morning-sub{font-size:12px;opacity:.65;margin-bottom:14px}
+.morning-stats{display:flex;gap:10px;margin-bottom:14px}
+.morning-stat{background:rgba(255,255,255,.1);border-radius:7px;padding:7px 11px;font-size:11px;text-align:center}
+.morning-stat-val{font-size:17px;font-weight:800;line-height:1.2}
+.morning-tasks-list{background:rgba(255,255,255,.08);border-radius:8px;padding:10px;margin-bottom:14px}
+.morning-task-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;cursor:pointer;user-select:none}
+.morning-task-row:last-child{border-bottom:none;padding-bottom:0}
+.morning-cb{width:18px;height:18px;border:2px solid rgba(255,255,255,.4);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:11px;font-weight:700}
+.morning-cb.on{background:#4CAF50;border-color:#4CAF50}
+.morning-task-name{flex:1}
+.morning-task-q{font-size:10px;opacity:.55;font-weight:600}
+.morning-btns{display:flex;gap:8px}
+.btn-morning-skip{background:rgba(255,255,255,.12);color:#fff;border:none;padding:9px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-morning-go{background:var(--red);color:#fff;border:none;padding:9px 20px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;flex:1}
+/* What Now widget */
+.whatnow-wrap{margin-bottom:14px}
+.whatnow-btn{background:linear-gradient(135deg,#E8A020,#F5A623);color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.whatnow-btn:disabled{opacity:.6;cursor:default}
+.whatnow-result{margin-top:10px;background:#FFF9F0;border:1px solid #F5A623;border-radius:10px;padding:13px 15px}
+.whatnow-text{font-size:13px;color:#333;line-height:1.6;margin-bottom:10px}
+.whatnow-task{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #F5A623;border-radius:7px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer}
+.whatnow-task:hover{background:#fffbf0}
+.whatnow-arrow{color:var(--orange);font-size:15px}
+.whatnow-dismiss{font-size:11px;color:#bbb;cursor:pointer;text-align:right;margin-top:7px}
+/* 1on1 Prep */
+.prep-modal-body{padding:0;max-height:70vh;overflow-y:auto}
+.prep-header{background:var(--navy);color:#fff;padding:14px 18px;border-radius:12px 12px 0 0}
+.prep-person-name{font-size:17px;font-weight:800;margin-bottom:2px}
+.prep-date-line{font-size:12px;opacity:.65}
+.prep-section{padding:12px 18px;border-bottom:1px solid var(--grey-bg)}
+.prep-section:last-child{border-bottom:none}
+.prep-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--grey-text);margin-bottom:7px}
+.prep-ai-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--grey-bg);font-size:13px}
+.prep-ai-item:last-child{border-bottom:none}
+.prep-ai-cb{width:14px;height:14px;border:2px solid #ccc;border-radius:3px;flex-shrink:0;margin-top:1px}
+.prep-ai-cb.done{background:var(--green);border-color:var(--green)}
+.prep-ai-done{text-decoration:line-through;color:#bbb}
+.prep-ai-from{font-size:10px;color:#bbb;margin-left:auto;flex-shrink:0}
+.prep-topic{display:flex;gap:7px;font-size:13px;padding:5px 0;color:#333}
+.prep-topic-dot{color:var(--orange);font-size:15px;line-height:1.1;flex-shrink:0}
+.prep-footer{display:flex;gap:8px;padding:10px 18px;background:var(--grey-bg);border-radius:0 0 12px 12px}
 /* Toast */
 .onenon-layout{display:flex;gap:20px;padding:20px;height:100%}
 .onenon-sidebar{width:220px;flex-shrink:0}
