@@ -1760,8 +1760,7 @@ function PrepDocModal({ person, notes, profile, onClose }) {
       lines.push('', 'Navrhovaná témata:');
       aiTopics.forEach(t => lines.push('• ' + t));
     }
-    navigator.clipboard.writeText(lines.join('
-')).catch(() => {});
+    navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
   }
 
   return (
