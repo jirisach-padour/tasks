@@ -1703,6 +1703,143 @@ function OneOnOneContextPanel({ ctx }) {
   );
 }
 
+// ---- PrepDocModal ----
+function PrepDocModal({ person, notes, profile, onClose }) {
+  const [aiTopics, setAiTopics] = React.useState(null);
+  const [aiLoading, setAiLoading] = React.useState(false);
+
+  const allActionItems = notes.flatMap(n =>
+    (n.action_items || []).map(it => ({ ...it, from: n.meeting_date }))
+  );
+  const openItems = allActionItems.filter(it => !it.done);
+  const doneItems = allActionItems.filter(it => it.done).slice(0, 3);
+
+  const lastNote = notes[0] || null;
+  const prevNote = notes[1] || null;
+  const moodTrend = lastNote && prevNote && lastNote.mood && prevNote.mood
+    ? (lastNote.mood > prevNote.mood ? 'zlepšení' : lastNote.mood < prevNote.mood ? 'zhoršení' : 'stabilní')
+    : null;
+
+  const recentTags = [...new Set(notes.slice(0, 3).flatMap(n => n.tags || []))];
+
+  const today = new Date().toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  const daysSince = lastNote
+    ? Math.floor((Date.now() - new Date(lastNote.meeting_date).getTime()) / 86400000)
+    : null;
+
+  async function loadAiTopics() {
+    setAiLoading(true);
+    try {
+      const d = await apiFetch('prep_topics', 'POST', {
+        person,
+        profile,
+        openItems: openItems.map(it => it.text),
+        recentTags,
+        moodTrend,
+        lastNoteDate: lastNote ? lastNote.meeting_date : null,
+      });
+      setAiTopics(d.topics || []);
+    } catch(e) { setAiTopics(['Nepodařilo se načíst návrhy.']); }
+    setAiLoading(false);
+  }
+
+  function copyToClipboard() {
+    const lines = [
+      '1on1 s ' + person + ' — ' + today,
+      '─'.repeat(40),
+    ];
+    if (lastNote) lines.push('Poslední schůzka: ' + lastNote.meeting_date + (daysSince !== null ? ' (' + daysSince + ' dní)' : ''));
+    if (moodTrend) lines.push('Nálada: ' + moodTrend);
+    if (recentTags.length) lines.push('Tagy: ' + recentTags.join(', '));
+    if (openItems.length) {
+      lines.push('', 'Otevřené action items (' + openItems.length + '):');
+      openItems.forEach(it => lines.push('• ' + it.text + ' (z ' + it.from + ')'));
+    }
+    if (aiTopics && aiTopics.length) {
+      lines.push('', 'Navrhovaná témata:');
+      aiTopics.forEach(t => lines.push('• ' + t));
+    }
+    navigator.clipboard.writeText(lines.join('
+')).catch(() => {});
+  }
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box" style={{padding:0,maxWidth:480,width:'95vw'}}>
+        <div className="prep-header">
+          <div className="prep-person-name">1on1 s {person}</div>
+          <div className="prep-date-line">{today}{daysSince !== null ? ' · Poslední schůzka: ' + daysSince + ' dní' : ''}</div>
+        </div>
+        <div className="prep-modal-body">
+          {lastNote && (
+            <div className="prep-section">
+              <div className="prep-section-label">Nálada & tagy</div>
+              <div style={{fontSize:13,marginBottom:4}}>
+                {prevNote && prevNote.mood && lastNote.mood && (
+                  <span>{'★'.repeat(prevNote.mood) + '☆'.repeat(5-prevNote.mood)} → {'★'.repeat(lastNote.mood) + '☆'.repeat(5-lastNote.mood)}
+                    {moodTrend && <span style={{color: moodTrend === 'zlepšení' ? 'var(--green)' : moodTrend === 'zhoršení' ? 'var(--red)' : 'var(--grey-text)',fontWeight:700,marginLeft:6}}>↑ {moodTrend}</span>}
+                  </span>
+                )}
+                {!prevNote && lastNote.mood && <span>{'★'.repeat(lastNote.mood) + '☆'.repeat(5-lastNote.mood)}</span>}
+              </div>
+              {recentTags.length > 0 && <div>{recentTags.map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}</div>}
+            </div>
+          )}
+
+          {(openItems.length > 0 || doneItems.length > 0) && (
+            <div className="prep-section">
+              <div className="prep-section-label">Action items ({openItems.length} otevřených)</div>
+              {openItems.map((it, i) => (
+                <div key={i} className="prep-ai-item">
+                  <div className="prep-ai-cb" />
+                  <div style={{flex:1,fontSize:13}}>{it.text}</div>
+                  <div className="prep-ai-from">z {it.from}</div>
+                </div>
+              ))}
+              {doneItems.map((it, i) => (
+                <div key={i} className="prep-ai-item">
+                  <div className="prep-ai-cb done" />
+                  <div className="prep-ai-done" style={{flex:1,fontSize:13}}>{it.text}</div>
+                  <div className="prep-ai-from" style={{color:'var(--green)'}}>splněno</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {profile && (
+            <div className="prep-section">
+              <div className="prep-section-label">Profil</div>
+              <div style={{fontSize:12,display:'flex',gap:12,flexWrap:'wrap'}}>
+                {profile.performance > 0 && <span>Výkon: {'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</span>}
+                {profile.potential && <span style={{background:{low:'#E8F5EC',medium:'#FFF4E0',high:'#FEE8E7'}[profile.potential]||'#eee',padding:'1px 7px',borderRadius:8,fontWeight:700,fontSize:11}}>{profile.potential}</span>}
+                {profile.strength && <span>💪 {profile.strength}</span>}
+                {profile.development && <span>🎯 {profile.development}</span>}
+              </div>
+            </div>
+          )}
+
+          <div className="prep-section">
+            <div className="prep-section-label" style={{marginBottom:8}}>Navrhovaná témata</div>
+            {!aiTopics && !aiLoading && (
+              <button className="btn btn-secondary" style={{fontSize:12}} onClick={loadAiTopics}>✦ Vygenerovat pomocí AI</button>
+            )}
+            {aiLoading && <div style={{fontSize:12,color:'var(--grey-text)'}}>Generuji...</div>}
+            {aiTopics && aiTopics.map((t, i) => (
+              <div key={i} className="prep-topic">
+                <span className="prep-topic-dot">·</span>{t}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="prep-footer">
+          <button className="btn btn-secondary prep-btn" style={{fontSize:12}} onClick={copyToClipboard}>Kopírovat</button>
+          <button className="btn btn-primary prep-btn" style={{fontSize:12,marginLeft:'auto'}} onClick={onClose}>Zavřít</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [people, setPeople] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
@@ -1712,6 +1849,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [modal, setModal] = React.useState(null);
   const [daktelaAgents, setDaktelaAgents] = React.useState([]);
   const [editingPerson, setEditingPerson] = React.useState(null);
+  const [prepDoc, setPrepDoc] = React.useState(false);
 
   React.useEffect(() => { loadPeople(); }, []);
 
@@ -1848,8 +1986,12 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
           <>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:selectedDesc ? 6 : 16}}>
               <div className="section-title">{selected}</div>
-              <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
+              <div style={{display:'flex',gap:6}}>
+                <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Podklady</button>
+                <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
+              </div>
             </div>
+            {prepDoc && <PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />}
             {notes.length === 0 && <div style={{color:'var(--grey-text)',fontSize:13}}>Zatím žádné záznamy</div>}
             {notes.map(n => (
               <div key={n.id} className="onenon-note-card">
