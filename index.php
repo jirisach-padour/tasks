@@ -2310,6 +2310,15 @@ function App() {
     toast('Přidáno do Dnes');
   }
 
+  async function handleBatchAddToDaily(ids) {
+    if (!ids || !ids.length) return;
+    const open = tasks.filter(t => t.status === 'open' && t.daily_order === null);
+    const toAdd = tasks.filter(t => ids.includes(t.id) && (t.daily_order === null || t.daily_order === undefined));
+    const maxOrder = tasks.reduce((m, t) => t.daily_order !== null && t.daily_order !== undefined ? Math.max(m, t.daily_order) : m, -1);
+    await Promise.all(toAdd.map((t, i) => apiFetch('tasks', 'PUT', { daily_order: maxOrder + 1 + i }, { id: t.id })));
+    await loadTasks();
+  }
+
   async function handleRemoveFromDaily(task) {
     const result = await apiFetch('tasks', 'PUT', { daily_order: null }, { id: task.id });
     setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
@@ -2534,7 +2543,7 @@ function App() {
           : activeTab === 'onenon'
           ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
           : activeTab === 'dnes'
-          ? <DnesView tasks={tasks} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} />
+          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} />
           : (
             <>
               <div className="matrix">
