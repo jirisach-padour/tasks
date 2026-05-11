@@ -15,6 +15,8 @@ match($action) {
     'daktela_cache'  => require __DIR__ . '/api/daktela.php',
     'calendar'       => require __DIR__ . '/api/calendar.php',
     'ai_suggest'     => require __DIR__ . '/api/ai.php',
+    'what_now'       => require __DIR__ . '/api/what_now.php',
+    'prep_topics'    => require __DIR__ . '/api/prep_topics.php',
     'onenon'         => require __DIR__ . '/api/onenon.php',
     'settings'        => require __DIR__ . '/api/settings.php',
     'todo'           => (function() {
