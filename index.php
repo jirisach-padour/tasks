@@ -1098,7 +1098,7 @@ function MorningRitual({ tasks, calEvents, onConfirm, onSkip }) {
       )}
       <div className="morning-btns">
         <button className="btn-morning-skip" onClick={onSkip}>Přeskočit</button>
-        <button className="btn-morning-go" onClick={() => onConfirm([...checked])}>
+        <button className="btn-morning-go" onClick={() => onConfirm(Array.from(checked))}>
           Potvrdit a začít →
         </button>
       </div>
@@ -1226,7 +1226,7 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
     );
   }
 
-  const TasksList = () => (
+  const dnesTasksJsx = (
     <div className="dnes-tasks-col">
       <div className="whatnow-wrap" style={{marginBottom:12}}>
         <WhatNowWidget tasks={tasks} calEvents={calEvents} />
@@ -1238,7 +1238,7 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
           <div style={{fontSize:'12px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
         </div>
       ) : (
-        <>
+        <React.Fragment>
           <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:'10px'}}>
             Dnes — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}
             {freeH > 0 && <span style={{marginLeft:8,color:'var(--green)',fontWeight:700}}>· {freeStr} volného</span>}
@@ -1291,14 +1291,14 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
               </div>
             );
           })}
-        </>
+        </React.Fragment>
       )}
     </div>
   );
 
   // If no calendar connected or no events → simple view without timeline split
   if (!todayEvents.length) {
-    return <TasksList />;
+    return dnesTasksJsx;
   }
 
   return (
@@ -1324,7 +1324,7 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
         })}
         {freeMinutes() > 0 && <div className="dnes-free">● {freeStr} volného</div>}
       </div>
-      <TasksList />
+      {dnesTasksJsx}
     </div>
   );
 }
@@ -1723,6 +1723,7 @@ function PrepDocModal({ person, notes, profile, onClose }) {
   const recentTags = [...new Set(notes.slice(0, 3).flatMap(n => n.tags || []))];
 
   const today = new Date().toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+  const potentialBg = { low: '#E8F5EC', medium: '#FFF4E0', high: '#FEE8E7' };
   const daysSince = lastNote
     ? Math.floor((Date.now() - new Date(lastNote.meeting_date).getTime()) / 86400000)
     : null;
@@ -1811,7 +1812,7 @@ function PrepDocModal({ person, notes, profile, onClose }) {
               <div className="prep-section-label">Profil</div>
               <div style={{fontSize:12,display:'flex',gap:12,flexWrap:'wrap'}}>
                 {profile.performance > 0 && <span>Výkon: {'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</span>}
-                {profile.potential && <span style={{background:{low:'#E8F5EC',medium:'#FFF4E0',high:'#FEE8E7'}[profile.potential]||'#eee',padding:'1px 7px',borderRadius:8,fontWeight:700,fontSize:11}}>{profile.potential}</span>}
+                {profile.potential && <span style={{background:potentialBg[profile.potential]||'#eee',padding:'1px 7px',borderRadius:8,fontWeight:700,fontSize:11}}>{profile.potential}</span>}
                 {profile.strength && <span>💪 {profile.strength}</span>}
                 {profile.development && <span>🎯 {profile.development}</span>}
               </div>
