@@ -51,7 +51,8 @@ function fetchEvents(string $token): array {
         $time     = $allDay ? '' : substr($startRaw, 11, 5);
         $dow      = (int)(new DateTime($date, new DateTimeZone($tz)))->format('w');
         $label    = $date === $todayDate ? 'Dnes' : ($date === $tomorrowDate ? 'Zítra' : $dayLabels[$dow] . ' ' . substr($date, 8, 2) . '.' . substr($date, 5, 2) . '.');
-        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label];
+        $durationH = (!$allDay && $endRaw) ? round((strtotime($endRaw) - strtotime($startRaw)) / 3600, 1) : 1;
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH];
     }
     return $events;
 }
