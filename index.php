@@ -700,6 +700,10 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
   const isOverdue = task.status === 'open' && task.due_date && task.due_date < today;
   const daysUntil = task.due_date ? Math.ceil((new Date(task.due_date) - new Date(today)) / 86400000) : null;
   const isSoon = !isOverdue && task.status === 'open' && daysUntil !== null && daysUntil <= 3;
+  const createdAt = task.created_at || task.updated_at || null;
+  const daysOld = createdAt ? Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000) : 0;
+  const isStaleOld = task.status === 'open' && daysOld >= 21;
+  const isStaleMid = task.status === 'open' && !isStaleOld && daysOld >= 7;
 
   function startEdit(e) {
     e.stopPropagation();
@@ -715,7 +719,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
     }
   }
 
-  const cardClass = 'task-card' + (isOverdue ? ' overdue' : '');
+  const cardClass = 'task-card' + (isOverdue ? ' overdue' : '') + (isStaleOld ? ' stale-old' : isStaleMid ? ' stale-mid' : '');
   const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window);
 
   return (
@@ -750,6 +754,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
               title="Dvojklik = rychlá editace názvu"
             >{task.title}</div>
         }
+        {task.description && <div className="task-desc">{task.description}</div>}
         <div className="task-meta">
           <span className={'badge ' + (task.type === 'personal' ? 'badge-personal' : 'badge-work')}>
             {task.type === 'personal' ? 'Osobní' : 'Work'}
@@ -771,6 +776,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
       {onAddToDaily && (
         <button className="task-del" title="Přidat do Dnes" onClick={e => { e.stopPropagation(); onAddToDaily(task); }} style={{color:'var(--navy)',fontSize:'11px',fontWeight:700,marginLeft:'-2px'}}>+D</button>
       )}
+      {(isStaleMid || isStaleOld) && <div className={'stale-bar ' + (isStaleOld ? 'old' : 'mid')} />}
     </div>
   );
 }
