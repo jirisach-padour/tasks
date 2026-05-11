@@ -56,9 +56,20 @@ if ($method === 'GET') {
              GROUP BY n.person, p.description, p.profile
              ORDER BY n.person ASC"
         )->fetchAll();
+        $openRows = DB::q("SELECT person, action_items FROM onenon_notes WHERE action_items IS NOT NULL AND action_items != '[]'")->fetchAll();
+        $openByPerson = [];
+        foreach ($openRows as $or) {
+            $items = json_decode($or['action_items'], true) ?: [];
+            foreach ($items as $it) {
+                if (empty($it['done'])) {
+                    $openByPerson[$or['person']][] = $it['text'];
+                }
+            }
+        }
         foreach ($rows as &$r) {
-            $r['count']      = (int)$r['count'];
-            $r['open_items'] = (int)($r['open_items'] ?? 0);
+            $r['count']             = (int)$r['count'];
+            $r['open_items']        = (int)($r['open_items'] ?? 0);
+            $r['open_action_items'] = $openByPerson[$r['person']] ?? [];
             $daysAgo = $r['last_meeting_date']
                 ? (int)((strtotime('today') - strtotime($r['last_meeting_date'])) / 86400)
                 : null;
