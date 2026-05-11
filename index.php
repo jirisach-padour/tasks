@@ -1040,10 +1040,142 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
   );
 }
 
+// ---- MorningRitual ----
+function MorningRitual({ tasks, calEvents, onConfirm, onSkip }) {
+  const today = new Date().toISOString().split('T')[0];
+  const suggested = tasks
+    .filter(t => t.status === 'open' && (t.quadrant === 'urgent_important' || t.quadrant === 'important'))
+    .sort((a, b) => {
+      if (a.quadrant !== b.quadrant) return a.quadrant === 'urgent_important' ? -1 : 1;
+      if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : 1;
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    })
+    .slice(0, 5);
+
+  const [checked, setChecked] = React.useState(() => new Set(suggested.map(t => t.id)));
+  const todayEvents = calEvents.filter(e => e.date === today);
+  const freeHours = Math.max(0, 8 - todayEvents.reduce((s, e) => s + (e.durationH || 1), 0));
+
+  const qLabel = { urgent_important: 'Q1', important: 'Q2', urgent: 'Q3', other: 'Q4' };
+  const dayName = new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
+
+  function toggle(id) {
+    setChecked(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  }
+
+  return (
+    <div className="morning-ritual">
+      <div style={{fontSize:'24px',marginBottom:'6px'}}>🌅</div>
+      <div className="morning-title">Dobré ráno!</div>
+      <div className="morning-sub">{dayName} · {todayEvents.length > 0 ? todayEvents.length + ' schůzek' : 'žádné schůzky'} · ~{freeHours}h volného</div>
+      <div className="morning-stats">
+        <div className="morning-stat">
+          <div className="morning-stat-val">{tasks.filter(t => t.status === 'open' && t.quadrant === 'urgent_important').length}</div>
+          <div>Q1 tasků</div>
+        </div>
+        <div className="morning-stat">
+          <div className="morning-stat-val">{tasks.filter(t => t.status === 'open' && t.due_date && t.due_date <= today).length}</div>
+          <div>po deadline</div>
+        </div>
+        <div className="morning-stat">
+          <div className="morning-stat-val">{tasks.filter(t => t.status === 'open').length}</div>
+          <div>celkem open</div>
+        </div>
+      </div>
+      {suggested.length > 0 && (
+        <div className="morning-tasks-list">
+          <div style={{fontSize:'11px',fontWeight:700,opacity:.65,marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.06em'}}>Doporučené na dnes:</div>
+          {suggested.map(t => (
+            <div key={t.id} className="morning-task-row" onClick={() => toggle(t.id)}>
+              <div className={'morning-cb' + (checked.has(t.id) ? ' on' : '')}>{checked.has(t.id) ? '✓' : ''}</div>
+              <div className="morning-task-name">{t.title}</div>
+              <div className="morning-task-q">{qLabel[t.quadrant]}{t.due_date ? ' · ' + t.due_date : ''}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="morning-btns">
+        <button className="btn-morning-skip" onClick={onSkip}>Přeskočit</button>
+        <button className="btn-morning-go" onClick={() => onConfirm([...checked])}>
+          Potvrdit a začít →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---- WhatNowWidget ----
+function WhatNowWidget({ tasks, calEvents }) {
+  const [loading, setLoading] = React.useState(false);
+  const [result, setResult] = React.useState(null);
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  const todayEvents = (calEvents || []).filter(e => e.date === today);
+  const upcomingEvent = todayEvents.find(e => e.time && e.time > timeStr);
+  const topQ1 = tasks.filter(t => t.status === 'open' && t.quadrant === 'urgent_important').slice(0, 3);
+  const dailyTasks = tasks.filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined);
+
+  async function handleClick() {
+    setLoading(true);
+    setResult(null);
+    try {
+      const d = await apiFetch('what_now', 'POST', {
+        time: timeStr,
+        nextEvent: upcomingEvent ? upcomingEvent.title + ' v ' + upcomingEvent.time : null,
+        topQ1: topQ1.map(t => ({ title: t.title, due_date: t.due_date })),
+        dailyTasks: dailyTasks.map(t => ({ title: t.title, quadrant: t.quadrant })),
+      });
+      setResult(d);
+    } catch(e) { setResult({ error: 'Nepodařilo se načíst doporučení.' }); }
+    setLoading(false);
+  }
+
+  React.useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(() => setResult(null), 30000);
+    return () => clearTimeout(t);
+  }, [result]);
+
+  return (
+    <div className="whatnow-wrap">
+      {!result && (
+        <button className="whatnow-btn" onClick={handleClick} disabled={loading}>
+          {loading ? '...' : '✦ Co mám dělat teď?'}
+        </button>
+      )}
+      {result && !result.error && (
+        <div className="whatnow-result">
+          <div className="whatnow-text">{result.text}</div>
+          {result.task_title && (
+            <div className="whatnow-task">
+              <span className="whatnow-arrow">→</span>
+              {result.task_title}
+              {result.task_quadrant && <span style={{fontSize:'10px',color:'var(--red)',fontWeight:700,marginLeft:'auto'}}>{result.task_quadrant}</span>}
+            </div>
+          )}
+          <div className="whatnow-dismiss" onClick={() => setResult(null)}>Zavřít ×</div>
+        </div>
+      )}
+      {result && result.error && (
+        <div style={{fontSize:'12px',color:'#c94f42',marginTop:6}}>{result.error}</div>
+      )}
+    </div>
+  );
+}
+
 // ---- DnesView ----
-function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder }) {
+function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily }) {
   const [dragId, setDragId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
+  const [showMorning, setShowMorning] = useState(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const h = new Date().getHours();
+    return h >= 6 && h <= 10 && localStorage.getItem('lastMorningCheck') !== today;
+  });
 
   const dnesTasks = tasks
     .filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined)
@@ -1061,72 +1193,138 @@ function DnesView({ tasks, onToggleDone, onEdit, onRemoveFromDaily, onReorder })
   }
   function handleDragEnd() { setDragId(null); setDragOverId(null); }
 
-  if (dnesTasks.length === 0) {
+  function handleMorningConfirm(ids) {
+    localStorage.setItem('lastMorningCheck', today);
+    setShowMorning(false);
+    if (onBatchAddToDaily) onBatchAddToDaily(ids);
+  }
+  function handleMorningSkip() {
+    localStorage.setItem('lastMorningCheck', today);
+    setShowMorning(false);
+  }
+
+  // Timeline: group today's calendar events by hour
+  const todayEvents = (calEvents || []).filter(e => e.date === today);
+  const HOURS = [8,9,10,11,12,13,14,15,16,17];
+  function freeMinutes() {
+    const busyMins = todayEvents.reduce((s, e) => s + (e.durationH || 1) * 60, 0);
+    return Math.max(0, 8 * 60 - busyMins);
+  }
+  const freeH = Math.floor(freeMinutes() / 60);
+  const freeM = freeMinutes() % 60;
+  const freeStr = freeH > 0 ? freeH + 'h' + (freeM > 0 ? ' ' + freeM + 'min' : '') : freeM + 'min';
+
+  // Morning ritual overlay
+  if (showMorning) {
     return (
-      <div style={{padding:'40px 24px',textAlign:'center',color:'var(--grey-text)'}}>
-        <div style={{fontSize:'32px',marginBottom:'12px'}}>📋</div>
-        <div style={{fontWeight:600,marginBottom:'6px'}}>Denní plán je prázdný</div>
-        <div style={{fontSize:'13px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
-      </div>
+      <MorningRitual
+        tasks={tasks}
+        calEvents={calEvents || []}
+        onConfirm={handleMorningConfirm}
+        onSkip={handleMorningSkip}
+      />
     );
   }
 
-  return (
-    <div style={{padding:'16px 0'}}>
-      <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',letterSpacing:'0.05em',textTransform:'uppercase',padding:'0 24px 12px'}}>
-        Dnes — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}
+  const TasksList = () => (
+    <div className="dnes-tasks-col">
+      <div className="whatnow-wrap" style={{marginBottom:12}}>
+        <WhatNowWidget tasks={tasks} calEvents={calEvents} />
       </div>
-      {dnesTasks.map((t, idx) => {
-        const isOverdue = t.due_date && t.due_date < today;
-        const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000) : null;
-        const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
-        return (
-          <div
-            key={t.id}
-            draggable
-            onDragStart={() => handleDragStart(t.id)}
-            onDragOver={e => handleDragOver(e, t.id)}
-            onDrop={e => handleDrop(e, t.id)}
-            onDragEnd={handleDragEnd}
-            style={{
-              display:'flex',alignItems:'center',gap:'10px',
-              padding:'10px 24px',
-              borderBottom:'1px solid var(--grey-border)',
-              background: dragOverId === t.id ? '#EBF0FF' : 'transparent',
-              opacity: dragId === t.id ? 0.4 : 1,
-              cursor:'grab',
-            }}
-          >
-            <span style={{color:'var(--grey-text)',fontSize:'12px',fontWeight:700,width:'18px',flexShrink:0}}>{idx + 1}</span>
-            <input
-              type="checkbox"
-              checked={false}
-              style={{accentColor:'var(--red)',width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
-              onChange={() => onToggleDone(t)}
-            />
-            <span
-              onClick={() => onEdit(t)}
-              style={{flex:1,fontSize:'14px',cursor:'pointer',color: isOverdue ? '#c0392b' : 'inherit',fontWeight: isOverdue ? 600 : 'normal'}}
-            >{t.title}</span>
-            {t.due_date && (
-              <span style={{fontSize:'11px',fontWeight:700,padding:'1px 6px',borderRadius:'4px',
-                background: isOverdue ? '#FEE8E7' : isSoon ? '#FFF4E0' : '#F4F5F7',
-                color: isOverdue ? '#E63327' : isSoon ? '#A06000' : 'var(--grey-text)',
-                flexShrink:0}}>
-                {isOverdue ? 'Prošlé' : daysUntil === 0 ? 'Dnes' : daysUntil + 'd'}
-              </span>
-            )}
-            <span className={'badge ' + (t.type === 'personal' ? 'badge-personal' : 'badge-work')} style={{flexShrink:0}}>
-              {t.type === 'personal' ? 'osobní' : 'práce'}
-            </span>
-            <button
-              title="Odebrat z denního plánu"
-              onClick={() => onRemoveFromDaily(t)}
-              style={{background:'none',border:'none',cursor:'pointer',color:'var(--grey-border)',fontSize:'14px',flexShrink:0,padding:'0 2px'}}
-            >×</button>
+      {dnesTasks.length === 0 ? (
+        <div style={{textAlign:'center',color:'var(--grey-text)',padding:'30px 0'}}>
+          <div style={{fontSize:'28px',marginBottom:'8px'}}>📋</div>
+          <div style={{fontWeight:600,marginBottom:'4px'}}>Denní plán je prázdný</div>
+          <div style={{fontSize:'12px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
+        </div>
+      ) : (
+        <>
+          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:'10px'}}>
+            Dnes — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}
+            {freeH > 0 && <span style={{marginLeft:8,color:'var(--green)',fontWeight:700}}>· {freeStr} volného</span>}
           </div>
-        );
-      })}
+          {dnesTasks.map((t, idx) => {
+            const isOverdue = t.due_date && t.due_date < today;
+            const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000) : null;
+            const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
+            return (
+              <div
+                key={t.id}
+                draggable
+                onDragStart={() => handleDragStart(t.id)}
+                onDragOver={e => handleDragOver(e, t.id)}
+                onDrop={e => handleDrop(e, t.id)}
+                onDragEnd={handleDragEnd}
+                style={{
+                  display:'flex',alignItems:'center',gap:'10px',
+                  padding:'9px 0',
+                  borderBottom:'1px solid var(--grey-border)',
+                  background: dragOverId === t.id ? '#EBF0FF' : 'transparent',
+                  opacity: dragId === t.id ? 0.4 : 1,
+                  cursor:'grab',
+                }}
+              >
+                <span style={{color:'var(--grey-text)',fontSize:'12px',fontWeight:700,width:'18px',flexShrink:0}}>{idx + 1}</span>
+                <input
+                  type="checkbox"
+                  checked={false}
+                  style={{accentColor:'var(--red)',width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
+                  onChange={() => onToggleDone(t)}
+                />
+                <span
+                  onClick={() => onEdit(t)}
+                  style={{flex:1,fontSize:'13px',cursor:'pointer',color: isOverdue ? '#c0392b' : 'inherit',fontWeight: isOverdue ? 600 : 'normal'}}
+                >{t.title}</span>
+                {t.due_date && (
+                  <span style={{fontSize:'10px',fontWeight:700,padding:'1px 5px',borderRadius:'4px',
+                    background: isOverdue ? '#FEE8E7' : isSoon ? '#FFF4E0' : '#F4F5F7',
+                    color: isOverdue ? '#E63327' : isSoon ? '#A06000' : 'var(--grey-text)',
+                    flexShrink:0}}>
+                    {isOverdue ? 'Prošlé' : daysUntil === 0 ? 'Dnes' : daysUntil + 'd'}
+                  </span>
+                )}
+                <button
+                  title="Odebrat z denního plánu"
+                  onClick={() => onRemoveFromDaily(t)}
+                  style={{background:'none',border:'none',cursor:'pointer',color:'var(--grey-border)',fontSize:'14px',flexShrink:0,padding:'0 2px'}}
+                >×</button>
+              </div>
+            );
+          })}
+        </>
+      )}
+    </div>
+  );
+
+  // If no calendar connected or no events → simple view without timeline split
+  if (!todayEvents.length) {
+    return <TasksList />;
+  }
+
+  return (
+    <div className="dnes-split">
+      <div className="dnes-timeline-col">
+        <div className="dnes-timeline-label">Kalendář</div>
+        {HOURS.map(h => {
+          const hStr = h.toString().padStart(2,'0') + ':00';
+          const events = todayEvents.filter(e => e.time && parseInt(e.time.split(':')[0]) === h);
+          return (
+            <div key={h}>
+              <div className="dnes-time-row">
+                <span className="dnes-time-val">{hStr}</span>
+                <div className="dnes-time-line" />
+              </div>
+              {events.map((e, i) => (
+                <div key={i} className={'dnes-cal-block ' + (e.allDay ? 'all-day' : 'work')} title={e.title}>
+                  {e.title.length > 20 ? e.title.slice(0, 18) + '…' : e.title}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+        {freeMinutes() > 0 && <div className="dnes-free">● {freeStr} volného</div>}
+      </div>
+      <TasksList />
     </div>
   );
 }
