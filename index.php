@@ -204,7 +204,7 @@ input[type=search]::-webkit-search-cancel-button{filter:invert(1);opacity:.6;cur
 .stale-age{font-size:10px;color:#bbb;font-weight:600;padding:1px 5px;background:#f0f0f0;border-radius:4px}
 .stale-age.warn{color:#c94f42;background:#fee8e7}
 /* Task description */
-.task-desc{font-size:11px;color:var(--grey-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}
+.task-desc{font-size:11px;color:var(--grey-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}.task-desc-link{color:var(--primary);text-decoration:none}.task-desc-link:hover{text-decoration:underline}
 /* Dnes timeline */
 .dnes-split{display:grid;grid-template-columns:150px 1fr;height:100%;min-height:400px}
 .dnes-timeline-col{border-right:1px solid var(--grey-border);padding:12px 8px 12px 12px;overflow-y:auto}
