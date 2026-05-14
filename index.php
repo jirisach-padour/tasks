@@ -690,6 +690,17 @@ function AiSuggestModal({ suggestions, tasks, onApply, onClose }) {
 }
 
 // ---- TaskCard ----
+function linkifyText(text) {
+  const urlRe = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRe);
+  return parts.map((part, i) => {
+    if (urlRe.test(part)) {
+      const display = part.length > 50 ? part.slice(0, 47) + '...' : part;
+      return React.createElement('a', {key:i, href:part, target:'_blank', rel:'noreferrer', onClick:e=>e.stopPropagation(), className:'task-desc-link'}, display);
+    }
+    return part;
+  });
+}
 function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragStart, onAddToDaily }) {
   const tickets = task.daktela_tickets || [];
   const [editing, setEditing] = useState(false);
@@ -754,7 +765,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
               title="Dvojklik = rychlá editace názvu"
             >{task.title}</div>
         }
-        {task.description && <div className="task-desc">{task.description}</div>}
+        {task.description && <div className="task-desc">{linkifyText(task.description)}</div>}
         <div className="task-meta">
           <span className={'badge ' + (task.type === 'personal' ? 'badge-personal' : 'badge-work')}>
             {task.type === 'personal' ? 'Osobní' : 'Work'}
