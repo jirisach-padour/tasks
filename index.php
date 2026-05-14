@@ -55,7 +55,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .q-add-btn{background:none;border:none;cursor:pointer;color:var(--grey-text);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
 .q-add-btn:hover{color:var(--navy)}
 /* Task card */
-.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--white);border-radius:6px;margin-bottom:6px;border:1px solid var(--grey-border);cursor:pointer;transition:border-color .1s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--white);border-radius:6px;margin-bottom:6px;border:1px solid var(--grey-border);cursor:pointer;transition:border-color .1s;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;overflow:hidden}
 .task-card:hover{border-color:#bbc}
 .task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--red);cursor:pointer}
 .task-body{flex:1;min-width:0}
