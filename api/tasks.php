@@ -110,7 +110,7 @@ switch ($method) {
         if (!$id) { http_response_code(400); echo json_encode(['error' => 'Chybí id']); break; }
 
         $data = [];
-        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit'];
+        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit','estimated_minutes'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 if ($f === 'daktela_tickets') { $data[$f] = json_encode($body[$f]); } elseif ($f === 'daily_order') { $data[$f] = $body[$f] === null ? null : (int)$body[$f]; } else { $data[$f] = $body[$f] ?: null; }
