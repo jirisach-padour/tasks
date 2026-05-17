@@ -3,6 +3,7 @@
 // Cron: 0 6 * * * php /var/www/app/tasks/cron/daily_context.php
 
 define('TASKS_ROOT', dirname(__DIR__));
+require_once '/etc/tasks/secrets.php';
 require_once TASKS_ROOT . '/lib/DB.php';
 
 $today = date('Y-m-d');
