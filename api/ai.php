@@ -59,6 +59,23 @@ try {
     $daktelaTickets = DB::q("SELECT name, title, sla_deadline FROM daktela_cache ORDER BY sla_deadline ASC LIMIT 20")->fetchAll();
 } catch (Throwable) {}
 
+// Přesnost odhadů — kontext pro AI
+$accuracyNote = '';
+try {
+    $accRows = DB::q(
+        "SELECT estimated_minutes, actual_minutes FROM tasks WHERE status = 'done' AND done_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND estimated_minutes IS NOT NULL AND actual_minutes IS NOT NULL"
+    )->fetchAll();
+    if (count($accRows) >= 3) {
+        $totalEst = array_sum(array_column($accRows, 'estimated_minutes'));
+        $totalAct = array_sum(array_column($accRows, 'actual_minutes'));
+        if ($totalEst > 0) {
+            $ratio = round($totalAct / $totalEst * 100);
+            if ($ratio > 115) $accuracyNote = "Poznámka: Jiří historicky podhodnocuje tasky o " . ($ratio - 100) . "% (skutečná práce trvá déle než odhad).";
+            elseif ($ratio < 85) $accuracyNote = "Poznámka: Jiří historicky nadhodnocuje tasky o " . (100 - $ratio) . "% (tasky jdou rychleji než odhad).";
+        }
+    }
+} catch (Throwable) {}
+
 // Sestav prompt
 $taskList = '';
 $today = date('Y-m-d');
@@ -114,13 +131,15 @@ if ($onenon) {
     }
 }
 
+$accuracyStr = $accuracyNote ? "
+{$accuracyNote}" : '';
 $userPrompt = <<<USR
 Dnešní datum: {$today}
 
 Moje otevřené tasky:
 {$taskList}
 
-Dnešní a zítřejší kalendář: {$calStr}
+Dnešní a zítřejší kalendář: {$calStr}{$accuracyStr}
 
 Pro každý task navrhni vhodný kvadrant a 1–2 věty zdůvodnění (konkrétní, ne obecné). Vrať JSON:
 {"suggestions": [{"id": 1, "quadrant": "urgent_important", "reason": "..."}]}
