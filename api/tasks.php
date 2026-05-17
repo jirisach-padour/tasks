@@ -59,6 +59,18 @@ switch ($method) {
         // Denní plán
         if (!empty($_GET['daily'])) {
             $rows = DB::q("SELECT * FROM tasks WHERE status = 'open' AND daily_order IS NOT NULL ORDER BY daily_order, created_at")->fetchAll();
+            foreach ($rows as &$r) { $r['daktela_tickets'] = json_decode($r['daktela_tickets']); }
+            echo json_encode(['tasks' => $rows]);
+            break;
+        case isset($_GET['history']) && $_GET['history'] === 'month_accuracy':
+            $rows = DB::q(
+                "SELECT estimated_minutes, actual_minutes FROM tasks WHERE status = 'done' AND done_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND estimated_minutes IS NOT NULL AND actual_minutes IS NOT NULL"
+            )->fetchAll();
+            if (count($rows) < 2) { echo json_encode(['accuracy' => null]); break; }
+            $totalEst = array_sum(array_column($rows, 'estimated_minutes'));
+            $totalAct = array_sum(array_column($rows, 'actual_minutes'));
+            $accuracy = $totalEst > 0 ? (int)round($totalAct / $totalEst * 100) : null;
+            echo json_encode(['accuracy' => $accuracy, 'count' => count($rows)]);
             foreach ($rows as &$r) {
                 $r['daktela_tickets'] = $r['daktela_tickets'] ? json_decode($r['daktela_tickets']) : [];
             }
@@ -110,7 +122,7 @@ switch ($method) {
         if (!$id) { http_response_code(400); echo json_encode(['error' => 'Chybí id']); break; }
 
         $data = [];
-        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit','estimated_minutes'];
+        $allowed = ['title','description','ai_context','quadrant','type','due_date','sort_order','daily_order','daktela_tickets','recurrence','recurrence_day','recurrence_interval','recurrence_unit','estimated_minutes','actual_minutes'];
         foreach ($allowed as $f) {
             if (array_key_exists($f, $body)) {
                 if ($f === 'daktela_tickets') { $data[$f] = json_encode($body[$f]); } elseif ($f === 'daily_order') { $data[$f] = $body[$f] === null ? null : (int)$body[$f]; } else { $data[$f] = $body[$f] ?: null; }
