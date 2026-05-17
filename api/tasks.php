@@ -56,13 +56,8 @@ switch ($method) {
             break;
         }
 
-        // Denní plán
-        if (!empty($_GET['daily'])) {
-            $rows = DB::q("SELECT * FROM tasks WHERE status = 'open' AND daily_order IS NOT NULL ORDER BY daily_order, created_at")->fetchAll();
-            foreach ($rows as &$r) { $r['daktela_tickets'] = json_decode($r['daktela_tickets']); }
-            echo json_encode(['tasks' => $rows]);
-            break;
-        case isset($_GET['history']) && $_GET['history'] === 'month_accuracy':
+        // Přesnost odhadů za 30 dní
+        if ($history === 'month_accuracy') {
             $rows = DB::q(
                 "SELECT estimated_minutes, actual_minutes FROM tasks WHERE status = 'done' AND done_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND estimated_minutes IS NOT NULL AND actual_minutes IS NOT NULL"
             )->fetchAll();
@@ -71,9 +66,13 @@ switch ($method) {
             $totalAct = array_sum(array_column($rows, 'actual_minutes'));
             $accuracy = $totalEst > 0 ? (int)round($totalAct / $totalEst * 100) : null;
             echo json_encode(['accuracy' => $accuracy, 'count' => count($rows)]);
-            foreach ($rows as &$r) {
-                $r['daktela_tickets'] = $r['daktela_tickets'] ? json_decode($r['daktela_tickets']) : [];
-            }
+            break;
+        }
+
+        // Denní plán
+        if (!empty($_GET['daily'])) {
+            $rows = DB::q("SELECT * FROM tasks WHERE status = 'open' AND daily_order IS NOT NULL ORDER BY daily_order, created_at")->fetchAll();
+            foreach ($rows as &$r) { $r['daktela_tickets'] = json_decode($r['daktela_tickets']); }
             echo json_encode(['tasks' => $rows]);
             break;
         }
