@@ -6,12 +6,7 @@
 - [ ] Export tasků (CSV, JSON)
 - [ ] Sdílení tasku (read-only link)
 - [ ] Tmavý režim
-- [ ] Odškrtnutí v Dnes — odškrtne task globálně (zrcadlí stav v matici)
-- [ ] Reset Dnes ráno — dialog při otevření nového dne: co přesunout, co zahodit
-- [ ] AI kontext z DB (fáze 1) — rozšířit AI prompt o 1on1 záznamy, profily lidí, Daktela cache
-- [ ] Chat okýnko (fáze 2) — Copilot-style sidebar pro přirozené dotazy
-- [ ] Denní cron — aktualizace personal context (tasks-context.md → MCP)
-- [ ] Samoučení — porovnávat naplánováno vs. splněno, zpřesňovat odhady
+- [ ] Export do Google Docs — po dokončení dne/týdne vygenerovat přehled do Google Doc (Google Docs API, OAuth scope rozšířit o docs)
 
 ## Dokončeno
 
@@ -59,3 +54,11 @@
 ### UX & vizuál
 - [x] **Stale task indicator** — task karty starší 7d/21d dostávají vizuální aging (proužek zdola + opacity) (2026-05-11)
 - [x] **Task description v kartě** — 1 řádek šedě pod názvem (2026-05-11)
+
+### Samoučení & AI rozšíření
+- [x] **Odškrtnutí v Dnes → zrcadlení do matice** — checkbox v DnesView volá handleToggleDone globálně (2026-05-17)
+- [x] **Reset Dnes ráno** — DnesResetModal: nový den → výběr co přenést, hotové se odstraní automaticky (2026-05-17)
+- [x] **AI kontext z DB (fáze 1)** — ai.php rozšířen o 1on1 záznamy, Daktela cache; prompt caching (2026-05-17)
+- [x] **Chat okýnko (fáze 2)** — api/chat.php (Claude Haiku), ChatPanel v pravém sidebaru (2026-05-17)
+- [x] **Denní cron** — cron/daily_context.php exportuje tasks-context.md; crontab 6:00 (2026-05-17)
+- [x] **Samoučení** — estimated_minutes + actual_minutes; DoneTimeModal; přesnost odhadů v KpiPanel; AI accuracy context (2026-05-17)
