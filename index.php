@@ -1178,21 +1178,89 @@ function WhatNowWidget({ tasks, calEvents }) {
   );
 }
 
+// ---- DnesResetModal ----
+function DnesResetModal({ tasks, onConfirm, onSkip }) {
+  const openTasks = tasks.filter(t => t.daily_order !== null && t.daily_order !== undefined && t.status === 'open');
+  const doneTasks = tasks.filter(t => t.daily_order !== null && t.daily_order !== undefined && t.status === 'done');
+  const [keep, setKeep] = React.useState(() => new Set(openTasks.map(t => t.id)));
+
+  function toggleKeep(id) {
+    setKeep(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  }
+
+  function handleConfirm() {
+    const removeIds = [
+      ...doneTasks.map(t => t.id),
+      ...openTasks.filter(t => !keep.has(t.id)).map(t => t.id),
+    ];
+    onConfirm(removeIds);
+  }
+
+  return (
+    <div style={{maxWidth:480,margin:'40px auto',background:'var(--white)',borderRadius:'12px',boxShadow:'0 4px 24px rgba(0,0,0,0.10)',padding:'28px 28px 22px'}}>
+      <div style={{fontWeight:700,fontSize:'16px',marginBottom:'4px'}}>Nový den — co s denním plánem?</div>
+      <div style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:'20px'}}>
+        Zaškrtni tasky, které chceš přenést na dnes.
+        {doneTasks.length > 0 && ' Hotové (' + doneTasks.length + ') se odeberou automaticky.'}
+      </div>
+
+      {openTasks.length > 0 ? (
+        <div style={{marginBottom:'20px'}}>
+          {openTasks.map(t => (
+            <div key={t.id} style={{display:'flex',alignItems:'center',gap:'10px',padding:'7px 0',borderBottom:'1px solid var(--grey-border)'}}>
+              <input
+                type="checkbox"
+                checked={keep.has(t.id)}
+                onChange={() => toggleKeep(t.id)}
+                style={{accentColor:'var(--blue)',width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
+              />
+              <span style={{fontSize:'13px',flex:1}}>{t.title}</span>
+              {t.due_date && (
+                <span style={{fontSize:'10px',color:'var(--grey-text)'}}>{t.due_date}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{color:'var(--grey-text)',fontSize:'13px',marginBottom:'20px'}}>Žádné nedokončené tasky v plánu.</div>
+      )}
+
+      <div style={{display:'flex',gap:'10px',justifyContent:'flex-end'}}>
+        <button onClick={onSkip} style={{background:'none',border:'1px solid var(--grey-border)',borderRadius:'6px',padding:'7px 16px',fontSize:'13px',cursor:'pointer',color:'var(--grey-text)'}}>
+          Přeskočit
+        </button>
+        <button onClick={handleConfirm} style={{background:'var(--blue)',color:'#fff',border:'none',borderRadius:'6px',padding:'7px 16px',fontSize:'13px',cursor:'pointer',fontWeight:600}}>
+          Potvrdit
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ---- DnesView ----
-function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily }) {
+function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily, onBatchRemoveFromDaily }) {
   const [dragId, setDragId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
-  const [showMorning, setShowMorning] = useState(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const h = new Date().getHours();
-    return h >= 6 && h <= 10 && localStorage.getItem('lastMorningCheck') !== today;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const hasDnesTasks = tasks.some(t => t.daily_order !== null && t.daily_order !== undefined);
+  const [showDnesReset, setShowDnesReset] = useState(() => {
+    return localStorage.getItem('lastDnesCheck') !== todayStr && hasDnesTasks;
   });
+  const [showMorning, setShowMorning] = useState(false);
+  function checkShowMorning() {
+    const h = new Date().getHours();
+    if (h >= 6 && h <= 10 && localStorage.getItem('lastMorningCheck') !== todayStr) {
+      setShowMorning(true);
+    }
+  }
 
   const dnesTasks = tasks
     .filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined)
     .sort((a, b) => a.daily_order - b.daily_order);
-
-  const today = new Date().toISOString().split('T')[0];
 
   function handleDragStart(id) { setDragId(id); }
   function handleDragOver(e, id) { e.preventDefault(); setDragOverId(id); }
@@ -1204,18 +1272,33 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
   }
   function handleDragEnd() { setDragId(null); setDragOverId(null); }
 
+  function handleDnesResetConfirm(removeIds) {
+    localStorage.setItem('lastDnesCheck', todayStr);
+    setShowDnesReset(false);
+    if (removeIds && removeIds.length && onBatchRemoveFromDaily) {
+      onBatchRemoveFromDaily(removeIds).then(() => checkShowMorning());
+    } else {
+      checkShowMorning();
+    }
+  }
+  function handleDnesResetSkip() {
+    localStorage.setItem('lastDnesCheck', todayStr);
+    setShowDnesReset(false);
+    checkShowMorning();
+  }
+
   function handleMorningConfirm(ids) {
-    localStorage.setItem('lastMorningCheck', today);
+    localStorage.setItem('lastMorningCheck', todayStr);
     setShowMorning(false);
     if (onBatchAddToDaily) onBatchAddToDaily(ids);
   }
   function handleMorningSkip() {
-    localStorage.setItem('lastMorningCheck', today);
+    localStorage.setItem('lastMorningCheck', todayStr);
     setShowMorning(false);
   }
 
   // Timeline: group today's calendar events by hour
-  const todayEvents = (calEvents || []).filter(e => e.date === today);
+  const todayEvents = (calEvents || []).filter(e => e.date === todayStr);
   const HOURS = [8,9,10,11,12,13,14,15,16,17];
   function freeMinutes() {
     const busyMins = todayEvents.reduce((s, e) => s + (e.durationH || 1) * 60, 0);
@@ -1224,6 +1307,17 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
   const freeH = Math.floor(freeMinutes() / 60);
   const freeM = freeMinutes() % 60;
   const freeStr = freeH > 0 ? freeH + 'h' + (freeM > 0 ? ' ' + freeM + 'min' : '') : freeM + 'min';
+
+  // Reset denního plánu
+  if (showDnesReset) {
+    return (
+      <DnesResetModal
+        tasks={tasks}
+        onConfirm={handleDnesResetConfirm}
+        onSkip={handleDnesResetSkip}
+      />
+    );
+  }
 
   // Morning ritual overlay
   if (showMorning) {
@@ -1255,8 +1349,8 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
             {freeH > 0 && <span style={{marginLeft:8,color:'var(--green)',fontWeight:700}}>· {freeStr} volného</span>}
           </div>
           {dnesTasks.map((t, idx) => {
-            const isOverdue = t.due_date && t.due_date < today;
-            const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(today)) / 86400000) : null;
+            const isOverdue = t.due_date && t.due_date < todayStr;
+            const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(todayStr)) / 86400000) : null;
             const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
             return (
               <div
@@ -2477,6 +2571,12 @@ function App() {
     setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
   }
 
+  async function handleBatchRemoveFromDaily(ids) {
+    if (!ids || !ids.length) return;
+    await Promise.all(ids.map(id => apiFetch('tasks', 'PUT', { daily_order: null }, { id })));
+    await loadTasks();
+  }
+
   async function handleDnesReorder(dragId, targetId) {
     const dnesSorted = tasks
       .filter(t => t.status === 'open' && t.daily_order !== null && t.daily_order !== undefined)
@@ -2696,7 +2796,7 @@ function App() {
           : activeTab === 'onenon'
           ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
           : activeTab === 'dnes'
-          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} />
+          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} />
           : (
             <>
               <div className="matrix">
