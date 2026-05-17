@@ -423,6 +423,40 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
   return json;
 }
 
+// ---- DoneTimeModal ----
+function DoneTimeModal({ task, onSave, onSkip }) {
+  const [minutes, setMinutes] = React.useState('');
+  function handleSave() {
+    const m = parseInt(minutes);
+    onSave(m > 0 ? m : null);
+  }
+  return (
+    <div className="modal-overlay" onClick={onSkip}>
+      <div className="modal" style={{maxWidth:340}} onClick={e => e.stopPropagation()}>
+        <div style={{fontWeight:700,fontSize:'15px',marginBottom:'6px'}}>Hotovo!</div>
+        <div style={{fontSize:'12px',color:'var(--grey-text)',marginBottom:'16px'}}>
+          Za jak dlouho jsi to udělal?
+          {task.estimated_minutes && <span style={{marginLeft:6,color:'var(--blue)'}}>Odhad byl {task.estimated_minutes} min</span>}
+        </div>
+        <div style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'16px'}}>
+          <input
+            type="number" min="1" max="600" value={minutes} onChange={e => setMinutes(e.target.value)}
+            placeholder="minut"
+            style={{width:'90px',fontSize:'13px',padding:'6px 8px',border:'1px solid var(--grey-border)',borderRadius:'6px'}}
+            autoFocus
+            onKeyDown={e => e.key === 'Enter' && handleSave()}
+          />
+          <span style={{fontSize:'12px',color:'var(--grey-text)'}}>minut</span>
+        </div>
+        <div style={{display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+          <button onClick={onSkip} style={{background:'none',border:'1px solid var(--grey-border)',borderRadius:'6px',padding:'6px 14px',fontSize:'12px',cursor:'pointer',color:'var(--grey-text)'}}>Přeskočit</button>
+          <button onClick={handleSave} style={{background:'var(--blue)',color:'#fff',border:'none',borderRadius:'6px',padding:'6px 14px',fontSize:'12px',cursor:'pointer',fontWeight:600}}>Uložit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---- TaskModal ----
 function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, assignedMap, onSave, onClose, onDelete }) {
   const initial = task || {};
@@ -442,6 +476,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
   const [recurrenceDay, setRecurrenceDay] = useState(initial.recurrence_day !== undefined && initial.recurrence_day !== null ? initial.recurrence_day : null);
   const [recurrenceInterval, setRecurrenceInterval] = useState(initial.recurrence_interval || 1);
   const [recurrenceUnit, setRecurrenceUnit] = useState(initial.recurrence_unit || 'weeks');
+  const [estimatedMinutes, setEstimatedMinutes] = useState(initial.estimated_minutes || '');
   const [saving, setSaving] = useState(false);
 
   function removeTicket(name) {
@@ -461,7 +496,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
     if (!title.trim()) return;
     setSaving(true);
     try {
-      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence, recurrence_day: recurrenceDay, recurrence_interval: recurrenceInterval, recurrence_unit: recurrenceUnit });
+      await onSave({ title, description, ai_context: aiContext, quadrant, type, due_date: dueDate, daktela_tickets: daktelaTickets, recurrence, recurrence_day: recurrenceDay, recurrence_interval: recurrenceInterval, recurrence_unit: recurrenceUnit, estimated_minutes: estimatedMinutes ? parseInt(estimatedMinutes) : null });
       onClose();
     } catch(e) { toast('Chyba: ' + e.message); }
     setSaving(false);
@@ -490,9 +525,15 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
             </select>
           </div>
         </div>
-        <div className="form-group">
-          <label>{recurrence !== 'none' ? 'Termín / start opakování' : 'Termín'}</label>
-          <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+        <div className="form-group" style={{display:'flex',gap:'12px'}}>
+          <div style={{flex:'2'}}>
+            <label>{recurrence !== 'none' ? 'Termín / start opakování' : 'Termín'}</label>
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+          </div>
+          <div style={{flex:'1'}}>
+            <label>Odhad (min)</label>
+            <input type="number" min="1" max="480" value={estimatedMinutes} onChange={e => setEstimatedMinutes(e.target.value)} placeholder="?" style={{width:'100%'}} />
+          </div>
         </div>
         <div className="form-group">
           <label>Popis</label>
@@ -1617,6 +1658,14 @@ function ChatPanel() {
 }
 
 function KpiPanel({ todayDone, totalOpen }) {
+  const [accuracy, setAccuracy] = React.useState(null);
+
+  React.useEffect(() => {
+    apiFetch('tasks', 'GET', null, { history: 'month_accuracy' })
+      .then(d => { if (d.accuracy !== undefined) setAccuracy(d.accuracy); })
+      .catch(() => {});
+  }, [todayDone]);
+
   return (
     <div className="panel">
       <div className="section-title">Dnešní výkon</div>
@@ -1630,6 +1679,13 @@ function KpiPanel({ todayDone, totalOpen }) {
           <div className="kpi-value">{totalOpen}</div>
         </div>
       </div>
+      {accuracy !== null && (
+        <div style={{marginTop:'10px',fontSize:'11px',color:'var(--grey-text)',textAlign:'center'}}>
+          <span title="Průměrná přesnost odhadů za 30 dní (100% = přesné, >100% = podhodnocuješ)">
+            Přesnost odhadů: <strong style={{color: accuracy > 130 ? '#c0392b' : accuracy > 110 ? '#A06000' : '#2E7D3F'}}>{accuracy}%</strong>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -2473,6 +2529,7 @@ function App() {
   const [calEvents, setCalEvents] = useState([]);
   const [calConnected, setCalConnected] = useState(false);
   const [todayDone, setTodayDone] = useState(0);
+  const [doneTimeTask, setDoneTimeTask] = useState(null);
   const [clTodayDone, setClTodayDone] = useState(0);
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
@@ -2581,8 +2638,12 @@ function App() {
     const newStatus = task.status === 'done' ? 'open' : 'done';
     const result = await apiFetch('tasks', 'PUT', { status: newStatus }, { id: task.id });
     setTasks(prev => prev.map(t => t.id === task.id ? result.task : t));
-    if (newStatus === 'done') { setTodayDone(v => v + 1); toast('✓ Hotovo!'); }
-    else setTodayDone(v => Math.max(0, v - 1));
+    if (newStatus === 'done') {
+      setTodayDone(v => v + 1);
+      setDoneTimeTask(result.task);
+    } else {
+      setTodayDone(v => Math.max(0, v - 1));
+    }
   }
 
   async function handleEditTask(task) {
@@ -2928,6 +2989,18 @@ function App() {
       )}
 
       {/* Modals — portal do body kvůli stacking context na mobilu */}
+      {doneTimeTask && ReactDOM.createPortal(
+        <DoneTimeModal
+          task={doneTimeTask}
+          onSave={async (minutes) => {
+            if (minutes) await apiFetch('tasks', 'PUT', { actual_minutes: minutes }, { id: doneTimeTask.id });
+            setDoneTimeTask(null);
+            toast('✓ Hotovo!');
+          }}
+          onSkip={() => { setDoneTimeTask(null); toast('✓ Hotovo!'); }}
+        />,
+        document.body
+      )}
       {modal?.type === 'task' && ReactDOM.createPortal(
         <TaskModal
           task={modal.task || null}
