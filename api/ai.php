@@ -26,6 +26,39 @@ try {
     }
 } catch (Throwable) {}
 
+// Načti 1on1 data — profily lidí a otevřené action items
+$onenon = [];
+try {
+    $people = DB::q("SELECT name FROM onenon_people ORDER BY name")->fetchAll();
+    foreach ($people as $p) {
+        $personName = $p['name'];
+        $lastNote = DB::q("SELECT meeting_date, mood, action_items, tags FROM onenon_notes WHERE person = ? ORDER BY meeting_date DESC LIMIT 1", [$personName])->fetch();
+        $openItems = [];
+        if ($lastNote && $lastNote['action_items']) {
+            $items = json_decode($lastNote['action_items'], true) ?: [];
+            foreach ($items as $item) {
+                if (!($item['done'] ?? false)) $openItems[] = $item['text'];
+            }
+        }
+        $daysSince = null;
+        if ($lastNote) {
+            $daysSince = (int)((time() - strtotime($lastNote['meeting_date'])) / 86400);
+        }
+        $onenon[] = [
+            'name'         => $personName,
+            'last_mood'    => $lastNote['mood'] ?? null,
+            'open_actions' => $openItems,
+            'days_since'   => $daysSince,
+        ];
+    }
+} catch (Throwable) {}
+
+// Načti Daktela tickety z cache
+$daktelaTickets = [];
+try {
+    $daktelaTickets = DB::q("SELECT name, title, sla_deadline FROM daktela_cache ORDER BY sla_deadline ASC LIMIT 20")->fetchAll();
+} catch (Throwable) {}
+
 // Sestav prompt
 $taskList = '';
 $today = date('Y-m-d');
@@ -62,6 +95,25 @@ Pravidla pro hodnocení:
 Odpovídej v češtině. Vrať pouze JSON, žádný text navíc.
 SYS;
 
+// Sestav 1on1 kontext blok (cachovaný — mění se méně než tasky)
+$onenon1on1Str = '';
+if ($onenon) {
+    $onenon1on1Str = "
+
+## Kontext o týmu (z 1on1 schůzek)
+";
+    foreach ($onenon as $p) {
+        $onenon1on1Str .= "- " . $p['name'];
+        if ($p['last_mood']) $onenon1on1Str .= " (poslední nálada: " . $p['last_mood'] . "/5)";
+        if ($p['days_since'] !== null) $onenon1on1Str .= " — 1on1 před " . $p['days_since'] . " dny";
+        if ($p['days_since'] !== null && $p['days_since'] > 30) $onenon1on1Str .= " [!! bez 1on1 >30 dní]";
+        if ($p['open_actions']) $onenon1on1Str .= "
+  Otevřené action items: " . implode('; ', array_slice($p['open_actions'], 0, 3));
+        $onenon1on1Str .= "
+";
+    }
+}
+
 $userPrompt = <<<USR
 Dnešní datum: {$today}
 
@@ -74,11 +126,33 @@ Pro každý task navrhni vhodný kvadrant a 1–2 věty zdůvodnění (konkrétn
 {"suggestions": [{"id": 1, "quadrant": "urgent_important", "reason": "..."}]}
 USR;
 
+// Daktela tickety do user promptu
+$daktelaStr = '';
+if ($daktelaTickets) {
+    $daktelaStr = "
+
+Otevřené Daktela tickety (ze sachj fronty):
+";
+    foreach ($daktelaTickets as $dt) {
+        $sla = $dt['sla_deadline'] ? " [SLA: " . $dt['sla_deadline'] . "]" : "";
+        $daktelaStr .= "- " . $dt['name'] . ": " . $dt['title'] . $sla . "
+";
+    }
+}
+$userPromptFull = $userPrompt . $daktelaStr;
+
+$systemBlocks = [
+    ['type' => 'text', 'text' => $systemPrompt, 'cache_control' => ['type' => 'ephemeral']],
+];
+if ($onenon1on1Str) {
+    $systemBlocks[] = ['type' => 'text', 'text' => $onenon1on1Str, 'cache_control' => ['type' => 'ephemeral']];
+}
+
 $payload = [
     'model'      => 'claude-sonnet-4-6',
     'max_tokens' => 4096,
-    'system'     => [['type' => 'text', 'text' => $systemPrompt, 'cache_control' => ['type' => 'ephemeral']]],
-    'messages'   => [['role' => 'user', 'content' => $userPrompt]],
+    'system'     => $systemBlocks,
+    'messages'   => [['role' => 'user', 'content' => $userPromptFull]],
 ];
 
 $ch = curl_init('https://api.anthropic.com/v1/messages');
