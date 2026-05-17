@@ -46,7 +46,7 @@ body{font-family:var(--font);font-size:14px;background:var(--grey-bg);color:var(
 .kpi-value{font-size:22px;font-weight:700;color:var(--navy);line-height:1.1;margin-top:2px}
 /* Eisenhower */
 .matrix{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.quadrant{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:14px;min-height:160px}
+.quadrant{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:14px;min-height:160px;min-width:0;overflow:hidden}
 .quadrant.q-urgent_important{border-left:3px solid var(--red)}
 .quadrant.q-important{border-left:3px solid var(--navy)}
 .quadrant.q-urgent{border-left:3px solid #E8A020}
