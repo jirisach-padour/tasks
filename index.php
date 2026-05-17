@@ -1517,6 +1517,105 @@ function Q1AlertBadge({ tasks, onEditTask }) {
 }
 
 // ---- KPI Panel ----
+// ---- ChatPanel ----
+function ChatPanel() {
+  const [open, setOpen] = React.useState(false);
+  const [input, setInput] = React.useState('');
+  const [history, setHistory] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const bottomRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (bottomRef.current) bottomRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, [history, loading]);
+
+  async function handleSend() {
+    const msg = input.trim();
+    if (!msg || loading) return;
+    const newHistory = [...history, { role: 'user', content: msg }];
+    setHistory(newHistory);
+    setInput('');
+    setLoading(true);
+    try {
+      const data = await apiFetch('chat', 'POST', { message: msg, history: history });
+      setHistory([...newHistory, { role: 'assistant', content: data.reply }]);
+    } catch(e) {
+      setHistory([...newHistory, { role: 'assistant', content: 'Chyba: ' + e.message }]);
+    }
+    setLoading(false);
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }
+
+  return (
+    <div className="sidebar-panel" style={{marginTop:'12px'}}>
+      <div
+        style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none'}}
+        onClick={() => setOpen(v => !v)}
+      >
+        <span style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'0.05em'}}>
+          AI Asistent
+        </span>
+        <span style={{fontSize:'14px',color:'var(--grey-text)'}}>{open ? '▲' : '▼'}</span>
+      </div>
+      {open && (
+        <div style={{marginTop:'10px'}}>
+          <div style={{maxHeight:'280px',overflowY:'auto',marginBottom:'8px',display:'flex',flexDirection:'column',gap:'6px'}}>
+            {history.length === 0 && (
+              <div style={{fontSize:'11px',color:'var(--grey-text)',fontStyle:'italic',padding:'8px 0'}}>
+                Zeptej se na cokoli — priority, co teď dělat, jak formulovat mail...
+              </div>
+            )}
+            {history.map((h, i) => (
+              <div key={i} style={{
+                fontSize:'12px',
+                padding:'6px 9px',
+                borderRadius:'8px',
+                background: h.role === 'user' ? '#EBF0FF' : '#F4F5F7',
+                alignSelf: h.role === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth:'90%',
+                whiteSpace:'pre-wrap',
+                lineHeight:'1.4',
+              }}>
+                {h.content}
+              </div>
+            ))}
+            {loading && (
+              <div style={{fontSize:'12px',padding:'6px 9px',borderRadius:'8px',background:'#F4F5F7',alignSelf:'flex-start',color:'var(--grey-text)'}}>
+                ...
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+          <div style={{display:'flex',gap:'6px'}}>
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder="Napiš otázku... (Enter = odeslat)"
+              rows={2}
+              style={{flex:1,fontSize:'12px',padding:'6px 8px',borderRadius:'6px',border:'1px solid var(--grey-border)',resize:'none',fontFamily:'var(--font)'}}
+            />
+            <button
+              onClick={handleSend}
+              disabled={loading || !input.trim()}
+              style={{background:'var(--blue)',color:'#fff',border:'none',borderRadius:'6px',padding:'0 10px',fontSize:'13px',cursor:'pointer',flexShrink:0,opacity: loading || !input.trim() ? 0.5 : 1}}
+            >↑</button>
+          </div>
+          {history.length > 0 && (
+            <button
+              onClick={() => setHistory([])}
+              style={{marginTop:'6px',background:'none',border:'none',fontSize:'10px',color:'var(--grey-text)',cursor:'pointer',padding:0}}
+            >Smazat historii</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function KpiPanel({ todayDone, totalOpen }) {
   return (
     <div className="panel">
@@ -2783,6 +2882,7 @@ function App() {
             onRefresh={loadCalendar}
             onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
           />
+          <ChatPanel />
         </>,
         document.getElementById('sidebarRight')
       )}

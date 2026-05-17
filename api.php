@@ -17,6 +17,7 @@ match($action) {
     'ai_suggest'     => require __DIR__ . '/api/ai.php',
     'what_now'       => require __DIR__ . '/api/what_now.php',
     'prep_topics'    => require __DIR__ . '/api/prep_topics.php',
+    'chat'           => require __DIR__ . '/api/chat.php',
     'onenon'         => require __DIR__ . '/api/onenon.php',
     'settings'        => require __DIR__ . '/api/settings.php',
     'todo'           => (function() {
