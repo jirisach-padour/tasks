@@ -38,18 +38,28 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .nav-sep{width:28px;height:1px;background:var(--border);margin:4px 0}
 .nav-spacer{flex:1}
 /* Layout */
-.layout{display:grid;grid-template-columns:60px clamp(200px,16%,280px) 1fr clamp(200px,16%,280px);gap:16px;margin-top:0;padding-bottom:80px;align-items:start}
-.layout.onenon-mode{grid-template-columns:60px clamp(200px,16%,280px) 1fr}
-.layout.onenon-mode #sidebarRight{display:none}
+.layout{display:grid;grid-template-columns:60px 1fr 280px;gap:0;margin-top:0;padding-bottom:0;align-items:stretch;height:calc(100vh - 52px);overflow:hidden}
+.layout.onenon-mode{grid-template-columns:60px 1fr 280px}
 /* Panel */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)}
 .panel+.panel{margin-top:14px}
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+/* Right sidebar */
+.sidebar-right{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;height:100%}
+.sidebar-left{display:none!important}
+#mainContent{overflow-y:auto;padding:20px}
+.rs-panel{border-bottom:1px solid var(--border);padding:14px 16px}
+.rs-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.rs-title-action{font-weight:600;font-size:11px;color:var(--accent);cursor:pointer;text-transform:none;letter-spacing:0}
 /* KPI */
-.kpi-row{display:flex;gap:10px;margin-bottom:12px}
-.kpi-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow-sm)}
-.kpi-label{font-size:10px;color:var(--text-2);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
-.kpi-value{font-size:22px;font-weight:700;color:var(--text);line-height:1.1;margin-top:2px}
+.kpi-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.kpi-stat{font-size:20px;font-weight:800;color:var(--text)}
+.kpi-label-sm{font-size:11px;color:var(--text-2);margin-top:1px}
+.kpi-sep{width:1px;height:30px;background:var(--border);flex-shrink:0}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.progress-fill{height:100%;background:var(--success);border-radius:3px;transition:width .4s}
+.progress-label{font-size:11px;color:var(--text-2)}
+.progress-label span{color:var(--success);font-weight:700}
 /* Eisenhower */
 .matrix{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .quadrant{border-radius:var(--radius);padding:14px;min-height:160px;min-width:0;overflow:hidden;box-shadow:var(--shadow-sm)}
@@ -355,15 +365,12 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .toast.show{opacity:1}
 /* Responsive */
 @media(max-width:1100px){
-  .layout{grid-template-columns:220px 1fr}
+  .layout{grid-template-columns:60px 1fr;height:100vh}
   .sidebar-right{display:none}
 }
 @media(max-width:900px){
-  .layout{grid-template-columns:1fr}
-  .sidebar-left{display:none}
-  .sidebar-left.open{display:block;position:fixed;left:0;top:0;width:min(300px,85vw);height:100vh;z-index:150;overflow-y:auto;background:var(--white);padding:16px;box-shadow:4px 0 20px rgba(0,0,0,.2)}
-  .sidebar-mobile-panels{display:block}
-  .sidebar-toggle{display:inline-flex;align-items:center}
+  .layout{grid-template-columns:60px 1fr;height:100vh}
+  .sidebar-right{display:none}
   .fab{display:flex}
   .header-desktop-only{display:none}
   .header-actions input[type=search]{width:120px !important}
@@ -461,30 +468,31 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
 }
 
 // ---- NavSidebar ----
-const NAV_ITEMS = [
-  { key: 'dnes',    icon: '☀', label: 'Dnes' },
-  { key: 'all',     icon: '#', label: 'Matice' },
-  { key: 'history', icon: '○', label: 'Historie' },
-  { key: 'onenon',  icon: '♟', label: '1on1' },
-];
-
 function NavSidebar({ activeTab, onTab }) {
   const isMatrix = ['all','work','personal'].includes(activeTab);
+  const active = (key) => key === activeTab || (key === 'all' && isMatrix);
   return (
-    <nav style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 0',gap:'2px',height:'100%'}}>
-      {NAV_ITEMS.map(item => (
-        <button
-          key={item.key}
-          className={'nav-item' + ((item.key === activeTab || (item.key === 'all' && isMatrix)) ? ' active' : '')}
-          onClick={() => onTab(item.key)}
-          title={item.label}>
-          {item.icon}
-        </button>
-      ))}
-      <div className="nav-spacer" />
+    <nav style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'12px 0',gap:'4px',height:'100%'}}>
+      <button className={'nav-item' + (active('dnes') ? ' active' : '')} onClick={() => onTab('dnes')} title="Dnes">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+      <button className={'nav-item' + (active('all') ? ' active' : '')} onClick={() => onTab('all')} title="Matice">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button className={'nav-item' + (active('history') ? ' active' : '')} onClick={() => onTab('history')} title="Historie">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
+      <button className={'nav-item' + (active('onenon') ? ' active' : '')} onClick={() => onTab('onenon')} title="1on1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </button>
       <div className="nav-sep" />
-      <button className="nav-item" title="AI Chat" style={{color:'#7C3AED'}} onClick={() => onTab('chat')}>✦</button>
-      <button className="nav-item" title="Nastavení" onClick={() => onTab('settings')}>⚙</button>
+      <div className="nav-spacer" />
+      <button className="nav-item" title="AI Chat" style={{color:'#7C3AED'}} onClick={() => onTab('chat')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </button>
+      <button className="nav-item" title="Nastavení" onClick={() => onTab('settings')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </nav>
   );
 }
@@ -997,10 +1005,10 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete, onEdit })
   const done  = items.filter(i => i.done);
 
   return (
-    <div className="panel">
-      <div className="section-title">
+    <div className="rs-panel">
+      <div className="rs-title">
         Rychlý checklist
-        {todayDone > 0 && <span className="badge badge-work">{todayDone} dnes</span>}
+        {todayDone > 0 && <span style={{fontSize:10,background:'var(--accent-bg)',color:'var(--accent)',borderRadius:10,padding:'1px 7px',fontWeight:700,marginLeft:6}}>{todayDone} dnes</span>}
       </div>
       {open.map(i => renderItem(i, false))}
       {done.length > 0 && done.map(i => renderItem(i, true))}
@@ -1055,8 +1063,8 @@ function DaktelaPanel({ tickets, refreshedAt, token, onConnectClick, onRefresh, 
   const assigned = tickets.filter(t => am[t.name]);
 
   return (
-    <div className="panel">
-      <div className="section-title">
+    <div className="rs-panel">
+      <div className="rs-title">
         Daktela tickety
         <span style={{display:'flex',gap:6,alignItems:'center'}}>
           <button onClick={cycleSize} title="Výška panelu" style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'10px',color:'var(--grey-text)',padding:'1px 6px',fontWeight:700,fontFamily:'var(--font)'}}>{sizeLabel}</button>
@@ -1125,8 +1133,8 @@ function CalendarPanel({ events, connected, onConnect, onDisconnect, onCreateTas
   }, []);
 
   return (
-    <div className="panel">
-      <div className="section-title">
+    <div className="rs-panel">
+      <div className="rs-title">
         Kalendář
         <span style={{display:'flex',gap:6,alignItems:'center'}}>
           {connected && <button onClick={cycleSize} title="Výška panelu" style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:4,cursor:'pointer',fontSize:'10px',color:'var(--grey-text)',padding:'1px 6px',fontWeight:700,fontFamily:'var(--font)'}}>{sizeLabel}</button>}
@@ -1680,15 +1688,15 @@ function ChatPanel() {
   }
 
   return (
-    <div className="sidebar-panel" style={{marginTop:'12px'}}>
+    <div className="rs-panel">
       <div
         style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none'}}
         onClick={() => setOpen(v => !v)}
       >
-        <span style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'0.05em'}}>
+        <span style={{fontSize:'11px',fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'0.06em'}}>
           AI Asistent
         </span>
-        <span style={{fontSize:'14px',color:'var(--grey-text)'}}>{open ? '▲' : '▼'}</span>
+        <span style={{fontSize:'14px',color:'var(--text-3)'}}>{open ? '▲' : '▼'}</span>
       </div>
       {open && (
         <div style={{marginTop:'10px'}}>
@@ -1756,24 +1764,24 @@ function KpiPanel({ todayDone, totalOpen }) {
   }, [todayDone]);
 
   return (
-    <div className="panel">
-      <div className="section-title">Dnešní výkon</div>
+    <div className="rs-panel">
+      <div className="rs-title">Výkon</div>
       <div className="kpi-row">
-        <div className="kpi-card">
-          <div className="kpi-label">Hotovo dnes</div>
-          <div className="kpi-value" style={{color: todayDone > 0 ? '#2E7D3F' : 'var(--navy)'}}>{todayDone}</div>
+        <div>
+          <div className="kpi-stat" style={{color:todayDone>0?'var(--success)':'var(--text)'}}>{todayDone}</div>
+          <div className="kpi-label-sm">hotovo dnes</div>
         </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Otevřené</div>
-          <div className="kpi-value">{totalOpen}</div>
+        <div className="kpi-sep" />
+        <div>
+          <div className="kpi-stat" style={{color:'var(--text-2)'}}>{totalOpen}</div>
+          <div className="kpi-label-sm">otevřených</div>
         </div>
       </div>
       {accuracy !== null && (
-        <div style={{marginTop:'10px',fontSize:'11px',color:'var(--grey-text)',textAlign:'center'}}>
-          <span title="Průměrná přesnost odhadů za 30 dní (100% = přesné, >100% = podhodnocuješ)">
-            Přesnost odhadů: <strong style={{color: accuracy > 130 ? '#c0392b' : accuracy > 110 ? '#A06000' : '#2E7D3F'}}>{accuracy}%</strong>
-          </span>
-        </div>
+        <React.Fragment>
+          <div className="progress-bar"><div className="progress-fill" style={{width:Math.min(accuracy,100)+'%'}} /></div>
+          <div className="progress-label">Přesnost odhadů <span>{accuracy}%</span></div>
+        </React.Fragment>
       )}
     </div>
   );
@@ -3152,46 +3160,21 @@ function App() {
         document.getElementById('navSidebar')
       )}
 
-      {/* Levý sidebar: KPI + Checklist nebo 1on1 kontext */}
-      {ReactDOM.createPortal(
-        activeTab === 'onenon'
-          ? <OneOnOneContextPanel ctx={onenonCtx} />
-          : <>
-              <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
-              <ChecklistPanel
-                items={checklistItems}
-                todayDone={clTodayDone}
-                onAdd={handleAddCl}
-                onToggle={handleToggleCl}
-                onDelete={handleDeleteCl}
-                onEdit={handleEditCl}
-              />
-              <div className="sidebar-mobile-panels">
-                <DaktelaPanel
-                  tickets={daktelaTickets}
-                  refreshedAt={daktelaRefreshedAt}
-                  token={daktelaToken}
-                  onConnectClick={() => setModal({ type: 'daktela' })}
-                  onRefresh={refreshDaktelaCache}
-                  onCreateTask={handleDaktelaCreateTask}
-                  assignedMap={assignedMap}
-                />
-                <CalendarPanel
-                  events={calEvents}
-                  connected={calConnected}
-                  onConnect={handleCalConnect}
-                  onDisconnect={handleCalDisconnect}
-                  onRefresh={loadCalendar}
-                  onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
-                />
-              </div>
-            </>,
-        document.getElementById('sidebarLeft')
-      )}
+      {/* Levý sidebar — skrytý */}
+      {ReactDOM.createPortal(<></>, document.getElementById('sidebarLeft'))}
 
-      {/* Pravý sidebar: Daktela + Calendar */}
+      {/* Pravý sidebar: KPI + Checklist + Daktela + Calendar + Chat */}
       {ReactDOM.createPortal(
         <>
+          <KpiPanel todayDone={todayDone + clTodayDone} totalOpen={totalOpen} />
+          <ChecklistPanel
+            items={checklistItems}
+            todayDone={clTodayDone}
+            onAdd={handleAddCl}
+            onToggle={handleToggleCl}
+            onDelete={handleDeleteCl}
+            onEdit={handleEditCl}
+          />
           <DaktelaPanel
             tickets={daktelaTickets}
             refreshedAt={daktelaRefreshedAt}
