@@ -62,3 +62,13 @@
 - [x] **Chat okýnko (fáze 2)** — api/chat.php (Claude Haiku), ChatPanel v pravém sidebaru (2026-05-17)
 - [x] **Denní cron** — cron/daily_context.php exportuje tasks-context.md; crontab 6:00 (2026-05-17)
 - [x] **Samoučení** — estimated_minutes + actual_minutes; DoneTimeModal; přesnost odhadů v KpiPanel; AI accuracy context (2026-05-17)
+
+## Fronta — redesign (naplánováno)
+
+- [ ] **Redesign — Dnes + Matice** — nový design systém (sidebar nav, světlá paleta, Q1 vizuální dominance, nové task karty)
+- [ ] **Redesign — 1on1** — person health signals, action items oddělené od zápisů, mood trend chart, profile strip, prep modal redesign
+
+## Fronta — nové featury
+
+- [ ] **1on1 auto-task z kalendáře** — nastavovací modal: spárovat GCal event názvy s osobami → cron den před schůzkou vytvoří "Připravit 1on1 s [osoba]" jako Q2 task (viz návrh 2026-05-22)
+- [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ FÁZE: zobrazit v detailu osoby tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token
