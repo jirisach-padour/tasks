@@ -2648,7 +2648,7 @@ function App() {
       sidebar.classList.toggle('open');
       backdrop.classList.toggle('active');
     }
-    document.getElementById('sidebarToggle').onclick = toggleSidebar;
+    const sidebarToggleBtn = document.getElementById('sidebarToggle'); if (sidebarToggleBtn) sidebarToggleBtn.onclick = toggleSidebar;
     backdrop.onclick = () => { sidebar.classList.remove('open'); backdrop.classList.remove('active'); };
 
     // Cmd+K = quick capture
