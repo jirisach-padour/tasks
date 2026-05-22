@@ -389,6 +389,27 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-dashboard{background:var(--warning-bg);border:1px solid #FDE68A;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px}
 .onenon-dashboard-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .onenon-person-warn{width:7px;height:7px;border-radius:50%;background:var(--warning);flex-shrink:0}
+.onenon-sidebar-footer{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);flex-shrink:0}
+.onenon-footer-btn{width:100%;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+.onenon-footer-btn:hover{border-color:var(--accent);color:var(--accent)}
+.onenon-cols{display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:flex-start}
+.onenon-col-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:12px}
+.onenon-col-card-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2)}
+.onenon-ai-group-section{padding:10px 14px 0}
+.onenon-ai-group-label{font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.onenon-ai-done-label{font-size:11px;font-weight:700;color:var(--success);margin:8px 0 4px;display:flex;align-items:center;gap:4px}
+.onenon-ai-done-item{font-size:12px;color:var(--text-3);text-decoration:line-through;padding:3px 0}
+.onenon-mood-chart{padding:12px 14px}
+.onenon-mood-trend-label{font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.onenon-bars{display:flex;gap:8px;align-items:flex-end;height:44px;margin-top:4px}
+.onenon-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.onenon-bar{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:height .2s}
+.onenon-bar-label{font-size:9px;color:var(--text-3);white-space:nowrap}
+.onenon-person-stars{font-size:11px;color:#F59E0B;letter-spacing:.5px}
+.onenon-trend{font-size:13px;font-weight:700;flex-shrink:0}
+.onenon-trend.up{color:var(--success)}
+.onenon-trend.down{color:var(--danger)}
+.onenon-note-tag-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
 .sr-section-label{font-size:11px;font-weight:700;color:var(--grey-text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .sr-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;margin-bottom:4px;border:1px solid var(--grey-border);background:var(--grey-bg)}
 .sr-task-title{font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--navy)}
@@ -2294,20 +2315,30 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
       .filter(it => !it.done)
       .map((it, idx) => ({ ...it, from: n.meeting_date, noteId: n.id, idx }))
   );
+  const allDoneItems = notes.flatMap(n =>
+    (n.action_items || [])
+      .filter(it => it.done)
+      .map((it, idx) => ({ ...it, from: n.meeting_date, noteId: n.id, idx }))
+  );
   const lastMoods = notes.filter(n => n.mood).slice(0, 4).map(n => n.mood);
   const moodTrend = lastMoods.length >= 2
     ? (lastMoods[0] > lastMoods[1] ? '↑' : lastMoods[0] < lastMoods[1] ? '↓' : '→')
     : null;
+  const moodAvg = lastMoods.length ? (lastMoods.reduce((a,b) => a+b,0)/lastMoods.length).toFixed(1) : null;
+  const moodBarColor = m => m >= 4 ? 'var(--success)' : m === 3 ? '#86EFAC' : m === 2 ? 'var(--warning)' : '#FCA5A5';
+
+  const potLabels = { low: 'Nízký', medium: 'Střední', high: 'Vysoký' };
+  const mgmtLabels = { low: 'Nízká', medium: 'Střední', high: 'Vysoká' };
 
   return (
     <div className="onenon-layout">
+      {/* Levý sidebar — seznam lidí */}
       <div className="onenon-people-sidebar">
         <div className="onenon-people-header">
-          <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé</span>
+          <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé ({people.length})</span>
           <div style={{display:'flex',gap:6,alignItems:'center'}}>
             {totalOpen > 0 && <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />}
             <button className="btn btn-secondary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
-          <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: selected || '' })}>+ Schůzka</button>
           </div>
         </div>
         {(warnPeople.length > 0) && (
@@ -2319,6 +2350,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
           {people.map(p => {
             const isEditing = editingPerson && editingPerson.name === p.person;
             const isActive = selected === p.person;
+            const prof = p.profile || {};
             return (
               <div key={p.person} className="onenon-person-row">
                 {isEditing ? (
@@ -2331,16 +2363,16 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                 ) : (
                   <div style={{display:'flex',alignItems:'center',gap:2}}>
                     <button className={'onenon-person-item-btn' + (isActive ? ' active' : '')} onClick={() => loadNotes(p.person)}>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
                         <span style={{fontWeight:600,fontSize:13,color:isActive ? 'var(--purple)' : 'var(--text)'}}>{p.person}</span>
                         <div style={{display:'flex',gap:4,alignItems:'center'}}>
                           {p.open_items > 0 && <span style={{background:'var(--danger)',color:'#fff',borderRadius:9,padding:'1px 5px',fontSize:10,fontWeight:700}}>{p.open_items}</span>}
                           {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní'} />}
                         </div>
                       </div>
-                      <div style={{fontSize:10,color:'var(--text-3)'}}>
-                        {p.days_since} dní
-                        {p.count > 0 && ' · ' + p.count + ' zápisů'}
+                      <div style={{display:'flex',alignItems:'center',gap:6}}>
+                        {prof.performance > 0 && <span className="onenon-person-stars">{'★'.repeat(prof.performance)}{'☆'.repeat(5-prof.performance)}</span>}
+                        <span style={{fontSize:10,color:'var(--text-3)'}}>· {p.days_since} dní</span>
                       </div>
                     </button>
                     <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null }); }}>✎</button>
@@ -2350,7 +2382,14 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
             );
           })}
         </div>
+        {selected && (
+          <div className="onenon-sidebar-footer">
+            <button className="onenon-footer-btn" onClick={() => setModal({ person: selected })}>+ Nová schůzka s {selected}</button>
+          </div>
+        )}
       </div>
+
+      {/* Hlavní obsah */}
       <div className="onenon-main">
         {!selected && (
           <div style={{color:'var(--text-3)',fontSize:13,padding:'40px 0',textAlign:'center'}}>
@@ -2360,7 +2399,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
         )}
         {selected && (
           <>
-            {/* Person header + health signals */}
+            {/* Person header */}
             <div className="onenon-person-header">
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                 <div>
@@ -2377,24 +2416,30 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                   <SignalChip type={selectedPeopleData.days_since > 30 ? 'warn' : 'ok'} label={'Poslední 1on1: ' + selectedPeopleData.days_since + ' dní'} />
                 )}
                 {allOpenItems.length > 0 && <SignalChip type="warn" label={allOpenItems.length + ' open action items'} />}
-                {moodTrend && <SignalChip type="info" label={'Nálada ' + moodTrend} />}
+                {moodTrend && <SignalChip type="info" label={'Nálada ' + moodTrend + ' stoupá'} />}
                 {selectedProfile && selectedProfile.potential === 'high' && <SignalChip type="purple" label="Vysoký potenciál" />}
               </div>
             </div>
 
             {/* Profile strip */}
-            {selectedProfile && (
-              <div style={{background:'#FAFAFA',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'12px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+            {selectedProfile && (selectedProfile.performance > 0 || selectedProfile.potential || selectedProfile.strength || selectedProfile.mgmt_effort) && (
+              <div style={{background:'#FAFAFA',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'10px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
                 {selectedProfile.performance > 0 && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                  <div style={{display:'flex',flexDirection:'column',gap:2,minWidth:60}}>
                     <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Výkon</span>
-                    <span style={{fontSize:14,color:'#F59E0B',letterSpacing:1}}>{'★'.repeat(selectedProfile.performance)}{'☆'.repeat(5-selectedProfile.performance)}</span>
+                    <span style={{fontSize:13,color:'#F59E0B',letterSpacing:.5}}>{'★'.repeat(selectedProfile.performance)}{'☆'.repeat(5-selectedProfile.performance)}</span>
                   </div>
                 )}
                 {selectedProfile.potential && (
                   <div style={{display:'flex',flexDirection:'column',gap:2}}>
                     <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Potenciál</span>
-                    <span style={{display:'inline-block',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:5,background:selectedProfile.potential==='high'?'#EDE9FE':selectedProfile.potential==='medium'?'var(--warning-bg)':'var(--bg)',color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{selectedProfile.potential}</span>
+                    <span style={{fontSize:12,fontWeight:700,color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
+                  </div>
+                )}
+                {selectedProfile.mgmt_effort && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Náročnost řízení</span>
+                    <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)'}}>{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
                   </div>
                 )}
                 {selectedProfile.strength && (
@@ -2405,69 +2450,111 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                 )}
                 {selectedProfile.development && (
                   <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Rozvoj</span>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Oblast rozvoje</span>
                     <span style={{fontSize:12,color:'var(--text-2)'}}>{selectedProfile.development}</span>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Open action items */}
-            {allOpenItems.length > 0 && (
-              <div className="onenon-open-items">
-                <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)',marginBottom:8}}>Open action items</div>
-                {allOpenItems.map((it, i) => (
-                  <div key={i} className="onenon-open-item-row" onClick={() => {
-                    const note = notes.find(n => n.id === it.noteId);
-                    if (note) toggleActionItem(note, it.idx);
-                  }}>
-                    <span className="onenon-action-check" style={{marginTop:1}} />
-                    <span style={{flex:1,color:'var(--text)'}}>{it.text}</span>
-                    <span className="onenon-open-item-from">{it.from}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {prepDoc && <PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />}
 
-            <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
-            <div style={{flex:1,minWidth:0}}>
-            {/* Timeline zápisů */}
-            <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)',marginBottom:10}}>
-              Záznamy — {notes.length}
-            </div>
-            {notes.length === 0 && <div style={{color:'var(--text-3)',fontSize:13}}>Zatím žádné záznamy</div>}
-            {notes.map(n => (
-              <div key={n.id} className="onenon-note-card">
-                <div className="onenon-note-header">
-                  <div>
-                    <div style={{display:'flex',alignItems:'center',gap:8}}>
-                      <div className="onenon-note-date">{n.meeting_date}</div>
-                      {renderMood(n.mood)}
-                      {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
-                    </div>
+            {/* Dvousloupcový layout */}
+            <div className="onenon-cols">
+              {/* Levý sloupec: action items + mood chart */}
+              <div>
+                <div className="onenon-col-card">
+                  <div className="onenon-col-card-header">
+                    <span>Open action items</span>
+                    <button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'var(--accent)',fontWeight:700,fontFamily:'var(--font)'}} onClick={() => setModal({ person: selected })}>+ přidat</button>
                   </div>
-                  <div className="onenon-note-actions">
-                    <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Upravit">✎</button>
-                    <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Smazat">🗑</button>
+                  <div className="onenon-ai-group-section" style={{paddingBottom:10}}>
+                    {allOpenItems.length === 0 && <div style={{fontSize:12,color:'var(--text-3)',padding:'8px 0'}}>Žádné otevřené položky</div>}
+                    {allOpenItems.length > 0 && (
+                      <>
+                        <div className="onenon-ai-group-label">Čeká na {selected} <span style={{color:'var(--danger)',fontWeight:700}}>{allOpenItems.length}</span></div>
+                        {allOpenItems.map((it, i) => (
+                          <div key={i} className="onenon-open-item-row" onClick={() => {
+                            const note = notes.find(n => n.id === it.noteId);
+                            if (note) toggleActionItem(note, it.idx);
+                          }}>
+                            <span className="onenon-action-check" style={{marginTop:1}} />
+                            <span style={{flex:1,color:'var(--text)',fontSize:12}}>{it.text}</span>
+                            <span className="onenon-open-item-from">{it.from}</span>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {allDoneItems.length > 0 && (
+                      <>
+                        <div className="onenon-ai-done-label">✓ Splněno {allDoneItems.length}</div>
+                        {allDoneItems.slice(0,3).map((it, i) => (
+                          <div key={i} className="onenon-ai-done-item">{it.text}</div>
+                        ))}
+                        {allDoneItems.length > 3 && <div style={{fontSize:11,color:'var(--text-3)'}}>&hellip; a {allDoneItems.length - 3} dalších</div>}
+                      </>
+                    )}
                   </div>
                 </div>
-                {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8,lineHeight:1.5}}>{n.notes}</div>}
-                {(n.action_items || []).length > 0 && (
-                  <div>
-                    <div style={{fontSize:11,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Action items</div>
-                    {(n.action_items || []).map((it, idx) => (
-                      <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, idx)}>
-                        <span className={'onenon-action-check' + (it.done ? ' done' : '')} />
-                        <span className={'onenon-action-text' + (it.done ? ' done' : '')}>{it.text}</span>
+
+                {/* Mood bar chart */}
+                {lastMoods.length >= 2 && (
+                  <div className="onenon-col-card">
+                    <div className="onenon-col-card-header">
+                      <span>Nálada (poslední {lastMoods.length} schůzky)</span>
+                    </div>
+                    <div className="onenon-mood-chart">
+                      <div className="onenon-mood-trend-label">
+                        <span>Trend: {moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní'}</span>
+                        {moodAvg && <span style={{color:'var(--text-2)'}}>avg {moodAvg}★</span>}
                       </div>
-                    ))}
+                      <div className="onenon-bars">
+                        {[...lastMoods].reverse().map((m, i) => (
+                          <div key={i} className="onenon-bar-wrap">
+                            <div className="onenon-bar" style={{height: (m/5*40) + 'px', background: moodBarColor(m)}} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            ))}
-            </div>
+
+              {/* Pravý sloupec: timeline zápisů */}
+              <div>
+                <div className="onenon-col-card-header" style={{marginBottom:10,background:'none',border:'none',padding:'0 0 8px 0',borderBottom:'1px solid var(--border)'}}>
+                  <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)'}}>Timeline zápisů ({notes.length})</span>
+                </div>
+                {notes.length === 0 && <div style={{color:'var(--text-3)',fontSize:13}}>Zatím žádné záznamy</div>}
+                {notes.map(n => (
+                  <div key={n.id} className="onenon-note-card">
+                    <div className="onenon-note-header">
+                      <div>
+                        <div className="onenon-note-tag-row">
+                          <div className="onenon-note-date">{n.meeting_date}</div>
+                          {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
+                        </div>
+                        {n.mood && <div style={{color:'#F59E0B',fontSize:13,letterSpacing:.5}}>{'★'.repeat(n.mood)}{'☆'.repeat(5-n.mood)}</div>}
+                      </div>
+                      <div className="onenon-note-actions">
+                        <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Upravit">✎</button>
+                        <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Smazat">🗑</button>
+                      </div>
+                    </div>
+                    {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8,lineHeight:1.5}}>{n.notes}</div>}
+                    {(n.action_items || []).length > 0 && (
+                      <div>
+                        {(n.action_items || []).map((it, idx) => (
+                          <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, idx)}>
+                            <span className={'onenon-action-check' + (it.done ? ' done' : '')} />
+                            <span className={'onenon-action-text' + (it.done ? ' done' : '')}>{it.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         )}
