@@ -52,17 +52,22 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .kpi-value{font-size:22px;font-weight:700;color:var(--navy);line-height:1.1;margin-top:2px}
 /* Eisenhower */
 .matrix{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.quadrant{background:var(--white);border:1px solid var(--grey-border);border-radius:var(--radius);padding:14px;min-height:160px;min-width:0;overflow:hidden}
-.quadrant.q-urgent_important{border-left:3px solid var(--red)}
-.quadrant.q-important{border-left:3px solid var(--navy)}
-.quadrant.q-urgent{border-left:3px solid #E8A020}
+.quadrant{border-radius:var(--radius);padding:14px;min-height:160px;min-width:0;overflow:hidden;box-shadow:var(--shadow-sm)}
+.quadrant.q-urgent_important{background:var(--danger-bg);border:1px solid #FECACA;border-top:3px solid var(--danger)}
+.quadrant.q-important{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent)}
+.quadrant.q-urgent{background:var(--warning-bg);border:1px solid #FDE68A;border-top:3px solid var(--warning)}
+.quadrant.q-other{background:var(--surface-2);border:1px solid var(--border)}
 .q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.q-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--grey-text);display:flex;align-items:center;gap:5px}
+.q-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-2);display:flex;align-items:center;gap:5px}
+.quadrant.q-urgent_important .q-label{color:var(--danger);font-weight:800}
+.quadrant.q-important .q-label{color:var(--accent);font-weight:700}
+.quadrant.q-urgent .q-label{color:var(--warning);font-weight:700}
+.quadrant.q-other .q-label{color:var(--text-3);font-weight:600}
 .q-add-btn{background:none;border:none;cursor:pointer;color:var(--grey-text);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
 .q-add-btn:hover{color:var(--navy)}
 /* Task card */
-.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--white);border-radius:6px;margin-bottom:6px;border:1px solid var(--grey-border);cursor:pointer;transition:border-color .1s;box-shadow:0 1px 3px rgba(0,0,0,.05);position:relative;overflow:hidden}
-.task-card:hover{border-color:#bbc}
+.task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}
 .task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--red);cursor:pointer}
 .task-body{flex:1;min-width:0}
 .task-title{font-size:13px;font-weight:500;line-height:1.4;word-break:break-word}
@@ -202,13 +207,10 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .qc-hint{font-size:11px;color:var(--grey-text);margin-top:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Stale task */
-.task-card.stale-mid{background:#FAFAFA;border-color:#e8e8e8}
-.task-card.stale-old{background:#F6F6F6;border-color:#e0e0e0;opacity:.88}
-.stale-bar{position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 0 7px;pointer-events:none}
-.stale-bar.mid{background:linear-gradient(90deg,#F5A623 0%,transparent 100%);width:40%}
-.stale-bar.old{background:linear-gradient(90deg,#ccc 0%,transparent 100%);width:70%}
-.stale-age{font-size:10px;color:#bbb;font-weight:600;padding:1px 5px;background:#f0f0f0;border-radius:4px}
-.stale-age.warn{color:#c94f42;background:#fee8e7}
+.task-card.stale-mid{border-left:3px solid var(--warning) !important}
+.task-card.stale-old{border-left:3px solid var(--danger) !important;opacity:.82}
+.stale-age{font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;color:var(--warning)}
+.stale-age.warn{color:var(--danger)}
 /* Task description */
 .task-desc{font-size:11px;color:var(--grey-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}.task-desc-link{color:var(--primary);text-decoration:none}.task-desc-link:hover{text-decoration:underline}
 /* Dnes timeline */
@@ -843,9 +845,6 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
         }
         {task.description && <div className="task-desc">{linkifyText(task.description)}</div>}
         <div className="task-meta">
-          <span className={'badge ' + (task.type === 'personal' ? 'badge-personal' : 'badge-work')}>
-            {task.type === 'personal' ? 'Osobní' : 'Work'}
-          </span>
           {tickets.length === 1 && (
             <a href={'https://daktela.daktela.com/tickets/update/' + tickets[0]} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="badge badge-daktela" style={{textDecoration:'none'}}>{tickets[0]}</a>
           )}
@@ -857,13 +856,13 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
               {isOverdue ? 'Po termínu: ' : isSoon ? '⚡ ' : ''}{task.due_date}
             </span>
           )}
+          {(isStaleMid || isStaleOld) && <span className={'stale-age' + (isStaleOld ? ' warn' : '')}>{daysOld}d</span>}
         </div>
       </div>
       <button className="task-del" onClick={e => { e.stopPropagation(); onDelete(task); }} title="Smazat">×</button>
       {onAddToDaily && (
         <button className="task-del" title="Přidat do Dnes" onClick={e => { e.stopPropagation(); onAddToDaily(task); }} style={{color:'var(--navy)',fontSize:'11px',fontWeight:700,marginLeft:'-2px'}}>+D</button>
       )}
-      {(isStaleMid || isStaleOld) && <div className={'stale-bar ' + (isStaleOld ? 'old' : 'mid')} />}
     </div>
   );
 }
