@@ -44,7 +44,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 /* Panel */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)}
 .panel+.panel{margin-top:14px}
-.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--grey-text);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 /* KPI */
 .kpi-row{display:flex;gap:10px;margin-bottom:12px}
 .kpi-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow-sm)}
@@ -90,9 +90,10 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .task-del:hover{color:#E63327}
 /* Add task inline */
 .add-inline{display:flex;gap:6px;margin-top:8px}
-.add-inline input{flex:1;height:30px;padding:0 8px;border:1px solid var(--grey-border);border-radius:6px;font-size:12px;font-family:var(--font);outline:none}
-.add-inline input:focus{border-color:var(--navy)}
-.add-inline button{height:30px;padding:0 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+.add-inline input{flex:1;height:28px;padding:0 8px;border:1px dashed var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);outline:none;background:transparent;color:var(--text)}
+.add-inline input:focus{border-color:var(--accent);border-style:solid;background:var(--surface)}
+.add-inline input::placeholder{color:var(--text-3)}
+.add-inline button{height:28px;padding:0 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer}
 /* Checklist */
 .cl-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--grey-border)}
 .cl-item:last-child{border-bottom:none}
