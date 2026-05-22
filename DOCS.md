@@ -46,11 +46,13 @@ define('ANTHROPIC_API_KEY',    'sk-ant-api03-...');
 | `api/checklist.php` | CRUD checklist items |
 | `api/daktela.php` | Proxy na Daktela API v6 + DB cache; whitelist: tickets, activities, users, groups |
 | `api/calendar.php` | Google Calendar API — token refresh + pull eventů; vrací date, time, durationH, allDay |
-| `api/ai.php` | Claude Sonnet 4.6 — návrh kvadrantů pro všechny tasky (max_tokens 4096) |
+| `api/ai.php` | Claude Sonnet 4.6 — návrh kvadrantů (+ 1on1 kontext, Daktela cache, accuracy od 2026-05-17) |
 | `api/what_now.php` | Claude Haiku — "Co teď?" (time, nextEvent, topQ1, dailyTasks → 2-3 věty + task) |
-| `api/prep_topics.php` | Claude Haiku — 3 témata pro 1on1 (person, profile, openItems → topics JSON) |
+| `api/prep_topics.php` | Claude Haiku — 3 témata pro 1on1 |
+| `api/chat.php` | Claude Haiku — chat asistent (stateless, kontext tasků/1on1/Daktela z DB) |
 | `api/onenon.php` | CRUD 1on1 schůzek + profily; GET list vrací open_action_items pole per osoba |
 | `api/settings.php` | Změna username/hesla (přepis secrets.php) |
+| `cron/daily_context.php` | Export tasks-context.md (denní plán, kvadranty, overdue, 1on1 items); crontab 6:00 apache |
 | `lib/DB.php` | PDO wrapper |
 
 ---
@@ -71,7 +73,10 @@ tasks (
     recurrence_unit ENUM('days','weeks','months'),
     sort_order INT,
     daily_order INT NULL,          -- NULL = není v Dnes; hodnota = pořadí
-    done_at TIMESTAMP, created_at, updated_at
+    done_at TIMESTAMP,
+    estimated_minutes SMALLINT NULL,  -- uživatelský odhad (samoučení)
+    actual_minutes SMALLINT NULL,     -- skutečný čas (samoučení)
+    created_at, updated_at
 )
 
 checklist_items (id, title, done, done_at, sort_order, created_at)
@@ -107,9 +112,11 @@ Všechny přes `api.php?action=X`, session auth.
 | `daktela` | POST | proxy Daktela API v6 |
 | `daktela_cache` | GET/POST | DB cache ticketů sachj |
 | `calendar` | GET/POST | events (date+time+durationH+allDay), connect/disconnect |
-| `ai_suggest` | POST | Claude Sonnet 4.6 → kvadranty pro všechny tasky |
+| `tasks` | GET `?history=month_accuracy` | přesnost odhadů za 30 dní `{accuracy, count}` |
+| `ai_suggest` | POST | Claude Sonnet 4.6 → kvadranty (+ 1on1, Daktela cache, accuracy kontext) |
 | `what_now` | POST | Claude Haiku → "Co teď?" s kontextem |
 | `prep_topics` | POST | Claude Haiku → 3 témata pro 1on1 |
+| `chat` | POST | Claude Haiku → `{reply}` (stateless history, kontext z DB) |
 | `onenon` | GET/POST/PUT/DELETE | 1on1 CRUD; GET list vrací open_action_items |
 | `settings` | POST | změna username/hesla |
 | `logout` | POST | session_destroy() |
@@ -177,6 +184,9 @@ Všechny přes `api.php?action=X`, session auth.
 | ai_suggest | Claude Sonnet 4.6 | Kvadranty pro všechny tasky | 4096 |
 | what_now | Claude Haiku | "Co dělat teď?" kontext | 300 |
 | prep_topics | Claude Haiku | 3 témata pro 1on1 | 400 |
+| chat | Claude Haiku | Chat asistent (stateless) | 800 |
+
+**ai_suggest kontext od 2026-05-17:** tasky + calendar + 1on1 záznamy (nálada, action items, dny bez 1on1) + Daktela cache + accuracy ratio. Prompt caching pro system prompt + 1on1 blok.
 
 ---
 
@@ -198,3 +208,14 @@ Všechny přes `api.php?action=X`, session auth.
 - **settings.php:** `preg_replace_callback` + `addcslashes($val, "'\\")` — addslashes nestačí pro PHP string injection
 - **daktela.php error_log:** nelogovat URL (obsahuje accessToken)
 - **calendar.php durationH:** `round((strtotime($endRaw) - strtotime($startRaw)) / 3600, 1)`
+- **cron/daily_context.php** musí spouštět jako apache (čte secrets.php); soubor tasks-context.md musí vlastnit apache
+
+---
+
+## Featury nasazené 2026-05-17
+
+- **DnesResetModal** — nový den: výběr co přenést do Dnes, hotové se odstraní automaticky; `localStorage['lastDnesCheck']`; spouští se před MorningRitual
+- **AI kontext z DB (fáze 1)** — ai.php rozšířen o 1on1 záznamy, Daktela cache, accuracy ratio; prompt caching
+- **ChatPanel + api/chat.php** — Claude Haiku, stateless history, panel v pravém sidebaru pod CalendarPanel
+- **Denní cron** — `cron/daily_context.php` → `tasks-context.md`; crontab `0 6 * * *` jako apache
+- **Samoučení** — `estimated_minutes` + `actual_minutes`; `DoneTimeModal` po dokončení; KpiPanel přesnost odhadů; AI accuracy context
