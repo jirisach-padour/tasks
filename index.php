@@ -349,32 +349,32 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 <body>
 
 <header class="app-header">
-  <div class="container">
-    <div class="header-inner">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-        <svg width="26" height="26" viewBox="0 0 32 32" style="flex-shrink:0;border-radius:5px">
-          <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.12)"/>
-          <rect x="6" y="6" width="9" height="9" rx="2" fill="#E05C4E"/>
-          <rect x="17" y="6" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
-          <rect x="6" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
-          <rect x="17" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.18)"/>
-        </svg>
-        <div>
-          <h1>Tasks</h1>
-          <p class="header-desc">Jiří Šach · Prioritizace</p>
-        </div>
+  <div class="header-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;border-radius:7px">
+        <rect width="32" height="32" rx="6" fill="#1B3468"/>
+        <rect x="6" y="6" width="9" height="9" rx="2" fill="#E05C4E"/>
+        <rect x="17" y="6" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
+        <rect x="6" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
+        <rect x="17" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.18)"/>
+      </svg>
+      <div>
+        <h1>Tasks</h1>
       </div>
-      <div class="header-actions" id="headerActions"></div>
     </div>
-    <div class="tab-bar" id="tabBar"></div>
+    <div style="flex:1;max-width:340px;margin:0 16px">
+      <div id="headerSearch"></div>
+    </div>
+    <div class="header-actions" id="headerActions"></div>
   </div>
+  <div class="tab-bar" id="tabBar" style="display:none"></div>
 </header>
 
-<main class="container">
+<main>
   <div id="app-root" style="position:absolute;width:0;height:0;overflow:visible"></div>
   <div class="layout" id="layout">
     <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+    <nav class="nav-sidebar" id="navSidebar"></nav>
     <aside class="sidebar-left" id="sidebarLeft"></aside>
     <div id="mainContent"></div>
     <aside class="sidebar-right" id="sidebarRight"></aside>
