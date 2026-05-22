@@ -63,8 +63,16 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .quadrant.q-important .q-label{color:var(--accent);font-weight:700}
 .quadrant.q-urgent .q-label{color:var(--warning);font-weight:700}
 .quadrant.q-other .q-label{color:var(--text-3);font-weight:600}
-.q-add-btn{background:none;border:none;cursor:pointer;color:var(--grey-text);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
-.q-add-btn:hover{color:var(--navy)}
+.q-count{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.quadrant.q-urgent_important .q-count{background:#FEE2E2;color:var(--danger)}
+.quadrant.q-important .q-count{background:var(--accent-bg);color:var(--accent)}
+.quadrant.q-urgent .q-count{background:#FEF3C7;color:var(--warning)}
+.quadrant.q-other .q-count{background:var(--surface-2);color:var(--text-2)}
+.q-add-btn{background:none;border:none;cursor:pointer;color:var(--text-2);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
+.q-add-btn:hover{color:var(--text)}
+.quadrant.q-urgent_important .task-card{background:#fff;border-color:#FECACA}
+.quadrant.q-urgent_important .task-card:hover{border-color:#FCA5A5;box-shadow:var(--shadow-md)}
+.quadrant.q-urgent .task-card{background:#fff;border-color:#FDE68A}
 /* Task card */
 .task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
 .task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}
@@ -243,7 +251,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .morning-cb.on{background:var(--success);border-color:var(--success)}
 .morning-task-name{flex:1;color:var(--text)}
 .morning-task-q{font-size:10px;color:var(--text-3);font-weight:600}
-.morning-btns{display:flex;gap:8px}
+.morning-btns{display:flex;gap:8px;margin-top:6px;padding:14px 22px;background:var(--bg);border-top:1px solid var(--border);margin-left:-22px;margin-right:-22px;margin-bottom:-22px}
 .btn-morning-skip{background:var(--surface);color:var(--text-2);border:1px solid var(--border);padding:9px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .btn-morning-go{background:var(--accent);color:#fff;border:none;padding:9px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;flex:1;font-family:var(--font)}
 /* What Now widget */
@@ -284,7 +292,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-person-row{margin-bottom:4px}
 .onenon-person-item-btn{width:100%;background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer;text-align:left;font-family:var(--font);transition:all .15s}
 .onenon-person-item-btn:hover{background:var(--bg);border-color:var(--border)}
-.onenon-person-item-btn.active{background:var(--accent-bg);border-color:#BFDBFE}
+.onenon-person-item-btn.active{background:var(--purple-bg);border-color:#C4B5FD}
 .onenon-person-edit-btn{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-3);padding:4px 6px;border-radius:4px;opacity:0;flex-shrink:0}
 .onenon-person-row:hover .onenon-person-edit-btn{opacity:1}
 .onenon-person-edit-form{background:var(--bg);border-radius:var(--radius-sm);padding:8px;margin-bottom:6px;border:1px solid var(--border)}
