@@ -2181,6 +2181,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [daktelaAgents, setDaktelaAgents] = React.useState([]);
   const [editingPerson, setEditingPerson] = React.useState(null);
   const [prepDoc, setPrepDoc] = React.useState(false);
+  const [mappingModal, setMappingModal] = React.useState(false);
 
   React.useEffect(() => { loadPeople(); }, []);
 
@@ -2287,7 +2288,8 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
           <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé</span>
           <div style={{display:'flex',gap:6,alignItems:'center'}}>
             {totalOpen > 0 && <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />}
-            <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: selected || '' })}>+ Schůzka</button>
+            <button className="btn btn-secondary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
+          <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: selected || '' })}>+ Schůzka</button>
           </div>
         </div>
         {(warnPeople.length > 0) && (
@@ -2419,6 +2421,79 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
         )}
       </div>
       {modal !== null && <OneOnOneModal note={modal} agents={daktelaAgents} existingPeople={people.map(p => p.person)} onSave={handleSave} onClose={() => setModal(null)} />}
+      {mappingModal && <OneOnOneMappingModal people={people} onClose={() => setMappingModal(false)} />}
+    </div>
+  );
+}
+
+// ---- OneOnOneMappingModal ----
+function OneOnOneMappingModal({ people, onClose }) {
+  const [events, setEvents] = React.useState([]);
+  const [mappings, setMappings] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+
+  React.useEffect(() => {
+    Promise.all([
+      apiFetch('calendar', 'GET', null, { sub: 'onenon_scan' }),
+      apiFetch('settings', 'GET', null, { sub: 'onenon_mappings' }),
+    ]).then(function(results) {
+      var calData = results[0];
+      var mappingsData = results[1];
+      setEvents(calData.events || []);
+      var m = {};
+      (mappingsData.mappings || []).forEach(function(r) { m[r.event_keyword] = r.person; });
+      setMappings(m);
+      setLoading(false);
+    });
+  }, []);
+
+  async function handleSave() {
+    setSaving(true);
+    var toSave = Object.entries(mappings)
+      .filter(function(kv) { return kv[1] && kv[1] !== ''; })
+      .map(function(kv) { return { event_keyword: kv[0], person: kv[1] }; });
+    await apiFetch('settings', 'POST', { mappings: toSave }, { sub: 'onenon_mappings' });
+    setSaving(false);
+    toast('Mappings uloženy');
+    onClose();
+  }
+
+  return (
+    <div className="modal-overlay" onClick={function(e) { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal" style={{maxWidth:520}}>
+        <h2 style={{marginBottom:4}}>Auto-tasky z kalendáře</h2>
+        <p style={{fontSize:12,color:'var(--text-2)',marginBottom:16}}>
+          Spáruj opakující se schůzky s lidmi. Den před schůzkou se automaticky vytvoří task "Připravit 1on1 s [osoba]".
+        </p>
+        {loading && <div style={{fontSize:13,color:'var(--text-2)',padding:'20px 0'}}>Načítám kalendář...</div>}
+        {!loading && events.length === 0 && (
+          <div style={{fontSize:13,color:'var(--text-2)'}}>Žádné eventy v příštích 30 dnech (nebo není připojen Google Calendar).</div>
+        )}
+        {!loading && events.map(function(e) {
+          return (
+            <div key={e.title} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+              <div style={{flex:1,fontSize:13,fontWeight:500,color:'var(--text)'}}>{e.title}</div>
+              <select
+                value={mappings[e.title] || ''}
+                onChange={function(ev) {
+                  var val = ev.target.value;
+                  setMappings(function(prev) { var next = Object.assign({}, prev); next[e.title] = val; return next; });
+                }}
+                style={{fontSize:12,padding:'4px 8px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',fontFamily:'var(--font)',color:'var(--text)',background:'var(--surface)'}}>
+                <option value="">— ignorovat —</option>
+                {people.map(function(p) { return <option key={p.person} value={p.person}>{p.person}</option>; })}
+              </select>
+            </div>
+          );
+        })}
+        <div className="modal-actions" style={{marginTop:16}}>
+          <button className="btn btn-secondary" onClick={onClose}>Zrušit</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            {saving ? 'Ukládám...' : 'Uložit'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
