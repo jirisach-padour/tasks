@@ -27,6 +27,36 @@ function getCalendarToken(): ?string {
     return $data['access_token'];
 }
 
+function fetchEventsDays(string $token, int $days, int $maxResults = 30): array {
+    $tz        = 'Europe/Prague';
+    $today     = (new DateTime('today',    new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $end7      = (new DateTime('today +' . $days . ' days', new DateTimeZone($tz)))->format(DateTime::RFC3339);
+    $todayDate    = (new DateTime('today', new DateTimeZone($tz)))->format('Y-m-d');
+    $tomorrowDate = (new DateTime('tomorrow', new DateTimeZone($tz)))->format('Y-m-d');
+    $dayLabels = ['Ne','Po','Út','St','Čt','Pá','So'];
+    $url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?'
+        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>$maxResults,'fields'=>'items(id,summary,start,end)']);
+    $ch2 = curl_init($url);
+    curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token], CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => true]);
+    $resp = curl_exec($ch2);
+    curl_close($ch2);
+    if (!$resp) return [];
+    $data = json_decode($resp, true);
+    $events = [];
+    foreach ($data['items'] ?? [] as $e) {
+        $startRaw = $e['start']['dateTime'] ?? $e['start']['date'] ?? '';
+        $endRaw   = $e['end']['dateTime']   ?? $e['end']['date']   ?? '';
+        $allDay   = !isset($e['start']['dateTime']);
+        $date     = substr($startRaw, 0, 10);
+        $time     = $allDay ? '' : substr($startRaw, 11, 5);
+        $dow      = (int)(new DateTime($date, new DateTimeZone($tz)))->format('w');
+        $label    = $date === $todayDate ? 'Dnes' : ($date === $tomorrowDate ? 'Zítra' : $dayLabels[$dow] . ' ' . substr($date, 8, 2) . '.' . substr($date, 5, 2) . '.');
+        $durationH = (!$allDay && $endRaw) ? round((strtotime($endRaw) - strtotime($startRaw)) / 3600, 1) : 1;
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH];
+    }
+    return $events;
+}
+
 function fetchEvents(string $token): array {
     $tz      = 'Europe/Prague';
     $today   = (new DateTime('today',    new DateTimeZone($tz)))->format(DateTime::RFC3339);
@@ -86,6 +116,24 @@ if ($sub === 'connect' && $method === 'GET') {
 if ($sub === 'disconnect' && $method === 'POST') {
     DB::q("DELETE FROM calendar_tokens");
     echo json_encode(['ok' => true]);
+    exit;
+}
+
+// Eventy pro 1on1 mapping modal (30 dní, unikátní tituly)
+if ($sub === 'onenon_scan' && $method === 'GET') {
+    requireAuth();
+    $token = getCalendarToken();
+    if (!$token) { echo json_encode(['connected'=>false,'events'=>[]]); exit; }
+    $all = fetchEventsDays($token, 30, 100);
+    $unique = [];
+    $seen = [];
+    foreach ($all as $e) {
+        if (!isset($seen[$e['title']])) {
+            $seen[$e['title']] = true;
+            $unique[] = $e;
+        }
+    }
+    echo json_encode(['connected'=>true,'events'=>array_values($unique)]);
     exit;
 }
 
