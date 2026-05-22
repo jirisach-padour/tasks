@@ -328,7 +328,9 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 /* Toast */
 /* 1on1 layout */
 .onenon-layout{display:grid;grid-template-columns:260px 1fr;height:100%;overflow:hidden;gap:0}
-.onenon-people-sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface)}
+.onenon-people-sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);position:relative}
+.layout.onenon-active{grid-template-columns:60px 1fr!important}
+.layout.onenon-active .sidebar-right{display:none!important}
 .onenon-people-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .onenon-people-list{flex:1;overflow-y:auto;padding:8px}
 .onenon-main{flex:1;min-width:0;overflow-y:auto;padding:16px 20px}
@@ -389,6 +391,32 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-dashboard{background:var(--warning-bg);border:1px solid #FDE68A;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px}
 .onenon-dashboard-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .onenon-person-warn{width:7px;height:7px;border-radius:50%;background:var(--warning);flex-shrink:0}
+.onenon-alert-banner{border-radius:var(--radius-sm);padding:7px 10px;font-size:12px;font-weight:600;margin:6px 8px 0;display:flex;align-items:center;gap:6px}
+.onenon-alert-banner.red{background:#FEE2E2;color:var(--danger);border:1px solid #FECACA}
+.onenon-alert-banner.orange{background:var(--warning-bg);color:var(--warning);border:1px solid #FDE68A}
+.onenon-person-trend{font-size:13px;font-weight:700;flex-shrink:0;width:16px;text-align:center}
+.onenon-person-trend.up{color:var(--success)}
+.onenon-person-trend.down{color:var(--danger)}
+.onenon-person-trend.flat{color:var(--text-3)}
+.onenon-metrics-row{background:#FAFAFA;border:1px solid var(--border);border-radius:var(--radius);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:0;overflow:hidden}
+.onenon-metric{display:flex;flex-direction:column;gap:3px;padding-right:20px;border-right:1px solid var(--border);margin-right:20px}
+.onenon-metric:last-of-type{border-right:none;margin-right:0;padding-right:0}
+.onenon-metric-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);font-weight:700}
+.onenon-metric-val{font-size:13px;font-weight:600;color:var(--text)}
+.onenon-metrics-collapse{margin-left:auto;font-size:11px;color:var(--text-3);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.onenon-ai-item-source{font-size:10px;color:var(--text-3);margin-top:2px}
+.onenon-splneno-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:12px}
+.onenon-splneno-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#F0FDF4;border-bottom:1px solid #BBF7D0;font-size:12px;font-weight:700;color:var(--success)}
+.onenon-splneno-item{font-size:12px;color:var(--text-3);text-decoration:line-through;padding:4px 14px;border-bottom:1px solid var(--border)}
+.onenon-splneno-item:last-child{border-bottom:none}
+.onenon-bar-date{font-size:9px;color:var(--text-3);margin-top:2px;text-align:center;white-space:nowrap}
+.onenon-bottom-tabs{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:0;padding:0}
+.onenon-btab{flex:1;padding:10px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-2);font-family:var(--font);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.onenon-btab.active{color:var(--text);border-bottom:2px solid var(--accent)}
+.onenon-note-actions{display:flex;gap:4px;align-items:center}
+.onenon-note-link{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-3);padding:2px 6px;border-radius:4px;font-family:var(--font)}
+.onenon-note-link:hover{color:var(--danger)}
+.onenon-note-link.edit:hover{color:var(--accent)}
 .onenon-sidebar-footer{border-top:1px solid var(--border);padding:10px 12px;background:var(--surface);flex-shrink:0}
 .onenon-footer-btn{width:100%;padding:8px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
 .onenon-footer-btn:hover{border-color:var(--accent);color:var(--accent)}
