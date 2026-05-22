@@ -112,7 +112,8 @@ try {
                 $title = "Připravit 1on1 s " . $m["person"];
                 $exists = DB::q("SELECT id FROM tasks WHERE title=? AND due_date=? AND status=\"open\"", [$title, $tomorrow])->fetch();
                 if ($exists) continue;
-                DB::q("INSERT INTO tasks (title,quadrant,type,due_date,status,created_at,updated_at) VALUES (?,?,?,?,?,NOW(),NOW())", [$title, "important", "work", $tomorrow, "open"]);
+                $maxOrder = DB::q("SELECT COALESCE(MAX(daily_order),0) FROM tasks WHERE daily_order IS NOT NULL")->fetchColumn();
+                DB::q("INSERT INTO tasks (title,quadrant,type,due_date,status,daily_order,created_at,updated_at) VALUES (?,?,?,?,?,?,NOW(),NOW())", [$title, "important", "work", $tomorrow, "open", (int)$maxOrder + 1]);
                 error_log("[daily_context] Vytvořen 1on1 task pro " . $m["person"]);
                 echo "1on1 task: {$title} ({$tomorrow})\n";
             }

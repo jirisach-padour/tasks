@@ -26,7 +26,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .header-actions{display:flex;gap:8px;align-items:center}
 .header-desktop-only{display:inline-flex}
 /* Tabs — skryté, navigace přes NavSidebar */
-.tab-bar{display:none}
+.tab-bar{}
 .tab{display:none}
 .tab.active{display:none}
 /* Nav sidebar */
@@ -35,6 +35,10 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .nav-item:hover{background:var(--bg);color:var(--text)}
 .nav-item.active{color:var(--accent);background:var(--accent-bg)}
 .nav-item.active::before{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.bottom-tabs{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B3468;border-radius:30px;display:flex;align-items:center;padding:5px;gap:2px;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:200}
+.bottom-tab{padding:8px 18px;border-radius:24px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.bottom-tab.active{background:#fff;color:#1B3468}
+.bottom-tab:hover:not(.active){color:#fff}
 .nav-sep{width:28px;height:1px;background:var(--border);margin:4px 0}
 .nav-spacer{flex:1}
 /* Layout */
@@ -434,7 +438,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
     </div>
     <div class="header-actions" id="headerActions"></div>
   </div>
-  <div class="tab-bar" id="tabBar" style="display:none"></div>
+  <div class="tab-bar" id="tabBar"></div>
 </header>
 
 <main>
@@ -907,7 +911,6 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
               title="Dvojklik = rychlá editace názvu"
             >{task.title}</div>
         }
-        {task.description && <div className="task-desc">{linkifyText(task.description)}</div>}
         <div className="tc-meta">
           {tickets.map(name => (
             <a key={name} href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="tc-daktela">{name}</a>
@@ -3129,9 +3132,21 @@ function App() {
         document.getElementById('headerActions')
       )}
 
-      {/* Tab bar — skrytý, zachován kvůli Q1 alert badge */}
+      {/* Bottom tab bar */}
       {ReactDOM.createPortal(
-        <div style={{display:'none'}} />,
+        <div className="bottom-tabs">
+          {[
+            { key: 'dnes', label: '✦ Dnes' },
+            { key: 'all', label: '# Matice' },
+            { key: 'morning', label: '🌅 Ranní rituál' },
+          ].map(t => (
+            <button
+              key={t.key}
+              className={'bottom-tab' + (activeTab === t.key || (t.key === 'all' && ['all','work','personal'].includes(activeTab)) ? ' active' : '')}
+              onClick={() => setActiveTab(t.key)}
+            >{t.label}</button>
+          ))}
+        </div>,
         document.getElementById('tabBar')
       )}
 
@@ -3168,14 +3183,6 @@ function App() {
             onRefresh={refreshDaktelaCache}
             onCreateTask={handleDaktelaCreateTask}
             assignedMap={assignedMap}
-          />
-          <CalendarPanel
-            events={calEvents}
-            connected={calConnected}
-            onConnect={handleCalConnect}
-            onDisconnect={handleCalDisconnect}
-            onRefresh={loadCalendar}
-            onCreateTask={e => setModal({ type: 'task', defaults: { title: e.title, due_date: e.date, quadrant: 'important', type: 'work' } })}
           />
           <ChatPanel />
         </>,
