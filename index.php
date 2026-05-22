@@ -1407,22 +1407,20 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
   }
 
   const dnesTasksJsx = (
-    <div className="dnes-tasks-col">
-      <div className="whatnow-wrap" style={{marginBottom:12}}>
-        <WhatNowWidget tasks={tasks} calEvents={calEvents} />
+    <div className="dnes-section">
+      <div className="dnes-section-header" style={{cursor:'default'}}>
+        <span>Denní plán — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}</span>
+        {freeH > 0 && <span style={{color:'var(--success)',fontWeight:700}}>{freeStr} volného</span>}
       </div>
+      <div className="dnes-section-body">
       {dnesTasks.length === 0 ? (
-        <div style={{textAlign:'center',color:'var(--grey-text)',padding:'30px 0'}}>
+        <div style={{textAlign:'center',color:'var(--text-2)',padding:'30px 0'}}>
           <div style={{fontSize:'28px',marginBottom:'8px'}}>📋</div>
           <div style={{fontWeight:600,marginBottom:'4px'}}>Denní plán je prázdný</div>
           <div style={{fontSize:'12px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
         </div>
       ) : (
         <React.Fragment>
-          <div style={{fontSize:'11px',fontWeight:700,color:'var(--grey-text)',letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:'10px'}}>
-            Dnes — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}
-            {freeH > 0 && <span style={{marginLeft:8,color:'var(--green)',fontWeight:700}}>· {freeStr} volného</span>}
-          </div>
           {dnesTasks.map((t, idx) => {
             const isOverdue = t.due_date && t.due_date < todayStr;
             const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(todayStr)) / 86400000) : null;
@@ -1473,6 +1471,10 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
           })}
         </React.Fragment>
       )}
+      <div style={{marginTop:14}}>
+        <WhatNowWidget tasks={tasks} calEvents={calEvents} />
+      </div>
+      </div>
     </div>
   );
 
