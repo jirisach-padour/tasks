@@ -3110,7 +3110,7 @@ function App() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Hledat..."
-            style={{height:34,padding:'0 10px',border:'1px solid rgba(255,255,255,.25)',borderRadius:'var(--radius)',background:'rgba(255,255,255,.12)',color:'#fff',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
+            style={{height:34,padding:'0 10px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background:'var(--bg)',color:'var(--text)',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
             onFocus={e => e.target.style.width='240px'}
             onBlur={e => e.target.style.width='160px'}
           />
