@@ -923,7 +923,7 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask,
       onDrop={handleDrop}
     >
       <div className="q-header">
-        <div className="q-label">{q.label} {visible.length > 0 && <span style={{fontSize:'10px',fontWeight:400,color:'var(--grey-text)'}}>({visible.length})</span>}</div>
+        <div className="q-label">{q.label} <span className="q-count">{visible.length}</span></div>
       </div>
       {visible.map(t => (
         <TaskCard key={t.id} task={t} onToggleDone={onToggleDone} onEdit={onEdit} onDelete={onDelete} onInlineEdit={onInlineEdit} onAddToDaily={onAddToDaily} />
@@ -1426,11 +1426,22 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
     );
   }
 
+  const todayFull = new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+
   const dnesTasksJsx = (
+    <React.Fragment>
+    <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:16}}>
+      <div>
+        <div style={{fontSize:22,fontWeight:800,color:'var(--text)',letterSpacing:'-.3px'}}>Dnes</div>
+        <div style={{fontSize:13,color:'var(--text-2)',marginTop:2}}>
+          {todayFull}
+          {freeH > 0 && <span style={{color:'var(--success)',fontWeight:600,marginLeft:10}}>· {freeStr} volného</span>}
+        </div>
+      </div>
+    </div>
     <div className="dnes-section">
       <div className="dnes-section-header" style={{cursor:'default'}}>
         <span>Denní plán — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}</span>
-        {freeH > 0 && <span style={{color:'var(--success)',fontWeight:700}}>{freeStr} volného</span>}
       </div>
       <div className="dnes-section-body">
       {dnesTasks.length === 0 ? (
@@ -1466,7 +1477,8 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
                 <input
                   type="checkbox"
                   checked={false}
-                  style={{accentColor:'var(--red)',width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
+                  className={t.quadrant === 'urgent_important' ? 'dnes-q1-cb' : t.quadrant === 'important' ? 'dnes-q2-cb' : ''}
+                  style={{width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
                   onChange={() => onToggleDone(t)}
                 />
                 <span
@@ -1496,6 +1508,7 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
       </div>
       </div>
     </div>
+    </React.Fragment>
   );
 
   const [calOpen, setCalOpen] = React.useState(true);
@@ -2314,7 +2327,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                   <div style={{display:'flex',alignItems:'center',gap:2}}>
                     <button className={'onenon-person-item-btn' + (isActive ? ' active' : '')} onClick={() => loadNotes(p.person)}>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
-                        <span style={{fontWeight:600,fontSize:13,color:isActive ? 'var(--accent)' : 'var(--text)'}}>{p.person}</span>
+                        <span style={{fontWeight:600,fontSize:13,color:isActive ? 'var(--purple)' : 'var(--text)'}}>{p.person}</span>
                         <div style={{display:'flex',gap:4,alignItems:'center'}}>
                           {p.open_items > 0 && <span style={{background:'var(--danger)',color:'#fff',borderRadius:9,padding:'1px 5px',fontSize:10,fontWeight:700}}>{p.open_items}</span>}
                           {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní'} />}
@@ -2364,6 +2377,36 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
               </div>
             </div>
 
+            {/* Profile strip */}
+            {selectedProfile && (
+              <div style={{background:'#FAFAFA',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'12px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+                {selectedProfile.performance > 0 && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Výkon</span>
+                    <span style={{fontSize:14,color:'#F59E0B',letterSpacing:1}}>{'★'.repeat(selectedProfile.performance)}{'☆'.repeat(5-selectedProfile.performance)}</span>
+                  </div>
+                )}
+                {selectedProfile.potential && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Potenciál</span>
+                    <span style={{display:'inline-block',fontSize:11,fontWeight:700,padding:'2px 8px',borderRadius:5,background:selectedProfile.potential==='high'?'#EDE9FE':selectedProfile.potential==='medium'?'var(--warning-bg)':'var(--bg)',color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{selectedProfile.potential}</span>
+                  </div>
+                )}
+                {selectedProfile.strength && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Silná stránka</span>
+                    <span style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{selectedProfile.strength}</span>
+                  </div>
+                )}
+                {selectedProfile.development && (
+                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Rozvoj</span>
+                    <span style={{fontSize:12,color:'var(--text-2)'}}>{selectedProfile.development}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Open action items */}
             {allOpenItems.length > 0 && (
               <div className="onenon-open-items">
@@ -2383,6 +2426,8 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
 
             {prepDoc && <PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />}
 
+            <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
+            <div style={{flex:1,minWidth:0}}>
             {/* Timeline zápisů */}
             <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)',marginBottom:10}}>
               Záznamy — {notes.length}
@@ -2417,6 +2462,8 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                 )}
               </div>
             ))}
+            </div>
+            </div>
           </>
         )}
       </div>
