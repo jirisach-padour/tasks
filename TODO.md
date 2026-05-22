@@ -1,5 +1,13 @@
 # Tasks App — TODO
 
+## Bugs — k opravě
+
+- [ ] **Připravit schůzku v 1on1** — rozsypaná grafika tlačítka/dialogu
+- [ ] **Ovládací prvky v Tasks neodpovídají redesignu** — divné/staré UI prvky přes celou appku
+- [ ] **Checklist a Daktela tickety v matici** — vypadají jinak než v návrhu (srovnat s preview)
+- [ ] **Volný čas v denním kalendáři** — nepočítá se správně, zkontrolovat dle návrhu
+- [ ] **Ranní rituál — Přeskočit nefunguje** — po kliknutí na Přeskočit modal nezmizí
+
 ## Fronta
 
 - [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ: v detailu osoby zobrazit OPEN tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token + mapování person→daktela login
