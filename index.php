@@ -232,22 +232,42 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .stale-age.warn{color:var(--danger)}
 /* Task description */
 .task-desc{font-size:11px;color:var(--grey-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;margin-top:2px}.task-desc-link{color:var(--primary);text-decoration:none}.task-desc-link:hover{text-decoration:underline}
-/* Dnes sekce */
-.dnes-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);margin-bottom:12px;overflow:hidden}
-.dnes-section-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);cursor:pointer;user-select:none}
-.dnes-section-body{padding:12px 14px}
-/* Dnes timeline */
-.dnes-timeline-col{padding:0}
-.dnes-timeline-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:10px}
-.dnes-time-row{display:flex;align-items:center;gap:5px;margin-bottom:1px}
-.dnes-time-val{font-size:10px;color:var(--text-3);width:30px;flex-shrink:0}
-.dnes-time-line{flex:1;height:1px;background:var(--border);margin-top:1px}
-.dnes-cal-block{margin:3px 0 6px 35px;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:600;cursor:default}
-.dnes-cal-block.work{background:var(--accent-bg);border-left:3px solid var(--accent);color:var(--accent)}
-.dnes-cal-block.all-day{background:var(--purple-bg);border-left:3px solid var(--purple);color:var(--purple)}
-.dnes-free{font-size:11px;color:var(--success);font-weight:700;padding:3px 0 5px 35px;display:flex;align-items:center;gap:4px}
-.dnes-tasks-col{padding:0}
-@media(max-width:700px){.dnes-cal-block{margin-left:0}}
+/* Dnes view */
+.dnes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.dnes-title{font-size:20px;font-weight:700;color:var(--text)}
+.dnes-meta{font-size:13px;color:var(--text-2);margin-top:2px}
+.dnes-free{color:var(--success);font-weight:600}
+/* Timeline */
+.timeline-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow-sm);overflow:hidden}
+.timeline-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2)}
+.timeline-body{padding:8px 0}
+.timeline-row{display:grid;grid-template-columns:44px 1fr;align-items:flex-start;padding:0 14px;min-height:32px}
+.t-time{font-size:11px;color:var(--text-3);font-weight:600;padding-top:8px}
+.t-slot{border-top:1px solid var(--border);padding:6px 0;min-height:32px}
+.cal-block{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:5px;font-size:12px;font-weight:600;margin-bottom:3px}
+.cal-block.work{background:var(--accent-bg);color:var(--accent);border-left:3px solid var(--accent)}
+.cal-block.all-day{background:var(--purple-bg);color:var(--purple);border-left:3px solid var(--purple)}
+.cal-duration{font-size:10px;font-weight:400;opacity:.7}
+/* Denní plán karta */
+.dnes-plan{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:14px}
+.dnes-plan-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.dnes-plan-title{font-size:13px;font-weight:700;color:var(--text)}
+.dnes-plan-meta{font-size:12px;color:var(--text-2)}
+.dnes-task-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);transition:background .1s;cursor:grab}
+.dnes-task-row:last-of-type{border-bottom:none}
+.dnes-task-row:hover{background:var(--bg)}
+.dnes-idx{font-size:11px;color:var(--text-3);font-weight:600;width:16px;flex-shrink:0}
+.dnes-cb{width:17px;height:17px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;transition:all .15s;cursor:pointer}
+.dnes-cb.q1{border-color:var(--danger)}
+.dnes-cb.q2{border-color:var(--accent)}
+.dnes-cb.q3{border-color:var(--warning)}
+.dnes-task-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
+.dnes-due{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;flex-shrink:0}
+.dnes-due.overdue{background:#FEE2E2;color:var(--danger)}
+.dnes-due.soon{background:var(--warning-bg);color:var(--warning)}
+.dnes-due.normal{color:var(--text-3);background:none}
+.dnes-remove{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:16px;padding:0 2px;opacity:0;transition:opacity .15s}
+.dnes-task-row:hover .dnes-remove{opacity:1}
 /* Morning ritual */
 .morning-ritual{background:var(--surface);border-radius:16px;padding:22px;box-shadow:var(--shadow-md);border:1px solid var(--border)}
 .morning-title{font-size:18px;font-weight:800;margin-bottom:3px;color:var(--text)}
@@ -265,15 +285,16 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .morning-btns{display:flex;gap:8px;margin-top:6px;padding:14px 22px;background:var(--bg);border-top:1px solid var(--border);margin-left:-22px;margin-right:-22px;margin-bottom:-22px}
 .btn-morning-skip{background:var(--surface);color:var(--text-2);border:1px solid var(--border);padding:9px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
 .btn-morning-go{background:var(--accent);color:#fff;border:none;padding:9px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;flex:1;font-family:var(--font)}
-/* What Now widget */
-.whatnow-wrap{margin-bottom:14px}
-.whatnow-btn{background:var(--warning-bg);color:var(--warning);border:1px solid #FDE68A;padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:var(--font)}
-.whatnow-btn:disabled{opacity:.6;cursor:default}
-.whatnow-result{margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow-sm)}
+/* What Now bar */
+.whatnow-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#FAFAFA;border:1px solid var(--border);border-radius:var(--radius);cursor:pointer;transition:all .15s}
+.whatnow-bar:hover{border-color:#7C3AED;background:var(--purple-bg)}
+.whatnow-spark{font-size:18px;flex-shrink:0}
+.whatnow-text-head{font-size:13px;font-weight:600;color:var(--text)}
+.whatnow-sub{font-size:12px;color:var(--text-2)}
+.whatnow-result-inline{margin-top:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;box-shadow:var(--shadow-sm)}
 .whatnow-text{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px}
 .whatnow-task{display:flex;align-items:center;gap:8px;background:var(--accent-bg);border:1px solid #BFDBFE;border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
 .whatnow-task:hover{background:#DBEAFE}
-.whatnow-arrow{color:var(--accent);font-size:15px}
 .whatnow-dismiss{font-size:11px;color:var(--text-3);cursor:pointer;text-align:right;margin-top:7px}
 /* 1on1 Prep */
 .prep-modal-body{padding:0;max-height:70vh;overflow-y:auto}
@@ -1264,27 +1285,30 @@ function WhatNowWidget({ tasks, calEvents }) {
   }, [result]);
 
   return (
-    <div className="whatnow-wrap">
+    <div>
       {!result && (
-        <button className="whatnow-btn" onClick={handleClick} disabled={loading}>
-          {loading ? '...' : '✦ Co mám dělat teď?'}
-        </button>
+        <div className="whatnow-bar" onClick={!loading ? handleClick : undefined}>
+          <span className="whatnow-spark">{loading ? '...' : '✦'}</span>
+          <div>
+            <div className="whatnow-text-head">Co mám dělat teď?</div>
+            <div className="whatnow-sub">AI doporučení dle kalendáře a priorit</div>
+          </div>
+        </div>
       )}
       {result && !result.error && (
-        <div className="whatnow-result">
+        <div className="whatnow-result-inline">
           <div className="whatnow-text">{result.text}</div>
           {result.task_title && (
             <div className="whatnow-task">
-              <span className="whatnow-arrow">→</span>
+              <span style={{color:'var(--accent)',fontSize:15}}>→</span>
               {result.task_title}
-              {result.task_quadrant && <span style={{fontSize:'10px',color:'var(--red)',fontWeight:700,marginLeft:'auto'}}>{result.task_quadrant}</span>}
             </div>
           )}
           <div className="whatnow-dismiss" onClick={() => setResult(null)}>Zavřít ×</div>
         </div>
       )}
       {result && result.error && (
-        <div style={{fontSize:'12px',color:'#c94f42',marginTop:6}}>{result.error}</div>
+        <div style={{fontSize:'12px',color:'var(--danger)',marginTop:6}}>{result.error}</div>
       )}
     </div>
   );
@@ -1445,129 +1469,87 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
 
   const todayFull = new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const dnesTasksJsx = (
-    <React.Fragment>
-    <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',marginBottom:16}}>
-      <div>
-        <div style={{fontSize:22,fontWeight:800,color:'var(--text)',letterSpacing:'-.3px'}}>Dnes</div>
-        <div style={{fontSize:13,color:'var(--text-2)',marginTop:2}}>
-          {todayFull}
-          {freeH > 0 && <span style={{color:'var(--success)',fontWeight:600,marginLeft:10}}>· {freeStr} volného</span>}
-        </div>
-      </div>
-    </div>
-    <div className="dnes-section">
-      <div className="dnes-section-header" style={{cursor:'default'}}>
-        <span>Denní plán — {dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}</span>
-      </div>
-      <div className="dnes-section-body">
-      {dnesTasks.length === 0 ? (
-        <div style={{textAlign:'center',color:'var(--text-2)',padding:'30px 0'}}>
-          <div style={{fontSize:'28px',marginBottom:'8px'}}>📋</div>
-          <div style={{fontWeight:600,marginBottom:'4px'}}>Denní plán je prázdný</div>
-          <div style={{fontSize:'12px'}}>Přidej tasky pomocí <strong>+D</strong> tlačítka v matici</div>
-        </div>
-      ) : (
-        <React.Fragment>
-          {dnesTasks.map((t, idx) => {
-            const isOverdue = t.due_date && t.due_date < todayStr;
-            const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(todayStr)) / 86400000) : null;
-            const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
-            return (
-              <div
-                key={t.id}
-                draggable
-                onDragStart={() => handleDragStart(t.id)}
-                onDragOver={e => handleDragOver(e, t.id)}
-                onDrop={e => handleDrop(e, t.id)}
-                onDragEnd={handleDragEnd}
-                style={{
-                  display:'flex',alignItems:'center',gap:'10px',
-                  padding:'9px 0',
-                  borderBottom:'1px solid var(--grey-border)',
-                  background: dragOverId === t.id ? '#EBF0FF' : 'transparent',
-                  opacity: dragId === t.id ? 0.4 : 1,
-                  cursor:'grab',
-                }}
-              >
-                <span style={{color:'var(--grey-text)',fontSize:'12px',fontWeight:700,width:'18px',flexShrink:0}}>{idx + 1}</span>
-                <input
-                  type="checkbox"
-                  checked={false}
-                  className={t.quadrant === 'urgent_important' ? 'dnes-q1-cb' : t.quadrant === 'important' ? 'dnes-q2-cb' : ''}
-                  style={{width:'15px',height:'15px',flexShrink:0,cursor:'pointer'}}
-                  onChange={() => onToggleDone(t)}
-                />
-                <span
-                  onClick={() => onEdit(t)}
-                  style={{flex:1,fontSize:'13px',cursor:'pointer',color: isOverdue ? '#c0392b' : 'inherit',fontWeight: isOverdue ? 600 : 'normal'}}
-                >{t.title}</span>
-                {t.due_date && (
-                  <span style={{fontSize:'10px',fontWeight:700,padding:'1px 5px',borderRadius:'4px',
-                    background: isOverdue ? '#FEE8E7' : isSoon ? '#FFF4E0' : '#F4F5F7',
-                    color: isOverdue ? '#E63327' : isSoon ? '#A06000' : 'var(--grey-text)',
-                    flexShrink:0}}>
-                    {isOverdue ? 'Prošlé' : daysUntil === 0 ? 'Dnes' : daysUntil + 'd'}
-                  </span>
-                )}
-                <button
-                  title="Odebrat z denního plánu"
-                  onClick={() => onRemoveFromDaily(t)}
-                  style={{background:'none',border:'none',cursor:'pointer',color:'var(--grey-border)',fontSize:'14px',flexShrink:0,padding:'0 2px'}}
-                >×</button>
-              </div>
-            );
-          })}
-        </React.Fragment>
-      )}
-      <div style={{marginTop:14}}>
-        <WhatNowWidget tasks={tasks} calEvents={calEvents} />
-      </div>
-      </div>
-    </div>
-    </React.Fragment>
-  );
-
-  const [calOpen, setCalOpen] = React.useState(true);
-
-  // If no calendar connected or no events → simple view
-  if (!todayEvents.length) {
-    return dnesTasksJsx;
-  }
-
   return (
     <React.Fragment>
-      <div className="dnes-section">
-        <div className="dnes-section-header" onClick={() => setCalOpen(v => !v)}>
-          <span>Kalendář dnes — {todayEvents.length} {todayEvents.length === 1 ? 'událost' : 'události'}</span>
-          <span style={{color:'var(--text-3)',fontSize:'13px'}}>{calOpen ? '▾' : '▸'}</span>
+      <div className="dnes-header">
+        <div>
+          <div className="dnes-title">Dnes</div>
+          <div className="dnes-meta">
+            {todayFull}
+            {freeH > 0 && <span className="dnes-free"> · {freeStr} volného</span>}
+          </div>
         </div>
-        {calOpen && (
-          <div className="dnes-section-body">
-            <div className="dnes-timeline-col">
-              {HOURS.map(h => {
-                const hStr = h.toString().padStart(2,'0') + ':00';
-                const events = todayEvents.filter(e => e.time && parseInt(e.time.split(':')[0]) === h);
-                return (
-                  <div key={h}>
-                    <div className="dnes-time-row">
-                      <span className="dnes-time-val">{hStr}</span>
-                      <div className="dnes-time-line" />
-                    </div>
-                    {events.map((e, i) => (
-                      <div key={i} className={'dnes-cal-block ' + (e.allDay ? 'all-day' : 'work')} title={e.title}>
-                        {e.title.length > 28 ? e.title.slice(0, 26) + '…' : e.title}
+      </div>
+
+      {todayEvents.length > 0 && (
+        <div className="timeline-section">
+          <div className="timeline-header">
+            Dnešní kalendář
+            <span style={{fontWeight:400}}>{todayEvents.length} {todayEvents.length === 1 ? 'událost' : 'události'}</span>
+          </div>
+          <div className="timeline-body">
+            {HOURS.map(h => {
+              const hStr = h.toString().padStart(2,'0') + ':00';
+              const evs = todayEvents.filter(e => e.time && parseInt(e.time.split(':')[0]) === h);
+              return (
+                <div key={h} className="timeline-row">
+                  <div className="t-time">{hStr}</div>
+                  <div className="t-slot">
+                    {evs.map((e, i) => (
+                      <div key={i} className={'cal-block ' + (e.allDay ? 'all-day' : 'work')}>
+                        {e.title.length > 30 ? e.title.slice(0,28) + '…' : e.title}
+                        {e.durationH && <span className="cal-duration">{e.durationH}h</span>}
                       </div>
                     ))}
                   </div>
-                );
-              })}
-              {freeMinutes() > 0 && <div className="dnes-free">● {freeStr} volného</div>}
-            </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="dnes-plan">
+        <div className="dnes-plan-header">
+          <div className="dnes-plan-title">Plán dne</div>
+          <div className="dnes-plan-meta">{dnesTasks.length} {dnesTasks.length === 1 ? 'task' : dnesTasks.length < 5 ? 'tasky' : 'tasků'}</div>
+        </div>
+        {dnesTasks.length === 0 ? (
+          <div style={{textAlign:'center',color:'var(--text-2)',padding:'30px 0'}}>
+            <div style={{fontWeight:600,marginBottom:4}}>Denní plán je prázdný</div>
+            <div style={{fontSize:12}}>Přidej tasky pomocí +D tlačítka v matici</div>
+          </div>
+        ) : dnesTasks.map((t, idx) => {
+          const isOverdue = t.due_date && t.due_date < todayStr;
+          const daysUntil = t.due_date ? Math.ceil((new Date(t.due_date) - new Date(todayStr)) / 86400000) : null;
+          const isSoon = !isOverdue && daysUntil !== null && daysUntil <= 3;
+          const qClass = t.quadrant === 'urgent_important' ? 'q1' : t.quadrant === 'important' ? 'q2' : t.quadrant === 'urgent' ? 'q3' : '';
+          return (
+            <div
+              key={t.id}
+              className="dnes-task-row"
+              draggable
+              onDragStart={() => handleDragStart(t.id)}
+              onDragOver={e => handleDragOver(e, t.id)}
+              onDrop={e => handleDrop(e, t.id)}
+              onDragEnd={handleDragEnd}
+              style={{opacity: dragId === t.id ? 0.4 : 1, background: dragOverId === t.id ? 'var(--accent-bg)' : ''}}
+            >
+              <div className="dnes-idx">{idx + 1}</div>
+              <div className={'dnes-cb' + (qClass ? ' ' + qClass : '')} onClick={() => onToggleDone(t)} />
+              <div className="dnes-task-name" onClick={() => onEdit(t)} style={{cursor:'pointer'}}>{t.title}</div>
+              {t.due_date && (
+                <div className={'dnes-due' + (isOverdue ? ' overdue' : isSoon ? ' soon' : ' normal')}>
+                  {isOverdue ? 'prošlé' : daysUntil === 0 ? 'dnes' : daysUntil + 'd'}
+                </div>
+              )}
+              <button className="dnes-remove" onClick={() => onRemoveFromDaily(t)}>×</button>
+            </div>
+          );
+        })}
       </div>
-      {dnesTasksJsx}
+
+      <WhatNowWidget tasks={tasks} calEvents={calEvents} />
     </React.Fragment>
   );
 }
