@@ -73,3 +73,51 @@ $lines[] = "";
 $output = implode("\n", $lines);
 file_put_contents(TASKS_ROOT . '/tasks-context.md', $output);
 echo "OK — exportováno do tasks-context.md (" . strlen($output) . " B)\n";
+
+// ── 1on1 auto-tasky: den před schůzkou ────────────────────────────────────
+try {
+    $mappings = DB::q("SELECT event_keyword, person FROM calendar_1on1_mappings WHERE active=1")->fetchAll();
+    if ($mappings) {
+        $calToken = null;
+        $tokenRow = DB::q("SELECT * FROM calendar_tokens ORDER BY id DESC LIMIT 1")->fetch();
+        if ($tokenRow) {
+            if (strtotime($tokenRow["expires_at"]) > time() + 60) {
+                $calToken = $tokenRow["access_token"];
+            } elseif ($tokenRow["refresh_token"]) {
+                $ch = curl_init("https://oauth2.googleapis.com/token");
+                curl_setopt_array($ch, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => http_build_query(["refresh_token" => $tokenRow["refresh_token"], "client_id" => GOOGLE_CLIENT_ID, "client_secret" => GOOGLE_CLIENT_SECRET, "grant_type" => "refresh_token"]), CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ["Content-Type: application/x-www-form-urlencoded"], CURLOPT_TIMEOUT => 10]);
+                $resp = curl_exec($ch); curl_close($ch);
+                $td = $resp ? json_decode($resp, true) : null;
+                if (isset($td["access_token"])) {
+                    $calToken = $td["access_token"];
+                    $exp = date("Y-m-d H:i:s", time() + ($td["expires_in"] ?? 3600));
+                    DB::q("UPDATE calendar_tokens SET access_token=?, expires_at=? WHERE id=?", [$calToken, $exp, $tokenRow["id"]]);
+                }
+            }
+        }
+        if ($calToken) {
+            $tz = "Europe/Prague";
+            $tomorrow = (new DateTime("tomorrow", new DateTimeZone($tz)))->format("Y-m-d");
+            $tEnd = (new DateTime("tomorrow +2 days", new DateTimeZone($tz)))->format(DateTime::RFC3339);
+            $tStart = (new DateTime("tomorrow", new DateTimeZone($tz)))->format(DateTime::RFC3339);
+            $url = "https://www.googleapis.com/calendar/v3/calendars/primary/events?" . http_build_query(["timeMin" => $tStart, "timeMax" => $tEnd, "singleEvents" => "true", "orderBy" => "startTime", "maxResults" => 20, "fields" => "items(summary,start)"]);
+            $ch2 = curl_init($url);
+            curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ["Authorization: Bearer " . $calToken], CURLOPT_TIMEOUT => 8]);
+            $resp2 = curl_exec($ch2); curl_close($ch2);
+            $calData = $resp2 ? json_decode($resp2, true) : null;
+            $tomorrowEvents = $calData ? array_map(fn($e) => $e["summary"] ?? "", $calData["items"] ?? []) : [];
+            foreach ($mappings as $m) {
+                $matched = array_filter($tomorrowEvents, fn($t) => stripos($t, $m["event_keyword"]) !== false);
+                if (!$matched) continue;
+                $title = "Připravit 1on1 s " . $m["person"];
+                $exists = DB::q("SELECT id FROM tasks WHERE title=? AND due_date=? AND status=\"open\"", [$title, $tomorrow])->fetch();
+                if ($exists) continue;
+                DB::q("INSERT INTO tasks (title,quadrant,type,due_date,status,created_at,updated_at) VALUES (?,?,?,?,?,NOW(),NOW())", [$title, "important", "work", $tomorrow, "open"]);
+                error_log("[daily_context] Vytvořen 1on1 task pro " . $m["person"]);
+                echo "1on1 task: {$title} ({$tomorrow})\n";
+            }
+        }
+    }
+} catch (Throwable $e) {
+    error_log("[daily_context] 1on1 auto-task chyba: " . $e->getMessage());
+}
