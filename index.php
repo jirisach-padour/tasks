@@ -1405,7 +1405,7 @@ function DnesResetModal({ tasks, onConfirm, onSkip }) {
 }
 
 // ---- DnesView ----
-function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily, onBatchRemoveFromDaily }) {
+function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily, onBatchRemoveFromDaily, forceShowMorning }) {
   const [dragId, setDragId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1483,7 +1483,7 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
   }
 
   // Morning ritual overlay
-  if (showMorning) {
+  if (showMorning || forceShowMorning) {
     return (
       <MorningRitual
         tasks={tasks}
@@ -2584,6 +2584,9 @@ function OneOnOneMappingModal({ people, onClose }) {
       (mappingsData.mappings || []).forEach(function(r) { m[r.event_keyword] = r.person; });
       setMappings(m);
       setLoading(false);
+    }).catch(function(err) {
+      console.error('onenon_scan error', err);
+      setLoading(false);
     });
   }, []);
 
@@ -3284,6 +3287,8 @@ function App() {
           ? <HistoryView filter="all" onReopen={handleReopenTask} />
           : activeTab === 'onenon'
           ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
+          : activeTab === 'morning'
+          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} forceShowMorning={true} />
           : activeTab === 'dnes'
           ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} />
           : (
