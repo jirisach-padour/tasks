@@ -86,14 +86,22 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 /* Task card */
 .task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
 .task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}
-.task-checkbox{width:16px;height:16px;flex-shrink:0;margin-top:2px;accent-color:var(--red);cursor:pointer}
-.task-body{flex:1;min-width:0}
-.task-title{font-size:13px;font-weight:500;line-height:1.4;word-break:break-word}
-.task-title.done-text{text-decoration:line-through;color:var(--grey-text)}
-.task-meta{font-size:11px;color:var(--grey-text);margin-top:3px;display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.tc-cb{width:15px;height:15px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .15s}
+.quadrant.q-urgent_important .tc-cb{border-color:#FCA5A5}
+.quadrant.q-important .tc-cb{border-color:#93C5FD}
+.quadrant.q-urgent .tc-cb{border-color:#FCD34D}
+.tc-body{flex:1;min-width:0}
+.tc-title{font-size:13px;font-weight:500;line-height:1.4;word-break:break-word}
+.tc-title.done-text{text-decoration:line-through;color:var(--text-3)}
+.tc-meta{font-size:11px;color:var(--text-2);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tc-daktela{color:var(--text-3);text-decoration:none;font-size:11px}
+.tc-daktela:hover{color:var(--accent);text-decoration:underline}
+.tc-age{color:var(--warning);font-weight:600}
+.tc-age.old{color:var(--danger)}
+.tc-due{font-size:11px;font-weight:600;color:var(--text-3)}
+.tc-due.overdue{color:var(--danger)}
+.tc-due.soon{color:var(--warning)}
 .badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;white-space:nowrap}
-.badge-work{background:#E0E8F5;color:#1B3468}
-.badge-personal{background:#E8F5E9;color:#2E7D3F}
 .badge-daktela{background:#FFF4E0;color:#A06000}
 .badge-ai{background:#E8F0FE;color:#1a56db}
 .task-del{background:none;border:none;cursor:pointer;color:var(--grey-border);font-size:14px;padding:0;flex-shrink:0;margin-top:1px}
@@ -866,6 +874,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
     }
   }
 
+  const qSuffix = task.quadrant === 'urgent_important' ? 'q1' : task.quadrant === 'important' ? 'q2' : task.quadrant === 'urgent' ? 'q3' : '';
   const cardClass = 'task-card' + (isOverdue ? ' overdue' : '') + (isStaleOld ? ' stale-old' : isStaleMid ? ' stale-mid' : '');
   const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window);
 
@@ -877,14 +886,11 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
       onDragStart={e => { if (isTouch) return; e.dataTransfer.setData('taskId', task.id); e.currentTarget.classList.add('dragging'); if (onDragStart) onDragStart(task); }}
       onDragEnd={e => { if (isTouch) return; e.currentTarget.classList.remove('dragging'); }}
     >
-      <input
-        type="checkbox"
-        className="task-checkbox"
-        checked={task.status === 'done'}
-        onClick={e => e.stopPropagation()}
-        onChange={() => onToggleDone(task)}
+      <div
+        className={'tc-cb' + (qSuffix ? ' ' + qSuffix : '')}
+        onClick={e => { e.stopPropagation(); onToggleDone(task); }}
       />
-      <div className="task-body">
+      <div className="tc-body">
         {editing
           ? <input
               ref={inputRef}
@@ -896,25 +902,22 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
               onClick={e => e.stopPropagation()}
             />
           : <div
-              className={'task-title' + (task.status === 'done' ? ' done-text' : '')}
+              className={'tc-title' + (task.status === 'done' ? ' done-text' : '')}
               onDoubleClick={startEdit}
               title="Dvojklik = rychlá editace názvu"
             >{task.title}</div>
         }
         {task.description && <div className="task-desc">{linkifyText(task.description)}</div>}
-        <div className="task-meta">
-          {tickets.length === 1 && (
-            <a href={'https://daktela.daktela.com/tickets/update/' + tickets[0]} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="badge badge-daktela" style={{textDecoration:'none'}}>{tickets[0]}</a>
-          )}
-          {tickets.length > 1 && tickets.map(name => (
-            <a key={name} href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="badge badge-daktela" style={{textDecoration:'none'}}>{name}</a>
+        <div className="tc-meta">
+          {tickets.map(name => (
+            <a key={name} href={'https://daktela.daktela.com/tickets/update/' + name} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()} className="tc-daktela">{name}</a>
           ))}
+          {(isStaleMid || isStaleOld) && <span className={'tc-age' + (isStaleOld ? ' old' : '')}>{daysOld} dní</span>}
           {task.due_date && (
-            <span className={isOverdue ? 'overdue-badge' : ''}>
-              {isOverdue ? 'Po termínu: ' : isSoon ? '⚡ ' : ''}{task.due_date}
+            <span className={'tc-due' + (isOverdue ? ' overdue' : isSoon ? ' soon' : '')} style={{marginLeft:'auto'}}>
+              {isOverdue ? 'po ' + task.due_date : task.due_date}
             </span>
           )}
-          {(isStaleMid || isStaleOld) && <span className={'stale-age' + (isStaleOld ? ' warn' : '')}>{daysOld}d</span>}
         </div>
       </div>
       <button className="task-del" onClick={e => { e.stopPropagation(); onDelete(task); }} title="Smazat">×</button>
