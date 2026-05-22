@@ -429,6 +429,35 @@ async function apiFetch(action, method = 'GET', body = null, params = {}) {
   return json;
 }
 
+// ---- NavSidebar ----
+const NAV_ITEMS = [
+  { key: 'dnes',    icon: '☀', label: 'Dnes' },
+  { key: 'all',     icon: '#', label: 'Matice' },
+  { key: 'history', icon: '○', label: 'Historie' },
+  { key: 'onenon',  icon: '♟', label: '1on1' },
+];
+
+function NavSidebar({ activeTab, onTab }) {
+  const isMatrix = ['all','work','personal'].includes(activeTab);
+  return (
+    <nav style={{display:'flex',flexDirection:'column',alignItems:'center',padding:'10px 0',gap:'2px',height:'100%'}}>
+      {NAV_ITEMS.map(item => (
+        <button
+          key={item.key}
+          className={'nav-item' + ((item.key === activeTab || (item.key === 'all' && isMatrix)) ? ' active' : '')}
+          onClick={() => onTab(item.key)}
+          title={item.label}>
+          {item.icon}
+        </button>
+      ))}
+      <div className="nav-spacer" />
+      <div className="nav-sep" />
+      <button className="nav-item" title="AI Chat" style={{color:'#7C3AED'}} onClick={() => onTab('chat')}>✦</button>
+      <button className="nav-item" title="Nastavení" onClick={() => onTab('settings')}>⚙</button>
+    </nav>
+  );
+}
+
 // ---- DoneTimeModal ----
 function DoneTimeModal({ task, onSave, onSkip }) {
   const [minutes, setMinutes] = React.useState('');
@@ -2540,7 +2569,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'work' | 'personal' | 'history'
+  const [activeTab, setActiveTab] = useState('dnes'); // 'all' | 'work' | 'personal' | 'dnes' | 'history' | 'onenon'
   const [modal, setModal] = useState(null); // null | {type, ...}
   const [onenonCtx, setOnenonCtx] = useState(null);
 
@@ -2863,8 +2892,9 @@ function App() {
             onFocus={e => e.target.style.width='240px'}
             onBlur={e => e.target.style.width='160px'}
           />
+          {q1DeadlineTasks.length > 0 && <Q1AlertBadge tasks={q1DeadlineTasks} onEditTask={handleEditTask} />}
           <button className="btn btn-ghost header-desktop-only" onClick={handleAiSuggest} disabled={aiLoading}>
-            {aiLoading ? '...' : '✦ AI priority'}
+            {aiLoading ? '...' : '✦ AI'}
           </button>
           <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Task</button>
           <button className="btn btn-ghost" style={{fontSize:'12px',padding:'6px 10px'}} onClick={() => setQuickCapture(true)} title="Cmd+K">⚡</button>
@@ -2872,24 +2902,25 @@ function App() {
           <button className="btn btn-ghost header-desktop-only" style={{fontSize:'12px'}} onClick={async () => {
             await apiFetch('logout', 'POST');
             window.location.href = '/tasks/login.php';
-          }}>Odhlásit</button>
+          }}>↩</button>
         </div>,
         document.getElementById('headerActions')
       )}
 
-      {/* Tab bar */}
+      {/* Tab bar — skrytý, zachován kvůli Q1 alert badge */}
       {ReactDOM.createPortal(
-        <div style={{display:'flex',alignItems:'center'}}>
-          {TABS.map(t => (
-            <button key={t.key} className={'tab' + (activeTab === t.key ? ' active' : '')} onClick={() => setActiveTab(t.key)}>
-              {t.label}{t.count !== null && t.count > 0 ? ' (' + t.count + ')' : ''}
-            </button>
-          ))}
-          {q1DeadlineTasks.length > 0 && (
-            <Q1AlertBadge tasks={q1DeadlineTasks} onEditTask={handleEditTask} />
-          )}
-        </div>,
+        <div style={{display:'none'}} />,
         document.getElementById('tabBar')
+      )}
+
+      {/* Nav sidebar */}
+      {ReactDOM.createPortal(
+        <NavSidebar activeTab={activeTab} onTab={tab => {
+          if (tab === 'settings') { setModal({ type: 'settings' }); return; }
+          if (tab === 'chat') return;
+          setActiveTab(tab);
+        }} />,
+        document.getElementById('navSidebar')
       )}
 
       {/* Levý sidebar: KPI + Checklist nebo 1on1 kontext */}
