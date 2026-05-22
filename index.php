@@ -2336,9 +2336,10 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
       <div className="onenon-people-sidebar">
         <div className="onenon-people-header">
           <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé ({people.length})</span>
-          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+          <div style={{display:'flex',gap:4,alignItems:'center'}}>
             {totalOpen > 0 && <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />}
-            <button className="btn btn-secondary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
+            <button className="btn btn-ghost" style={{fontSize:18,padding:'2px 6px',lineHeight:1}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
+            <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: '' })}>+ Schůzka</button>
           </div>
         </div>
         {(warnPeople.length > 0) && (
@@ -2407,6 +2408,10 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                   {selectedDesc && <div style={{fontSize:13,color:'var(--text-2)',fontStyle:'italic',marginTop:2}}>{selectedDesc}</div>}
                 </div>
                 <div style={{display:'flex',gap:6}}>
+                  <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => {
+                    const p = people.find(x => x.person === selected);
+                    if (p) setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null });
+                  }} title="Upravit profil (výkon, potenciál...)">✎ Profil</button>
                   <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Podklady</button>
                   <button className="btn btn-primary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Zápis</button>
                 </div>
