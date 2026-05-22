@@ -64,3 +64,25 @@ if (file_put_contents($secretsPath, $content) === false) {
 }
 
 echo json_encode(['ok' => true, 'username' => $newUser ?: APP_USER]);
+
+// ── onenon_mappings ────────────────────────────────────────────────────────
+if ($_SERVER["REQUEST_METHOD"] === "GET" && ($_GET["sub"] ?? "") === "onenon_mappings") {
+    requireAuth();
+    $rows = DB::q("SELECT event_keyword, person FROM calendar_1on1_mappings WHERE active=1 ORDER BY event_keyword")->fetchAll();
+    echo json_encode(["mappings" => $rows]);
+    exit;
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_GET["sub"] ?? "") === "onenon_mappings") {
+    requireAuth();
+    $body = json_decode(file_get_contents("php://input"), true) ?? [];
+    $mappings = $body["mappings"] ?? [];
+    DB::q("DELETE FROM calendar_1on1_mappings");
+    foreach ($mappings as $m) {
+        if (empty($m["event_keyword"]) || empty($m["person"])) continue;
+        DB::q("INSERT INTO calendar_1on1_mappings (event_keyword, person) VALUES (?,?) ON DUPLICATE KEY UPDATE person=VALUES(person), active=1",
+            [trim($m["event_keyword"]), trim($m["person"])]);
+    }
+    echo json_encode(["ok" => true]);
+    exit;
+}
