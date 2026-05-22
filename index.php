@@ -2249,8 +2249,16 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [editingPerson, setEditingPerson] = React.useState(null);
   const [prepDoc, setPrepDoc] = React.useState(false);
   const [mappingModal, setMappingModal] = React.useState(false);
+  const [contentTab, setContentTab] = React.useState('detail');
+  const [metricsOpen, setMetricsOpen] = React.useState(true);
 
   React.useEffect(() => { loadPeople(); }, []);
+
+  React.useEffect(() => {
+    const layout = document.getElementById('layout');
+    if (layout) layout.classList.add('onenon-active');
+    return () => { const l = document.getElementById('layout'); if (l) l.classList.remove('onenon-active'); };
+  }, []);
 
   React.useEffect(() => {
     if (!daktelaToken) return;
@@ -2348,38 +2356,47 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
       .filter(it => it.done)
       .map((it, idx) => ({ ...it, from: n.meeting_date, noteId: n.id, idx }))
   );
-  const lastMoods = notes.filter(n => n.mood).slice(0, 4).map(n => n.mood);
+  const moodNotes = notes.filter(n => n.mood).slice(0, 4);
+  const lastMoods = moodNotes.map(n => n.mood);
+  const moodDates = moodNotes.map(n => {
+    const d = new Date(n.meeting_date);
+    return (d.getDate()) + '. ' + (d.getMonth()+1) + '.';
+  });
   const moodTrend = lastMoods.length >= 2
     ? (lastMoods[0] > lastMoods[1] ? '↑' : lastMoods[0] < lastMoods[1] ? '↓' : '→')
     : null;
   const moodAvg = lastMoods.length ? (lastMoods.reduce((a,b) => a+b,0)/lastMoods.length).toFixed(1) : null;
   const moodBarColor = m => m >= 4 ? 'var(--success)' : m === 3 ? '#86EFAC' : m === 2 ? 'var(--warning)' : '#FCA5A5';
-
   const potLabels = { low: 'Nízký', medium: 'Střední', high: 'Vysoký' };
   const mgmtLabels = { low: 'Nízká', medium: 'Střední', high: 'Vysoká' };
+  const trendArrow = { up: '↑', down: '↓', flat: '→' };
 
   return (
     <div className="onenon-layout">
       {/* Levý sidebar — seznam lidí */}
       <div className="onenon-people-sidebar">
         <div className="onenon-people-header">
-          <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé ({people.length})</span>
+          <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Tým ({people.length})</span>
           <div style={{display:'flex',gap:4,alignItems:'center'}}>
-            {totalOpen > 0 && <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />}
-            <button className="btn btn-ghost" style={{fontSize:18,padding:'2px 6px',lineHeight:1}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
-            <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: '' })}>+ Schůzka</button>
+            <button className="btn btn-ghost" style={{fontSize:16,padding:'2px 6px',lineHeight:1}} onClick={() => setMappingModal(true)} title="Auto-tasky z kalendáře">⚙</button>
+            <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: '' })}>+ Přidat</button>
           </div>
         </div>
-        {(warnPeople.length > 0) && (
-          <div className="onenon-dashboard" style={{margin:'8px 8px 0'}}>
-            <span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span> {warnPeople.map(p => p.person).join(', ')}
+        {totalOpen > 0 && (
+          <div className="onenon-alert-banner red">
+            <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />
+            <span>{totalOpen} open action items celkem</span>
           </div>
+        )}
+        {warnPeople.length > 0 && (
+          <div className="onenon-alert-banner orange">⚠ {warnPeople.length} bez 1on1 &gt;30 dní</div>
         )}
         <div className="onenon-people-list">
           {people.map(p => {
             const isEditing = editingPerson && editingPerson.name === p.person;
             const isActive = selected === p.person;
             const prof = p.profile || {};
+            const trend = p.mood_trend;
             return (
               <div key={p.person} className="onenon-person-row">
                 {isEditing ? (
@@ -2395,8 +2412,8 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:3}}>
                         <span style={{fontWeight:600,fontSize:13,color:isActive ? 'var(--purple)' : 'var(--text)'}}>{p.person}</span>
                         <div style={{display:'flex',gap:4,alignItems:'center'}}>
+                          {trend && <span className={'onenon-person-trend ' + trend}>{trendArrow[trend]}</span>}
                           {p.open_items > 0 && <span style={{background:'var(--danger)',color:'#fff',borderRadius:9,padding:'1px 5px',fontSize:10,fontWeight:700}}>{p.open_items}</span>}
-                          {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní'} />}
                         </div>
                       </div>
                       <div style={{display:'flex',alignItems:'center',gap:6}}>
@@ -2432,61 +2449,64 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
             <div className="onenon-person-header">
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                 <div>
-                  <div style={{fontSize:20,fontWeight:800,color:'var(--text)'}}>{selected}</div>
-                  {selectedDesc && <div style={{fontSize:13,color:'var(--text-2)',fontStyle:'italic',marginTop:2}}>{selectedDesc}</div>}
+                  <div style={{fontSize:22,fontWeight:800,color:'var(--text)'}}>{selected}</div>
+                  {selectedDesc && <div style={{fontSize:13,color:'var(--text-2)',marginTop:3}}>{selectedDesc}</div>}
                 </div>
                 <div style={{display:'flex',gap:6}}>
-                  <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => {
-                    const p = people.find(x => x.person === selected);
-                    if (p) setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null });
-                  }} title="Upravit profil (výkon, potenciál...)">✎ Profil</button>
-                  <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Podklady</button>
-                  <button className="btn btn-primary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Zápis</button>
+                  <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Připravit schůzku</button>
+                  <button className="btn btn-primary" style={{fontSize:12,padding:'7px 16px'}} onClick={() => setModal({ person: selected })}>Nový zápis</button>
                 </div>
               </div>
-              <div className="onenon-signal-chips">
+              <div className="onenon-signal-chips" style={{marginTop:10}}>
                 {selectedPeopleData && (
                   <SignalChip type={selectedPeopleData.days_since > 30 ? 'warn' : 'ok'} label={'Poslední 1on1: ' + selectedPeopleData.days_since + ' dní'} />
                 )}
                 {allOpenItems.length > 0 && <SignalChip type="warn" label={allOpenItems.length + ' open action items'} />}
-                {moodTrend && <SignalChip type="info" label={'Nálada ' + moodTrend + ' stoupá'} />}
+                {moodTrend && <SignalChip type="info" label={'Nálada ' + (moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní')} />}
                 {selectedProfile && selectedProfile.potential === 'high' && <SignalChip type="purple" label="Vysoký potenciál" />}
               </div>
             </div>
 
-            {/* Profile strip */}
+            {/* Metrics row — collapsible */}
             {selectedProfile && (selectedProfile.performance > 0 || selectedProfile.potential || selectedProfile.strength || selectedProfile.mgmt_effort) && (
-              <div style={{background:'#FAFAFA',border:'1px solid var(--border)',borderRadius:'var(--radius)',padding:'10px 16px',marginBottom:14,display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-                {selectedProfile.performance > 0 && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2,minWidth:60}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Výkon</span>
-                    <span style={{fontSize:13,color:'#F59E0B',letterSpacing:.5}}>{'★'.repeat(selectedProfile.performance)}{'☆'.repeat(5-selectedProfile.performance)}</span>
-                  </div>
+              <div className="onenon-metrics-row">
+                {metricsOpen && (
+                  <>
+                    {selectedProfile.performance > 0 && (
+                      <div className="onenon-metric">
+                        <span className="onenon-metric-label">Výkon</span>
+                        <span style={{fontSize:14,color:'#F59E0B',letterSpacing:.5}}>{'★'.repeat(selectedProfile.performance)}{'☆'.repeat(5-selectedProfile.performance)}</span>
+                      </div>
+                    )}
+                    {selectedProfile.potential && (
+                      <div className="onenon-metric">
+                        <span className="onenon-metric-label">Potenciál</span>
+                        <span className="onenon-metric-val" style={{color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
+                      </div>
+                    )}
+                    {selectedProfile.mgmt_effort && (
+                      <div className="onenon-metric">
+                        <span className="onenon-metric-label">Náročnost řízení</span>
+                        <span className="onenon-metric-val">{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
+                      </div>
+                    )}
+                    {selectedProfile.strength && (
+                      <div className="onenon-metric">
+                        <span className="onenon-metric-label">Silná stránka</span>
+                        <span className="onenon-metric-val">{selectedProfile.strength}</span>
+                      </div>
+                    )}
+                    {selectedProfile.development && (
+                      <div className="onenon-metric" style={{borderRight:'none',marginRight:0,paddingRight:0}}>
+                        <span className="onenon-metric-label">Oblast rozvoje</span>
+                        <span className="onenon-metric-val">{selectedProfile.development}</span>
+                      </div>
+                    )}
+                  </>
                 )}
-                {selectedProfile.potential && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Potenciál</span>
-                    <span style={{fontSize:12,fontWeight:700,color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
-                  </div>
-                )}
-                {selectedProfile.mgmt_effort && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Náročnost řízení</span>
-                    <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)'}}>{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
-                  </div>
-                )}
-                {selectedProfile.strength && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Silná stránka</span>
-                    <span style={{fontSize:13,fontWeight:600,color:'var(--text)'}}>{selectedProfile.strength}</span>
-                  </div>
-                )}
-                {selectedProfile.development && (
-                  <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                    <span style={{fontSize:10,textTransform:'uppercase',letterSpacing:'.06em',color:'var(--text-3)',fontWeight:700}}>Oblast rozvoje</span>
-                    <span style={{fontSize:12,color:'var(--text-2)'}}>{selectedProfile.development}</span>
-                  </div>
-                )}
+                <span className="onenon-metrics-collapse" onClick={() => setMetricsOpen(v => !v)}>
+                  {metricsOpen ? 'kliknutím sbalit ↑' : 'zobrazit profil ↓'}
+                </span>
               </div>
             )}
 
@@ -2496,55 +2516,65 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
             <div className="onenon-cols">
               {/* Levý sloupec: action items + mood chart */}
               <div>
+                {/* Action items card */}
                 <div className="onenon-col-card">
                   <div className="onenon-col-card-header">
                     <span>Open action items</span>
                     <button style={{background:'none',border:'none',cursor:'pointer',fontSize:12,color:'var(--accent)',fontWeight:700,fontFamily:'var(--font)'}} onClick={() => setModal({ person: selected })}>+ přidat</button>
                   </div>
-                  <div className="onenon-ai-group-section" style={{paddingBottom:10}}>
-                    {allOpenItems.length === 0 && <div style={{fontSize:12,color:'var(--text-3)',padding:'8px 0'}}>Žádné otevřené položky</div>}
+                  <div style={{padding:'8px 14px 12px'}}>
+                    {allOpenItems.length === 0 && <div style={{fontSize:12,color:'var(--text-3)',padding:'4px 0'}}>Žádné otevřené položky</div>}
                     {allOpenItems.length > 0 && (
                       <>
-                        <div className="onenon-ai-group-label">Čeká na {selected} <span style={{color:'var(--danger)',fontWeight:700}}>{allOpenItems.length}</span></div>
+                        <div style={{fontSize:11,fontWeight:700,color:'var(--text-2)',marginBottom:6,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                          <span>Čeká na {selected}</span>
+                          <span style={{background:'var(--danger)',color:'#fff',borderRadius:10,padding:'1px 7px',fontSize:11}}>{allOpenItems.length}</span>
+                        </div>
                         {allOpenItems.map((it, i) => (
-                          <div key={i} className="onenon-open-item-row" onClick={() => {
+                          <div key={i} style={{display:'flex',alignItems:'flex-start',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border)',cursor:'pointer'}} onClick={() => {
                             const note = notes.find(n => n.id === it.noteId);
                             if (note) toggleActionItem(note, it.idx);
                           }}>
-                            <span className="onenon-action-check" style={{marginTop:1}} />
-                            <span style={{flex:1,color:'var(--text)',fontSize:12}}>{it.text}</span>
-                            <span className="onenon-open-item-from">{it.from}</span>
+                            <span className="onenon-action-check" style={{marginTop:2,flexShrink:0}} />
+                            <div style={{flex:1}}>
+                              <div style={{fontSize:13,color:'var(--text)'}}>{it.text}</div>
+                              <div style={{fontSize:10,color:'var(--text-3)',marginTop:2}}>ze schůzky {it.from}</div>
+                            </div>
                           </div>
                         ))}
-                      </>
-                    )}
-                    {allDoneItems.length > 0 && (
-                      <>
-                        <div className="onenon-ai-done-label">✓ Splněno {allDoneItems.length}</div>
-                        {allDoneItems.slice(0,3).map((it, i) => (
-                          <div key={i} className="onenon-ai-done-item">{it.text}</div>
-                        ))}
-                        {allDoneItems.length > 3 && <div style={{fontSize:11,color:'var(--text-3)'}}>&hellip; a {allDoneItems.length - 3} dalších</div>}
                       </>
                     )}
                   </div>
                 </div>
 
+                {/* Splněno card */}
+                {allDoneItems.length > 0 && (
+                  <div className="onenon-splneno-card">
+                    <div className="onenon-splneno-header">
+                      <span>Splněno</span>
+                      <span>{allDoneItems.length} splněno</span>
+                    </div>
+                    {allDoneItems.slice(0, 4).map((it, i) => (
+                      <div key={i} className="onenon-splneno-item">{it.text}</div>
+                    ))}
+                    {allDoneItems.length > 4 && <div style={{fontSize:11,color:'var(--text-3)',padding:'4px 14px 8px'}}>… a {allDoneItems.length - 4} dalších</div>}
+                  </div>
+                )}
+
                 {/* Mood bar chart */}
                 {lastMoods.length >= 2 && (
                   <div className="onenon-col-card">
-                    <div className="onenon-col-card-header">
-                      <span>Nálada (poslední {lastMoods.length} schůzky)</span>
-                    </div>
+                    <div className="onenon-col-card-header">Nálada (poslední {lastMoods.length} schůzky)</div>
                     <div className="onenon-mood-chart">
                       <div className="onenon-mood-trend-label">
-                        <span>Trend: {moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní'}</span>
+                        <span style={{fontWeight:700,color:moodTrend==='↑'?'var(--success)':moodTrend==='↓'?'var(--danger)':'var(--text-2)'}}>Trend: {moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní'}</span>
                         {moodAvg && <span style={{color:'var(--text-2)'}}>avg {moodAvg}★</span>}
                       </div>
                       <div className="onenon-bars">
                         {[...lastMoods].reverse().map((m, i) => (
                           <div key={i} className="onenon-bar-wrap">
                             <div className="onenon-bar" style={{height: (m/5*40) + 'px', background: moodBarColor(m)}} />
+                            <div className="onenon-bar-date">{[...moodDates].reverse()[i]}</div>
                           </div>
                         ))}
                       </div>
@@ -2554,40 +2584,54 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
               </div>
 
               {/* Pravý sloupec: timeline zápisů */}
-              <div>
-                <div className="onenon-col-card-header" style={{marginBottom:10,background:'none',border:'none',padding:'0 0 8px 0',borderBottom:'1px solid var(--border)'}}>
+              <div style={{display:'flex',flexDirection:'column',minHeight:0}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,borderBottom:'1px solid var(--border)',paddingBottom:8}}>
                   <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)'}}>Timeline zápisů ({notes.length})</span>
                 </div>
                 {notes.length === 0 && <div style={{color:'var(--text-3)',fontSize:13}}>Zatím žádné záznamy</div>}
-                {notes.map(n => (
-                  <div key={n.id} className="onenon-note-card">
-                    <div className="onenon-note-header">
-                      <div>
-                        <div className="onenon-note-tag-row">
-                          <div className="onenon-note-date">{n.meeting_date}</div>
-                          {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
-                        </div>
-                        {n.mood && <div style={{color:'#F59E0B',fontSize:13,letterSpacing:.5}}>{'★'.repeat(n.mood)}{'☆'.repeat(5-n.mood)}</div>}
-                      </div>
-                      <div className="onenon-note-actions">
-                        <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Upravit">✎</button>
-                        <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Smazat">🗑</button>
-                      </div>
-                    </div>
-                    {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8,lineHeight:1.5}}>{n.notes}</div>}
-                    {(n.action_items || []).length > 0 && (
-                      <div>
-                        {(n.action_items || []).map((it, idx) => (
-                          <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, idx)}>
-                            <span className={'onenon-action-check' + (it.done ? ' done' : '')} />
-                            <span className={'onenon-action-text' + (it.done ? ' done' : '')}>{it.text}</span>
+                {notes.map(n => {
+                  const daysAgo = n.meeting_date ? Math.floor((Date.now() - new Date(n.meeting_date)) / 86400000) : null;
+                  return (
+                    <div key={n.id} className="onenon-note-card">
+                      <div className="onenon-note-header">
+                        <div>
+                          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+                            <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{n.meeting_date && new Date(n.meeting_date).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'})}</span>
+                            {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
                           </div>
-                        ))}
+                          <div style={{display:'flex',alignItems:'center',gap:8}}>
+                            {daysAgo !== null && <span style={{fontSize:11,color:'var(--text-3)'}}>{daysAgo} dní</span>}
+                            {n.mood && <span style={{color:'#F59E0B',fontSize:13,letterSpacing:.5}}>{'★'.repeat(n.mood)}{'☆'.repeat(5-n.mood)}</span>}
+                          </div>
+                        </div>
+                        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                          <button className="onenon-note-link edit" onClick={() => setModal(n)}>Upravit</button>
+                          <button className="onenon-note-link" onClick={() => handleDelete(n.id)}>Smazat</button>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8,lineHeight:1.6}}>{n.notes}</div>}
+                      {(n.action_items || []).filter(it => it.done).map((it, idx) => (
+                        <div key={idx} style={{display:'flex',alignItems:'center',gap:6,padding:'3px 0',fontSize:12}}>
+                          <span style={{fontSize:11,color:'var(--success)'}}>✓</span>
+                          <span style={{textDecoration:'line-through',color:'var(--text-3)'}}>{it.text}</span>
+                        </div>
+                      ))}
+                      {(n.action_items || []).filter(it => !it.done).map((it, idx) => (
+                        <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, (n.action_items || []).indexOf(it))}>
+                          <span className="onenon-action-check" />
+                          <span className="onenon-action-text">{it.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+
+            {/* Bottom tabs */}
+            <div className="onenon-bottom-tabs" style={{marginTop:16}}>
+              <button className={'onenon-btab' + (contentTab === 'detail' ? ' active' : '')} onClick={() => setContentTab('detail')}>↑ 1on1 detail</button>
+              <button className={'onenon-btab' + (contentTab === 'prep' ? ' active' : '')} onClick={() => { setContentTab('prep'); setPrepDoc(true); }}>📋 Prep modal</button>
             </div>
           </>
         )}
