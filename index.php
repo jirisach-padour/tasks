@@ -2167,6 +2167,10 @@ function PrepDocModal({ person, notes, profile, onClose }) {
   );
 }
 
+function SignalChip({ type, label }) {
+  return <span className={'signal-chip ' + type}>{label}</span>;
+}
+
 function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
   const [people, setPeople] = React.useState([]);
   const [selected, setSelected] = React.useState(null);
@@ -2265,80 +2269,142 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
     return <span className="onenon-mood">{'★'.repeat(mood)}{'☆'.repeat(5 - mood)}</span>;
   }
 
+  const selectedPeopleData = people.find(p => p.person === selected);
+  const allOpenItems = notes.flatMap(n =>
+    (n.action_items || [])
+      .filter(it => !it.done)
+      .map((it, idx) => ({ ...it, from: n.meeting_date, noteId: n.id, idx }))
+  );
+  const lastMoods = notes.filter(n => n.mood).slice(0, 4).map(n => n.mood);
+  const moodTrend = lastMoods.length >= 2
+    ? (lastMoods[0] > lastMoods[1] ? '↑' : lastMoods[0] < lastMoods[1] ? '↓' : '→')
+    : null;
+
   return (
     <div className="onenon-layout">
-      <div className="onenon-sidebar">
-        {(totalOpen > 0 || warnPeople.length > 0) && (
-          <div className="onenon-dashboard">
-            {totalOpen > 0 && <div className="onenon-dashboard-row"><span>Otevřené action items:</span><ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} /></div>}
-            {warnPeople.length > 0 && <div className="onenon-dashboard-row" style={{marginTop:4}}><span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span><span>{warnPeople.map(p => p.person).join(', ')}</span></div>}
+      <div className="onenon-people-sidebar">
+        <div className="onenon-people-header">
+          <span style={{fontSize:12,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.04em'}}>Lidé</span>
+          <div style={{display:'flex',gap:6,alignItems:'center'}}>
+            {totalOpen > 0 && <ActionItemsPopover people={people} onSelectPerson={name => loadNotes(name)} />}
+            <button className="btn btn-primary" style={{fontSize:11,padding:'4px 10px'}} onClick={() => setModal({ person: selected || '' })}>+ Schůzka</button>
+          </div>
+        </div>
+        {(warnPeople.length > 0) && (
+          <div className="onenon-dashboard" style={{margin:'8px 8px 0'}}>
+            <span className="onenon-warn">⚠ Bez 1on1 &gt;30 dní:</span> {warnPeople.map(p => p.person).join(', ')}
           </div>
         )}
-        {!daktelaToken && (
-          <div style={{background:'var(--grey-bg)',border:'1px solid var(--grey-border)',borderRadius:6,padding:'8px 10px',marginBottom:10,fontSize:12}}>
-            <div style={{color:'var(--grey-text)',marginBottom:6}}>Pro načtení agentů připoj Daktelu.</div>
-            <button className="btn btn-secondary" style={{width:'100%',fontSize:11}} onClick={onConnectDaktela}>Připojit Daktelu</button>
-          </div>
-        )}
-        <div className="section-title" style={{marginBottom:8}}>Lidé</div>
-        {people.map(p => {
-          const isEditing = editingPerson && editingPerson.name === p.person;
-          return (
-            <div key={p.person}>
-              {isEditing ? (
-                <PersonEditForm
-                  person={editingPerson}
-                  onSave={(newName, profile) => handleUpdatePerson(p.person, newName, profile)}
-                  onCancel={() => setEditingPerson(null)}
-                  onDelete={() => handleDeletePerson(p.person)}
-                />
-              ) : (
-                <div className={'onenon-person-row' + (selected === p.person ? ' active' : '')}>
-                  <button className="onenon-person-item-btn" onClick={() => loadNotes(p.person)}>
-                    <span>{p.person} <span style={{opacity:.6,fontWeight:400}}>({p.count})</span></span>
-                    {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní bez 1on1'} />}
-                  </button>
-                  <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null }); }}>✎</button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <button className="btn btn-primary" style={{width:'100%',marginTop:12,fontSize:12}}
-          onClick={() => setModal({ person: selected || '' })}>+ Nová schůzka</button>
+        <div className="onenon-people-list">
+          {people.map(p => {
+            const isEditing = editingPerson && editingPerson.name === p.person;
+            const isActive = selected === p.person;
+            return (
+              <div key={p.person} className="onenon-person-row">
+                {isEditing ? (
+                  <PersonEditForm
+                    person={editingPerson}
+                    onSave={(newName, profile) => handleUpdatePerson(p.person, newName, profile)}
+                    onCancel={() => setEditingPerson(null)}
+                    onDelete={() => handleDeletePerson(p.person)}
+                  />
+                ) : (
+                  <div style={{display:'flex',alignItems:'center',gap:2}}>
+                    <button className={'onenon-person-item-btn' + (isActive ? ' active' : '')} onClick={() => loadNotes(p.person)}>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:2}}>
+                        <span style={{fontWeight:600,fontSize:13,color:isActive ? 'var(--accent)' : 'var(--text)'}}>{p.person}</span>
+                        <div style={{display:'flex',gap:4,alignItems:'center'}}>
+                          {p.open_items > 0 && <span style={{background:'var(--danger)',color:'#fff',borderRadius:9,padding:'1px 5px',fontSize:10,fontWeight:700}}>{p.open_items}</span>}
+                          {p.days_since > 30 && <span className="onenon-person-warn" title={p.days_since + ' dní'} />}
+                        </div>
+                      </div>
+                      <div style={{fontSize:10,color:'var(--text-3)'}}>
+                        {p.days_since} dní
+                        {p.count > 0 && ' · ' + p.count + ' zápisů'}
+                      </div>
+                    </button>
+                    <button className="onenon-person-edit-btn" title="Upravit" onClick={e => { e.stopPropagation(); setEditingPerson({ name: p.person, description: p.description || '', profile: p.profile || null }); }}>✎</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
       <div className="onenon-main">
-        {!selected && <div style={{color:'var(--grey-text)',fontSize:13}}>Vyber osobu vlevo</div>}
+        {!selected && (
+          <div style={{color:'var(--text-3)',fontSize:13,padding:'40px 0',textAlign:'center'}}>
+            <div style={{fontSize:28,marginBottom:8}}>♟</div>
+            Vyber osobu vlevo
+          </div>
+        )}
         {selected && (
           <>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:selectedDesc ? 6 : 16}}>
-              <div className="section-title">{selected}</div>
-              <div style={{display:'flex',gap:6}}>
-                <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Podklady</button>
-                <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Schůzka</button>
+            {/* Person header + health signals */}
+            <div className="onenon-person-header">
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+                <div>
+                  <div style={{fontSize:20,fontWeight:800,color:'var(--text)'}}>{selected}</div>
+                  {selectedDesc && <div style={{fontSize:13,color:'var(--text-2)',fontStyle:'italic',marginTop:2}}>{selectedDesc}</div>}
+                </div>
+                <div style={{display:'flex',gap:6}}>
+                  <button className="btn btn-secondary" style={{fontSize:12}} onClick={() => setPrepDoc(true)}>📋 Podklady</button>
+                  <button className="btn btn-primary" style={{fontSize:12}} onClick={() => setModal({ person: selected })}>+ Zápis</button>
+                </div>
+              </div>
+              <div className="onenon-signal-chips">
+                {selectedPeopleData && (
+                  <SignalChip type={selectedPeopleData.days_since > 30 ? 'warn' : 'ok'} label={'Poslední 1on1: ' + selectedPeopleData.days_since + ' dní'} />
+                )}
+                {allOpenItems.length > 0 && <SignalChip type="warn" label={allOpenItems.length + ' open action items'} />}
+                {moodTrend && <SignalChip type="info" label={'Nálada ' + moodTrend} />}
+                {selectedProfile && selectedProfile.potential === 'high' && <SignalChip type="purple" label="Vysoký potenciál" />}
               </div>
             </div>
+
+            {/* Open action items */}
+            {allOpenItems.length > 0 && (
+              <div className="onenon-open-items">
+                <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)',marginBottom:8}}>Open action items</div>
+                {allOpenItems.map((it, i) => (
+                  <div key={i} className="onenon-open-item-row" onClick={() => {
+                    const note = notes.find(n => n.id === it.noteId);
+                    if (note) toggleActionItem(note, it.idx);
+                  }}>
+                    <span className="onenon-action-check" style={{marginTop:1}} />
+                    <span style={{flex:1,color:'var(--text)'}}>{it.text}</span>
+                    <span className="onenon-open-item-from">{it.from}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {prepDoc && <PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />}
-            {notes.length === 0 && <div style={{color:'var(--grey-text)',fontSize:13}}>Zatím žádné záznamy</div>}
+
+            {/* Timeline zápisů */}
+            <div style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)',marginBottom:10}}>
+              Záznamy — {notes.length}
+            </div>
+            {notes.length === 0 && <div style={{color:'var(--text-3)',fontSize:13}}>Zatím žádné záznamy</div>}
             {notes.map(n => (
               <div key={n.id} className="onenon-note-card">
                 <div className="onenon-note-header">
                   <div>
-                    <div className="onenon-note-date">{n.meeting_date}</div>
-                    <div className="onenon-note-meta">
+                    <div style={{display:'flex',alignItems:'center',gap:8}}>
+                      <div className="onenon-note-date">{n.meeting_date}</div>
                       {renderMood(n.mood)}
                       {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
                     </div>
                   </div>
                   <div className="onenon-note-actions">
-                    <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'var(--grey-text)'}}>Upravit</button>
-                    <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'#E05C4E'}}>Smazat</button>
+                    <button onClick={() => setModal(n)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Upravit">✎</button>
+                    <button onClick={() => handleDelete(n.id)} style={{background:'none',border:'none',cursor:'pointer',fontSize:13,color:'var(--text-3)',padding:'2px 5px',borderRadius:4}} title="Smazat">🗑</button>
                   </div>
                 </div>
-                {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8}}>{n.notes}</div>}
+                {n.notes && <div style={{fontSize:13,color:'var(--text)',whiteSpace:'pre-wrap',marginBottom:8,lineHeight:1.5}}>{n.notes}</div>}
                 {(n.action_items || []).length > 0 && (
                   <div>
-                    <div style={{fontSize:11,fontWeight:700,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Action items</div>
+                    <div style={{fontSize:11,fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:4}}>Action items</div>
                     {(n.action_items || []).map((it, idx) => (
                       <div key={idx} className="onenon-action-item" onClick={() => toggleActionItem(n, idx)}>
                         <span className={'onenon-action-check' + (it.done ? ' done' : '')} />
