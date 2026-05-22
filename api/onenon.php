@@ -50,7 +50,9 @@ if ($method === 'GET') {
                 MAX(n.meeting_date) as last_meeting_date,
                 SUM(JSON_LENGTH(n.action_items)) as total_items,
                 SUM((SELECT COUNT(*) FROM JSON_TABLE(n.action_items, '\$[*]' COLUMNS(done JSON PATH '\$.done')) jt WHERE done = 'false' OR done = false)) as open_items,
-                p.description, p.profile
+                p.description, p.profile,
+                (SELECT mood FROM onenon_notes m1 WHERE m1.person=n.person AND m1.mood IS NOT NULL ORDER BY m1.meeting_date DESC LIMIT 1) as last_mood,
+                (SELECT mood FROM onenon_notes m2 WHERE m2.person=n.person AND m2.mood IS NOT NULL ORDER BY m2.meeting_date DESC LIMIT 1 OFFSET 1) as prev_mood
              FROM onenon_notes n
              LEFT JOIN onenon_people p ON p.name = n.person
              GROUP BY n.person, p.description, p.profile
@@ -75,6 +77,10 @@ if ($method === 'GET') {
                 : null;
             $r['days_since'] = $daysAgo;
             $r['profile']    = isset($r['profile']) ? json_decode($r['profile'], true) : null;
+            $lm = isset($r['last_mood']) ? (int)$r['last_mood'] : null;
+            $pm = isset($r['prev_mood']) ? (int)$r['prev_mood'] : null;
+            $r['mood_trend'] = ($lm && $pm) ? ($lm > $pm ? 'up' : ($lm < $pm ? 'down' : 'flat')) : ($lm ? 'flat' : null);
+            unset($r['last_mood'], $r['prev_mood']);
         }
         echo json_encode(['people' => $rows]);
     }
