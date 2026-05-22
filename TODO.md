@@ -1,74 +1,31 @@
 # Tasks App — TODO
 
-## Nápady / budoucí rozvoj
+## Fronta
 
+- [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ: v detailu osoby zobrazit OPEN tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token + mapování person→daktela login
+- [ ] **Mood trend chart v 1on1** — mini bar chart nálady (posledních 4 záznamy) v person detailu pod open items
 - [ ] Push notifikace / reminder pro overdue tasky
 - [ ] Export tasků (CSV, JSON)
-- [ ] Sdílení tasku (read-only link)
 - [ ] Tmavý režim
-- [ ] Export do Google Docs — po dokončení dne/týdne vygenerovat přehled do Google Doc (Google Docs API, OAuth scope rozšířit o docs)
+- [ ] Export do Google Docs — po dokončení dne/týdne generovat přehled
 
-## Dokončeno
+## Dokončeno 2026-05-22
 
-### Core
-- [x] Setup server, nginx, DB, secrets
-- [x] Auth (login.php + session guard, 30 dní)
-- [x] Backend (tasks CRUD, checklist, Daktela proxy, Calendar, AI)
-- [x] Frontend (Eisenhower matrix, záložky, sidebar, checklist, historie)
-- [x] Drag & drop mezi kvadranty
-- [x] Quick capture (Cmd+K)
-- [x] Overdue highlighting + ⚡ brzy badge (≤3 dny)
-- [x] Inline edit názvu (dvojklik)
-- [x] Task count badge na záložkách
-- [x] Q1 alert badge (popover s deadlinem)
-- [x] Fulltext search v headeru
-- [x] DaktelaPanel: přiřazené tickety za collapse tlačítkem
-- [x] Daktela tickety proklikatelné (správný URL /tickets/update/)
-- [x] Více ticketů na jeden task
-- [x] Vrátit task z historie do aktivních
-- [x] Delete task (hard delete s potvrzením)
-- [x] Opakující se tasky (weekly/monthly/custom interval + recurrence_day)
-- [x] Google Calendar OAuth (curl, SameSite=Lax fix)
-- [x] Daktela tickety DB cache (bez tokenu po refresh stránky)
-- [x] AI návrh priorit (Claude Sonnet 4.6, max_tokens 4096)
-- [x] Settings — změna username/password (addcslashes, preg_replace_callback)
-- [x] Favicon
-- [x] Checklist — editace položek (double-click)
+- [x] **FÁZE 1 — Nový design systém** — bílý header 52px, NavSidebar 60px, nové CSS proměnné (--bg, --surface, --border, --accent, --danger...), tab-bar hidden, default tab Dnes
+- [x] **FÁZE 2 — Matice vizuální hierarchie** — Q1 červené pozadí, Q2 bílé+modrý accent, Q3 žluté, Q4 šedé; per-kvadrantní q-label; task karty shadow; stale = levý border + věk text; badge work/personal odebrány
+- [x] **FÁZE 3 — Dnes redesign** — sekce s collapsible timeline, WhatNow pod tasky, morning ritual bílý modal, KPI/whatnow světlý styl
+- [x] **FÁZE 4 — 1on1 redesign** — grid layout 260px+main, person karty se signály, SignalChip health indikátory, open action items panel, icon edit buttony
+- [x] **FÁZE 5 — 1on1 auto-task z kalendáře** — DB calendar_1on1_mappings, calendar.php fetchEventsDays+onenon_scan, settings.php onenon_mappings, OneOnOneMappingModal, cron daily_context.php rozšíření
 
-### Záložka Dnes
-- [x] Záložka Dnes — daily_order INT NULL v DB
-- [x] +D tlačítko v matici → přidat task do Dnes
-- [x] Drag & drop reorder v Dnes
-- [x] **Dnes = Timeline split view** — levý sloupec s denním kalendářem po hodinách, pravý sloupec s tasky + počítadlo volného času (2026-05-11)
-- [x] **Ranní ritual** — overlay při prvním otevření 6–10h s prázdným plánem; doporučené Q1+Q2 tasky, batch přidání do Dnes, localStorage throttle (2026-05-11)
-- [x] **"Co mám dělat teď?"** — WhatNowWidget v Dnes záložce, Claude Haiku, kontext čas+příští schůzka+Q1, inline výsledek (2026-05-11)
+## Dokončeno dříve
 
-### 1on1 modul
-- [x] 1on1 záložka — osoby, timeline, action items, mood 1–5, tagy
-- [x] Dashboard: otevřené action items celkem, osoby bez 1on1 >30 dní
-- [x] Profil osoby (výkon, potenciál, náročnost, silná stránka, rozvoj)
-- [x] Daktela agenti auto-načítání ze skupiny
-- [x] **ActionItemsPopover** — červený badge → dropdown skupinami per osoba → klik naviguje na osobu (2026-05-11)
-- [x] **PrepDocModal** — tlačítko "📋 Podklady" v detailu osoby; shrnutí nálada/tagy/action items/profil; AI témata přes Claude Haiku (2026-05-11)
-
-### UX & vizuál
-- [x] **Stale task indicator** — task karty starší 7d/21d dostávají vizuální aging (proužek zdola + opacity) (2026-05-11)
-- [x] **Task description v kartě** — 1 řádek šedě pod názvem (2026-05-11)
-
-### Samoučení & AI rozšíření
-- [x] **Odškrtnutí v Dnes → zrcadlení do matice** — checkbox v DnesView volá handleToggleDone globálně (2026-05-17)
-- [x] **Reset Dnes ráno** — DnesResetModal: nový den → výběr co přenést, hotové se odstraní automaticky (2026-05-17)
-- [x] **AI kontext z DB (fáze 1)** — ai.php rozšířen o 1on1 záznamy, Daktela cache; prompt caching (2026-05-17)
-- [x] **Chat okýnko (fáze 2)** — api/chat.php (Claude Haiku), ChatPanel v pravém sidebaru (2026-05-17)
-- [x] **Denní cron** — cron/daily_context.php exportuje tasks-context.md; crontab 6:00 (2026-05-17)
-- [x] **Samoučení** — estimated_minutes + actual_minutes; DoneTimeModal; přesnost odhadů v KpiPanel; AI accuracy context (2026-05-17)
-
-## Fronta — redesign (naplánováno)
-
-- [ ] **Redesign — Dnes + Matice** — nový design systém (sidebar nav, světlá paleta, Q1 vizuální dominance, nové task karty)
-- [ ] **Redesign — 1on1** — person health signals, action items oddělené od zápisů, mood trend chart, profile strip, prep modal redesign
-
-## Fronta — nové featury
-
-- [ ] **1on1 auto-task z kalendáře** — nastavovací modal: spárovat GCal event názvy s osobami → cron den před schůzkou vytvoří "Připravit 1on1 s [osoba]" jako Q2 task (viz návrh 2026-05-22)
-- [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ FÁZE: zobrazit v detailu osoby tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token
+- [x] Setup server, nginx, DB, secrets, Auth (session, 30 dní)
+- [x] Tasks CRUD, Eisenhower matrix, drag&drop, záložky, sidebar, checklist, historie
+- [x] Quick capture (Cmd+K), overdue highlight, inline edit, Q1 alert badge, fulltext search
+- [x] Daktela tickety (proxy, cache, proklikatelné URL)
+- [x] Opakující se tasky (weekly/monthly/custom)
+- [x] Google Calendar OAuth (curl, SameSite=Lax fix), timeline v Dnes view
+- [x] AI návrh priorit (Claude Sonnet 4.6), WhatNowWidget (Haiku), ChatPanel, PrepDocModal
+- [x] Ranní ritual, DnesResetModal, samoučení (estimated/actual minutes, přesnost odhadů)
+- [x] Denní cron (daily_context.php → tasks-context.md)
+- [x] 1on1 modul — osoby, záznamy, action items, mood, tagy, profil, ActionItemsPopover, PrepDocModal
