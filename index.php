@@ -594,8 +594,18 @@ function NavSidebar({ activeTab, onTab }) {
   );
 }
 
+// ---- useEscapeKey helper ----
+function useEscapeKey(handler) {
+  React.useEffect(() => {
+    const fn = e => { if (e.key === 'Escape') handler(); };
+    window.addEventListener('keydown', fn);
+    return () => window.removeEventListener('keydown', fn);
+  }, []);
+}
+
 // ---- DoneTimeModal ----
 function DoneTimeModal({ task, onSave, onSkip }) {
+  useEscapeKey(onSkip);
   const [minutes, setMinutes] = React.useState('');
   function handleSave() {
     const m = parseInt(minutes);
@@ -630,6 +640,7 @@ function DoneTimeModal({ task, onSave, onSkip }) {
 
 // ---- TaskModal ----
 function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availableTickets, assignedMap, onSave, onClose, onDelete }) {
+  useEscapeKey(onClose);
   const initial = task || {};
   const [title, setTitle] = useState(initial.title || '');
   const [description, setDescription] = useState(initial.description || '');
@@ -806,6 +817,7 @@ function TaskModal({ task, defaultQuadrant, defaultType, defaultTickets, availab
 
 // ---- DaktelaAuthModal ----
 function DaktelaAuthModal({ onConnected, onClose }) {
+  useEscapeKey(onClose);
   const [username, setUsername] = useState('sachj');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -853,6 +865,7 @@ function DaktelaAuthModal({ onConnected, onClose }) {
 
 // ---- AiSuggestModal ----
 function AiSuggestModal({ suggestions, tasks, onApply, onClose }) {
+  useEscapeKey(onClose);
   const taskMap = {};
   tasks.forEach(t => { taskMap[t.id] = t; });
   const [selected, setSelected] = useState(
@@ -1386,6 +1399,7 @@ function WhatNowWidget({ tasks, calEvents }) {
 
 // ---- DnesResetModal ----
 function DnesResetModal({ tasks, onConfirm, onSkip }) {
+  useEscapeKey(onSkip);
   const openTasks = tasks.filter(t => t.daily_order !== null && t.daily_order !== undefined && t.status === 'open');
   const doneTasks = tasks.filter(t => t.daily_order !== null && t.daily_order !== undefined && t.status === 'done');
   const [keep, setKeep] = React.useState(() => new Set(openTasks.map(t => t.id)));
@@ -2098,6 +2112,7 @@ function OneOnOneContextPanel({ ctx }) {
 
 // ---- PrepDocModal ----
 function PrepDocModal({ person, notes, profile, onClose }) {
+  useEscapeKey(onClose);
   const [aiTopics, setAiTopics] = React.useState(null);
   const [aiLoading, setAiLoading] = React.useState(false);
 
@@ -2645,6 +2660,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
 
 // ---- OneOnOneMappingModal ----
 function OneOnOneMappingModal({ people, onClose }) {
+  useEscapeKey(onClose);
   const [events, setEvents] = React.useState([]);
   const [mappings, setMappings] = React.useState({});
   const [loading, setLoading] = React.useState(true);
@@ -2721,6 +2737,7 @@ function OneOnOneMappingModal({ people, onClose }) {
 const ONENON_TAGS = ['výkon', 'SLA', 'osobní', 'rozvoj', 'feedback'];
 
 function OneOnOneModal({ note, agents, existingPeople, onSave, onClose }) {
+  useEscapeKey(onClose);
   const [personMode, setPersonMode] = React.useState(note.person ? 'known' : 'select');
   const [person, setPerson] = React.useState(note.person || '');
   const [manualPerson, setManualPerson] = React.useState('');
@@ -2836,6 +2853,7 @@ function OneOnOneModal({ note, agents, existingPeople, onSave, onClose }) {
 
 // ---- SettingsModal ----
 function SettingsModal({ onClose }) {
+  useEscapeKey(onClose);
   // Sekce: uživatelské jméno
   const [newUser, setNewUser] = React.useState('');
   const [userOldPass, setUserOldPass] = React.useState('');
