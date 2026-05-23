@@ -2462,7 +2462,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                   <SignalChip type={selectedPeopleData.days_since > 30 ? 'warn' : 'ok'} label={'Poslední 1on1: ' + selectedPeopleData.days_since + ' dní'} />
                 )}
                 {allOpenItems.length > 0 && <SignalChip type="warn" label={allOpenItems.length + ' open action items'} />}
-                {moodTrend && <SignalChip type="info" label={'Nálada ' + (moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní')} />}
+                {moodTrend && <SignalChip type={moodTrend === '↑' ? 'ok' : moodTrend === '↓' ? 'warn' : 'info'} label={'Nálada ' + (moodTrend === '↑' ? '↑ stoupá' : moodTrend === '↓' ? '↓ klesá' : '→ stabilní')} />}
                 {selectedProfile && selectedProfile.potential === 'high' && <SignalChip type="purple" label="Vysoký potenciál" />}
               </div>
             </div>
@@ -2481,13 +2481,13 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                     {selectedProfile.potential && (
                       <div className="onenon-metric">
                         <span className="onenon-metric-label">Potenciál</span>
-                        <span style={{background:selectedProfile.potential==='high'?'#F5F3FF':selectedProfile.potential==='medium'?'#FEF3C7':'#EFF6FF',color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--accent)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,border:'1px solid currentColor',display:'inline-block'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
+                        <span style={{background:selectedProfile.potential==='high'?'var(--purple-bg)':selectedProfile.potential==='medium'?'var(--warning-bg)':'var(--accent-bg)',color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--accent)',border:selectedProfile.potential==='high'?'1px solid #DDD6FE':selectedProfile.potential==='medium'?'1px solid #FDE68A':'1px solid #BFDBFE',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,display:'inline-block'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
                       </div>
                     )}
                     {selectedProfile.mgmt_effort && (
                       <div className="onenon-metric">
                         <span className="onenon-metric-label">Náročnost řízení</span>
-                        <span style={{background:selectedProfile.mgmt_effort==='low'?'#DCFCE7':selectedProfile.mgmt_effort==='medium'?'#FEF3C7':'#FEE2E2',color:selectedProfile.mgmt_effort==='low'?'var(--success)':selectedProfile.mgmt_effort==='medium'?'var(--warning)':'var(--danger)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,border:'1px solid currentColor',display:'inline-block'}}>{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
+                        <span style={{background:selectedProfile.mgmt_effort==='low'?'var(--success-bg)':selectedProfile.mgmt_effort==='medium'?'var(--warning-bg)':'#FEE2E2',color:selectedProfile.mgmt_effort==='low'?'var(--success)':selectedProfile.mgmt_effort==='medium'?'var(--warning)':'var(--danger)',border:selectedProfile.mgmt_effort==='low'?'1px solid #BBF7D0':selectedProfile.mgmt_effort==='medium'?'1px solid #FDE68A':'1px solid #FECACA',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,display:'inline-block'}}>{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
                       </div>
                     )}
                     {selectedProfile.strength && (
