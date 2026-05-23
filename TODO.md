@@ -2,10 +2,10 @@
 
 ## Bugs — k opravě
 
-- [ ] **Připravit schůzku v 1on1** — rozsypaná grafika tlačítka/dialogu
-- [ ] **Checklist a Daktela tickety v matici** — vypadají jinak než v návrhu (srovnat s preview)
-- [ ] **Volný čas v denním kalendáři** — nepočítá se správně, zkontrolovat dle návrhu
-- [ ] **Důkladné porovnání grafiky: realita vs. návrh** — projít každou obrazovku (Matice, Dnes, 1on1, Ranní rituál, Modaly, Sidebar) a zdokumentovat všechny odchylky od designu; opravit po jednom
+- [x] **Připravit schůzku v 1on1** — opraveno 2026-05-23 (portal do #modals, modal-box CSS, signal chips, profil sekce, z-index)
+- [x] **Checklist a Daktela tickety v matici** — opraveno 2026-05-23
+- [x] **Volný čas v denním kalendáři** — OK 2026-05-23
+- [x] **Důkladné porovnání grafiky: realita vs. návrh** — hotovo 2026-05-23 — projít každou obrazovku (Matice, Dnes, 1on1, Ranní rituál, Modaly, Sidebar) a zdokumentovat všechny odchylky od designu; opravit po jednom
 
 ## Fronta
 
