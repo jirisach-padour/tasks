@@ -2,7 +2,7 @@
 
 ## Bugs — k opravě
 
-- [ ] **Action items v 1on1 se otevírají špatně** — screenshot k dodání; zjistit a opravit chování otevírání/zobrazení seznamu action items
+- [x] **Action items v 1on1 se otevírají špatně** — opraveno 2026-05-23 (popover right:0 → left:0, otevírá se doprava)
 - [ ] **Responsivní design — mobil** — vyladit zobrazení na mobilních zařízeních BEZ dopadu na PC; konkrétně: FAB tlačítko pro přidání rychlého tasku se překrývá se spodním fixním pilem; projít celý layout na <600px
 
 - [x] **Připravit schůzku v 1on1** — opraveno 2026-05-23 (portal do #modals, modal-box CSS, signal chips, profil sekce, z-index)
