@@ -2851,26 +2851,96 @@ function OneOnOneModal({ note, agents, existingPeople, onSave, onClose }) {
   );
 }
 
+// ---- AvatarBadge ----
+function AvatarBadge({ size, onClick }) {
+  const [bg, setBg] = React.useState(() => {
+    const key = localStorage.getItem('tasks_avatar_color') || 'navy';
+    const COLORS = [
+      {bg:'linear-gradient(135deg,#1B3468,#2563EB)', key:'navy'},
+      {bg:'linear-gradient(135deg,#7C3AED,#A855F7)', key:'purple'},
+      {bg:'linear-gradient(135deg,#059669,#10B981)', key:'green'},
+      {bg:'linear-gradient(135deg,#D97706,#F59E0B)', key:'amber'},
+      {bg:'linear-gradient(135deg,#DC2626,#EF4444)', key:'red'},
+      {bg:'linear-gradient(135deg,#0891B2,#06B6D4)', key:'cyan'},
+      {bg:'linear-gradient(135deg,#475569,#94A3B8)', key:'slate'},
+      {bg:'linear-gradient(135deg,#BE185D,#EC4899)', key:'pink'},
+    ];
+    return (COLORS.find(c => c.key === key) || COLORS[0]).bg;
+  });
+  const [initials, setInitials] = React.useState(() => localStorage.getItem('tasks_avatar_initials') || (CURRENT_USER||'?').slice(0,2).toUpperCase());
+  React.useEffect(() => {
+    function sync() {
+      const key = localStorage.getItem('tasks_avatar_color') || 'navy';
+      const COLORS = [
+        {bg:'linear-gradient(135deg,#1B3468,#2563EB)', key:'navy'},
+        {bg:'linear-gradient(135deg,#7C3AED,#A855F7)', key:'purple'},
+        {bg:'linear-gradient(135deg,#059669,#10B981)', key:'green'},
+        {bg:'linear-gradient(135deg,#D97706,#F59E0B)', key:'amber'},
+        {bg:'linear-gradient(135deg,#DC2626,#EF4444)', key:'red'},
+        {bg:'linear-gradient(135deg,#0891B2,#06B6D4)', key:'cyan'},
+        {bg:'linear-gradient(135deg,#475569,#94A3B8)', key:'slate'},
+        {bg:'linear-gradient(135deg,#BE185D,#EC4899)', key:'pink'},
+      ];
+      setBg((COLORS.find(c => c.key === key) || COLORS[0]).bg);
+      setInitials(localStorage.getItem('tasks_avatar_initials') || (CURRENT_USER||'?').slice(0,2).toUpperCase());
+    }
+    window.addEventListener('avatar-changed', sync);
+    return () => window.removeEventListener('avatar-changed', sync);
+  }, []);
+  return (
+    <div onClick={onClick} title={CURRENT_USER}
+      style={{width:size,height:size,borderRadius:'50%',background:bg,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:Math.round(size*0.37)+'px',fontWeight:700,cursor:'pointer',flexShrink:0,userSelect:'none',letterSpacing:1,boxShadow:'0 2px 6px rgba(0,0,0,.15)'}}>
+      {(initials||'?').slice(0,2).toUpperCase()}
+    </div>
+  );
+}
+
 // ---- SettingsModal ----
+const AVATAR_COLORS = [
+  {bg:'linear-gradient(135deg,#1B3468,#2563EB)', key:'navy'},
+  {bg:'linear-gradient(135deg,#7C3AED,#A855F7)', key:'purple'},
+  {bg:'linear-gradient(135deg,#059669,#10B981)', key:'green'},
+  {bg:'linear-gradient(135deg,#D97706,#F59E0B)', key:'amber'},
+  {bg:'linear-gradient(135deg,#DC2626,#EF4444)', key:'red'},
+  {bg:'linear-gradient(135deg,#0891B2,#06B6D4)', key:'cyan'},
+  {bg:'linear-gradient(135deg,#475569,#94A3B8)', key:'slate'},
+  {bg:'linear-gradient(135deg,#BE185D,#EC4899)', key:'pink'},
+];
+
 function SettingsModal({ onClose }) {
   useEscapeKey(onClose);
-  // Sekce: uživatelské jméno
+  const [activeSection, setActiveSection] = React.useState('avatar');
+
+  // Avatar
+  const [avatarColor, setAvatarColor] = React.useState(() => localStorage.getItem('tasks_avatar_color') || 'navy');
+  const [avatarInitials, setAvatarInitials] = React.useState(() => localStorage.getItem('tasks_avatar_initials') || (CURRENT_USER||'?').slice(0,2).toUpperCase());
+  const [avatarSaved, setAvatarSaved] = React.useState(false);
+
+  // Uživatelské jméno
   const [newUser, setNewUser] = React.useState('');
   const [userOldPass, setUserOldPass] = React.useState('');
   const [userSaving, setUserSaving] = React.useState(false);
-  const [userMsg, setUserMsg] = React.useState(null); // {ok, text}
+  const [userMsg, setUserMsg] = React.useState(null);
 
-  // Sekce: heslo
+  // Heslo
   const [oldPass, setOldPass] = React.useState('');
   const [newPass, setNewPass] = React.useState('');
   const [newPass2, setNewPass2] = React.useState('');
   const [passSaving, setPassSaving] = React.useState(false);
   const [passMsg, setPassMsg] = React.useState(null);
-
-  // Viditelnost hesel
-  const [showUserOld, setShowUserOld] = React.useState(false);
   const [showOld, setShowOld] = React.useState(false);
   const [showNew, setShowNew] = React.useState(false);
+  const [showUserOld, setShowUserOld] = React.useState(false);
+
+  const currentBg = (AVATAR_COLORS.find(c => c.key === avatarColor) || AVATAR_COLORS[0]).bg;
+
+  function saveAvatar() {
+    localStorage.setItem('tasks_avatar_color', avatarColor);
+    localStorage.setItem('tasks_avatar_initials', avatarInitials);
+    setAvatarSaved(true);
+    setTimeout(() => setAvatarSaved(false), 2000);
+    window.dispatchEvent(new Event('avatar-changed'));
+  }
 
   async function handleUserSave() {
     if (!newUser.trim()) { setUserMsg({ok:false, text:'Zadej nové uživatelské jméno'}); return; }
@@ -2897,71 +2967,120 @@ function SettingsModal({ onClose }) {
     setPassSaving(false);
   }
 
-  function pwInput(val, set, show, setShow, placeholder, autocomplete) {
+  function PwInput({val, set, show, setShow, placeholder, autoComplete}) {
     return (
       <div style={{position:'relative'}}>
         <input type={show ? 'text' : 'password'} value={val} onChange={e => set(e.target.value)}
-          placeholder={placeholder} autocomplete={autocomplete}
-          style={{width:'100%',paddingRight:36}} />
+          placeholder={placeholder} autoComplete={autoComplete} style={{width:'100%',paddingRight:38,boxSizing:'border-box'}} />
         <button type="button" onClick={() => setShow(v => !v)}
-          style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',fontSize:15,padding:0,color:'var(--grey-text)'}}>
-          {show ? '🙈' : '👁'}
+          style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',padding:0,color:'var(--text-3)',display:'flex',alignItems:'center'}}>
+          {show
+            ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          }
         </button>
       </div>
     );
   }
 
-  function Feedback({msg}) {
+  function Msg({msg}) {
     if (!msg) return null;
-    return <div style={{fontSize:12,marginTop:6,color:msg.ok ? '#2a7a2a' : 'var(--red)',fontWeight:500}}>{msg.text}</div>;
+    return <div style={{fontSize:12,marginTop:8,padding:'7px 10px',borderRadius:6,background:msg.ok ? '#F0FDF4' : '#FFF5F5',color:msg.ok ? 'var(--success)' : 'var(--danger)',fontWeight:500,border:'1px solid ' + (msg.ok ? '#BBF7D0' : '#FECACA')}}>{msg.text}</div>;
   }
 
-  const sectionStyle = {background:'var(--grey-bg)',borderRadius:8,padding:'16px 18px',marginBottom:16};
-  const labelStyle = {display:'block',fontSize:11,fontWeight:600,color:'var(--grey-text)',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:5};
-  const fgStyle = {marginBottom:12};
+  const tabs = [{key:'avatar',label:'Profil'},{key:'account',label:'Účet'},{key:'password',label:'Heslo'}];
+  const inputStyle = {width:'100%', boxSizing:'border-box'};
+  const labelStyle = {display:'block',fontSize:11,fontWeight:700,color:'var(--text-3)',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:5,marginTop:14};
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-          <h2 style={{margin:0}}>Nastavení účtu</h2>
-          <button className="btn btn-ghost" onClick={onClose} style={{fontSize:18,lineHeight:1,padding:'2px 8px'}}>×</button>
+      <div className="modal" style={{maxWidth:440,padding:0,overflow:'hidden'}}>
+
+        {/* Header */}
+        <div style={{padding:'20px 24px 0',background:'var(--surface)'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            <div style={{fontSize:16,fontWeight:700,color:'var(--text)'}}>Nastavení</div>
+            <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-3)',padding:4,borderRadius:6,display:'flex',alignItems:'center'}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div style={{display:'flex',gap:0,borderBottom:'1px solid var(--border)'}}>
+            {tabs.map(t => (
+              <button key={t.key} onClick={() => setActiveSection(t.key)}
+                style={{padding:'8px 16px',border:'none',background:'none',cursor:'pointer',fontSize:13,fontWeight:600,color:activeSection===t.key ? 'var(--accent)' : 'var(--text-2)',borderBottom:activeSection===t.key ? '2px solid var(--accent)' : '2px solid transparent',marginBottom:-1,fontFamily:'var(--font)',transition:'all .15s'}}>
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={sectionStyle}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:'var(--navy)'}}>Uživatelské jméno</div>
-          <div style={{fontSize:12,color:'var(--grey-text)',marginBottom:12}}>Aktuálně: <strong style={{color:'var(--navy)'}}>{CURRENT_USER}</strong></div>
-          <div style={fgStyle}>
-            <label style={labelStyle}>Nové uživatelské jméno</label>
-            <input value={newUser} onChange={e => setNewUser(e.target.value)}
-              placeholder="Nové jméno..." autocomplete="username" autocapitalize="off" autocorrect="off" />
-          </div>
-          <div style={fgStyle}>
-            <label style={labelStyle}>Stávající heslo (potvrzení)</label>
-            {pwInput(userOldPass, setUserOldPass, showUserOld, setShowUserOld, 'Heslo pro potvrzení', 'current-password')}
-          </div>
-          <Feedback msg={userMsg} />
-          <button className="btn btn-primary" onClick={handleUserSave} disabled={userSaving || !newUser.trim()}
-            style={{marginTop:4,width:'100%'}}>{userSaving ? 'Ukládám...' : 'Změnit uživatelské jméno'}</button>
-        </div>
+        {/* Content */}
+        <div style={{padding:'20px 24px 24px'}}>
 
-        <div style={sectionStyle}>
-          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:'var(--navy)'}}>Heslo</div>
-          <div style={fgStyle}>
-            <label style={labelStyle}>Stávající heslo</label>
-            {pwInput(oldPass, setOldPass, showOld, setShowOld, 'Stávající heslo', 'current-password')}
-          </div>
-          <div style={fgStyle}>
-            <label style={labelStyle}>Nové heslo</label>
-            {pwInput(newPass, setNewPass, showNew, setShowNew, 'Min. 8 znaků', 'new-password')}
-          </div>
-          <div style={fgStyle}>
-            <label style={labelStyle}>Potvrdit nové heslo</label>
-            {pwInput(newPass2, setNewPass2, showNew, setShowNew, 'Znovu nové heslo', 'new-password')}
-          </div>
-          <Feedback msg={passMsg} />
-          <button className="btn btn-primary" onClick={handlePassSave} disabled={passSaving || !oldPass || !newPass}
-            style={{marginTop:4,width:'100%'}}>{passSaving ? 'Ukládám...' : 'Změnit heslo'}</button>
+          {/* TAB: Profil / Avatar */}
+          {activeSection === 'avatar' && (
+            <div>
+              <div style={{display:'flex',alignItems:'center',gap:20,marginBottom:24,padding:'16px',background:'var(--bg)',borderRadius:12,border:'1px solid var(--border)'}}>
+                <div style={{width:64,height:64,borderRadius:'50%',background:currentBg,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,fontWeight:800,flexShrink:0,boxShadow:'0 4px 12px rgba(0,0,0,.15)',letterSpacing:1}}>
+                  {(avatarInitials||'?').slice(0,2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{fontWeight:700,fontSize:15,color:'var(--text)'}}>{CURRENT_USER}</div>
+                  <div style={{fontSize:12,color:'var(--text-3)',marginTop:2}}>Náhled profilového avataru</div>
+                </div>
+              </div>
+
+              <label style={labelStyle}>Zkratka (1–2 znaky)</label>
+              <input value={avatarInitials} onChange={e => setAvatarInitials(e.target.value.slice(0,2).toUpperCase())}
+                placeholder="JS" maxLength={2} style={{...inputStyle, textTransform:'uppercase', fontWeight:700, letterSpacing:2, fontSize:16, width:80, textAlign:'center'}} />
+
+              <label style={labelStyle}>Barva avataru</label>
+              <div style={{display:'flex',gap:10,flexWrap:'wrap',marginTop:4}}>
+                {AVATAR_COLORS.map(c => (
+                  <button key={c.key} onClick={() => setAvatarColor(c.key)}
+                    title={c.key}
+                    style={{width:36,height:36,borderRadius:'50%',background:c.bg,border:avatarColor===c.key ? '3px solid var(--text)' : '3px solid transparent',cursor:'pointer',padding:0,boxShadow:avatarColor===c.key ? '0 0 0 2px var(--surface), 0 0 0 4px var(--text)' : 'none',transition:'all .15s'}} />
+                ))}
+              </div>
+
+              <button className="btn btn-primary" onClick={saveAvatar} style={{marginTop:20,width:'100%'}}>
+                {avatarSaved ? '✓ Uloženo' : 'Uložit avatar'}
+              </button>
+            </div>
+          )}
+
+          {/* TAB: Účet */}
+          {activeSection === 'account' && (
+            <div>
+              <div style={{fontSize:12,color:'var(--text-2)',padding:'10px 12px',background:'var(--bg)',borderRadius:8,border:'1px solid var(--border)',marginBottom:4}}>
+                Přihlášen jako <strong style={{color:'var(--text)'}}>{CURRENT_USER}</strong>
+              </div>
+              <label style={labelStyle}>Nové uživatelské jméno</label>
+              <input value={newUser} onChange={e => setNewUser(e.target.value)}
+                placeholder="Nové jméno..." autoComplete="username" style={inputStyle} />
+              <label style={labelStyle}>Stávající heslo (potvrzení)</label>
+              <PwInput val={userOldPass} set={setUserOldPass} show={showUserOld} setShow={setShowUserOld} placeholder="Heslo pro potvrzení" autoComplete="current-password" />
+              <Msg msg={userMsg} />
+              <button className="btn btn-primary" onClick={handleUserSave} disabled={userSaving || !newUser.trim()}
+                style={{marginTop:16,width:'100%'}}>{userSaving ? 'Ukládám...' : 'Změnit uživatelské jméno'}</button>
+            </div>
+          )}
+
+          {/* TAB: Heslo */}
+          {activeSection === 'password' && (
+            <div>
+              <label style={{...labelStyle,marginTop:0}}>Stávající heslo</label>
+              <PwInput val={oldPass} set={setOldPass} show={showOld} setShow={setShowOld} placeholder="Stávající heslo" autoComplete="current-password" />
+              <label style={labelStyle}>Nové heslo</label>
+              <PwInput val={newPass} set={setNewPass} show={showNew} setShow={setShowNew} placeholder="Min. 8 znaků" autoComplete="new-password" />
+              <label style={labelStyle}>Potvrdit nové heslo</label>
+              <PwInput val={newPass2} set={setNewPass2} show={showNew} setShow={setShowNew} placeholder="Znovu nové heslo" autoComplete="new-password" />
+              <Msg msg={passMsg} />
+              <button className="btn btn-primary" onClick={handlePassSave} disabled={passSaving || !oldPass || !newPass}
+                style={{marginTop:16,width:'100%'}}>{passSaving ? 'Ukládám...' : 'Změnit heslo'}</button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
@@ -3317,9 +3436,7 @@ function App() {
             <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1v10M1 6h10"/></svg>
             Nový task
           </button>
-          <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg, #1B3468, #2563EB)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:700,cursor:'default',flexShrink:0,userSelect:'none'}} title={CURRENT_USER}>
-            {(CURRENT_USER||'?').slice(0,2).toUpperCase()}
-          </div>
+          <AvatarBadge size={30} onClick={() => setModal({ type: 'settings' })} />
         </div>,
         document.getElementById('headerActions')
       )}
