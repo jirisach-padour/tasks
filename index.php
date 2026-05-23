@@ -13,7 +13,7 @@ requireAuth();
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
-:root{--bg:#F7F7F8;--surface:#FFFFFF;--surface-2:#F0F0F2;--border:#E4E4E7;--text:#18181B;--text-2:#71717A;--text-3:#A1A1AA;--accent:#2563EB;--accent-bg:#EFF6FF;--danger:#DC2626;--danger-bg:#FFF5F5;--warning:#D97706;--warning-bg:#FFFBEB;--success:#16A34A;--success-bg:#F0FDF4;--purple:#7C3AED;--purple-bg:#F5F3FF;--navy:#1B3468;--radius:10px;--radius-sm:6px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);--red:#DC2626;--red-hover:#b91c1c;--grey-bg:#F7F7F8;--grey-border:#E4E4E7;--grey-text:#71717A;--white:#FFFFFF}
+:root{--bg:#F7F7F8;--surface:#FFFFFF;--surface-2:#F0F0F2;--border:#E4E4E7;--text:#18181B;--text-2:#71717A;--text-3:#A1A1AA;--accent:#2563EB;--accent-bg:#EFF6FF;--blue:#2563EB;--blue-hover:#1d4ed8;--danger:#DC2626;--danger-bg:#FFF5F5;--warning:#D97706;--warning-bg:#FFFBEB;--success:#16A34A;--success-bg:#F0FDF4;--purple:#7C3AED;--purple-bg:#F5F3FF;--navy:#1B3468;--radius:10px;--radius-sm:6px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);--red:#DC2626;--red-hover:#b91c1c;--grey-bg:#F7F7F8;--grey-border:#E4E4E7;--grey-text:#71717A;--white:#FFFFFF}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden}
 body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--text);overflow-x:hidden}
@@ -119,7 +119,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 /* Checklist */
 .cl-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--grey-border)}
 .cl-item:last-child{border-bottom:none}
-.cl-item input[type=checkbox]{accent-color:var(--red);width:15px;height:15px;flex-shrink:0;cursor:pointer}
+.cl-item input[type=checkbox]{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0;cursor:pointer}
 .cl-item-title{font-size:13px;flex:1;min-width:0}
 .cl-item-title.done{text-decoration:line-through;color:var(--grey-text)}
 .cl-del{background:none;border:none;cursor:pointer;color:var(--grey-border);font-size:13px;flex-shrink:0;padding:0}
@@ -127,7 +127,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .cl-add-row{display:flex;gap:6px;margin-top:10px}
 .cl-add-row input{flex:1;height:30px;padding:0 8px;border:1px solid var(--grey-border);border-radius:6px;font-size:13px;font-family:var(--font);outline:none}
 .cl-add-row input:focus{border-color:var(--navy)}
-.cl-add-row button{height:30px;padding:0 14px;background:var(--red);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
+.cl-add-row button{height:30px;padding:0 14px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}
 .cl-item-edit{flex:1;font-size:13px;font-family:var(--font);border:1px solid var(--navy);border-radius:4px;padding:0 4px;height:22px;outline:none;min-width:0}
 /* Daktela tickets */
 .ticket-row{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid var(--grey-border)}
@@ -161,7 +161,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .cal-event-row:hover .cal-task-btn{opacity:1}
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:background .15s}
-.btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-hover)}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-hover)}
 .btn-secondary{background:var(--white);color:var(--navy);border:1px solid var(--grey-border)}.btn-secondary:hover{background:var(--grey-bg)}
 .btn-ghost{background:var(--surface);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:var(--bg)}
 .action-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
@@ -201,7 +201,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .todo-modal-box{background:#fff;border-radius:10px;width:min(720px,95vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25)}
 .todo-modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--grey-border);font-weight:600;font-size:15px}
 .todo-modal-body{overflow-y:auto;padding:18px 22px;font-size:13px;line-height:1.7;white-space:pre-wrap;font-family:monospace}
-.fab{display:none;position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--red);color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:100;align-items:center;justify-content:center;font-family:var(--font)}
+.fab{display:none;position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;font-size:24px;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:100;align-items:center;justify-content:center;font-family:var(--font)}
 /* Sidebar hamburger (tablet) */
 .sidebar-toggle{display:none;background:var(--bg);border:1px solid var(--border);color:var(--text);font-size:20px;cursor:pointer;padding:6px 10px;border-radius:6px;font-family:var(--font)}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:149}
@@ -866,7 +866,7 @@ function AiSuggestModal({ suggestions, tasks, onApply, onClose }) {
           return (
             <div key={s.id} className="ai-suggestion" style={{opacity: s.accepted ? 1 : .5}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <input type="checkbox" checked={s.accepted} onChange={() => toggleAccept(i)} style={{accentColor:'var(--red)',width:15,height:15}} />
+                <input type="checkbox" checked={s.accepted} onChange={() => toggleAccept(i)} style={{accentColor:'var(--blue)',width:15,height:15}} />
                 <span className="ai-suggestion-title">{t.title}</span>
               </div>
               <div className="ai-suggestion-reason">{s.reason}</div>
@@ -1964,7 +1964,7 @@ function SearchResults({ query, checklistItems, daktelaTickets, onEditTask, onTo
           <div className="sr-section-label" style={{margin:'12px 0 8px'}}>Checklist ({clMatches.length})</div>
           {clMatches.map(i => (
             <div key={i.id} onClick={() => onToggleCl(i, !i.done)} className="sr-item">
-              <input type="checkbox" checked={!!i.done} readOnly style={{accentColor:'var(--red)',width:14,height:14,flexShrink:0}} />
+              <input type="checkbox" checked={!!i.done} readOnly style={{accentColor:'var(--blue)',width:14,height:14,flexShrink:0}} />
               <span style={{fontSize:'13px',textDecoration: i.done ? 'line-through' : 'none',color: i.done ? 'var(--grey-text)' : 'var(--navy)'}}>{i.title}</span>
             </div>
           ))}
@@ -3288,7 +3288,7 @@ function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             {aiLoading ? '...' : 'AI'}
           </button>
-          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })} style={{background:'var(--blue)',borderColor:'var(--blue)'}}>Nový task</button>
+          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>Nový task</button>
           <div style={{width:32,height:32,borderRadius:'50%',background:'var(--blue)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,cursor:'default',flexShrink:0,userSelect:'none'}} title={CURRENT_USER}>
             {(CURRENT_USER||'?').slice(0,2).toUpperCase()}
           </div>
