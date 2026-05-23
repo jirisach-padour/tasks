@@ -2509,7 +2509,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
               </div>
             )}
 
-            {prepDoc && <PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />}
+            {prepDoc && ReactDOM.createPortal(<PrepDocModal person={selected} notes={notes} profile={selectedProfile} onClose={() => setPrepDoc(false)} />, document.getElementById('modals'))}
 
             {/* Dvousloupcový layout */}
             <div className="onenon-cols">
