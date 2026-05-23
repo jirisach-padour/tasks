@@ -1433,7 +1433,7 @@ function DnesResetModal({ tasks, onConfirm, onSkip }) {
 }
 
 // ---- DnesView ----
-function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily, onBatchRemoveFromDaily, forceShowMorning }) {
+function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, onReorder, onBatchAddToDaily, onBatchRemoveFromDaily, forceShowMorning, onForceDone }) {
   const [dragId, setDragId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1482,10 +1482,12 @@ function DnesView({ tasks, calEvents, onToggleDone, onEdit, onRemoveFromDaily, o
     localStorage.setItem('lastMorningCheck', todayStr);
     setShowMorning(false);
     if (onBatchAddToDaily) onBatchAddToDaily(ids);
+    if (forceShowMorning && onForceDone) onForceDone();
   }
   function handleMorningSkip() {
     localStorage.setItem('lastMorningCheck', todayStr);
     setShowMorning(false);
+    if (forceShowMorning && onForceDone) onForceDone();
   }
 
   // Timeline: group today's calendar events by hour
@@ -3365,7 +3367,7 @@ function App() {
           : activeTab === 'onenon'
           ? <OneOnOneView daktelaToken={daktelaToken} onContextChange={setOnenonCtx} onConnectDaktela={() => setModal({ type: 'daktela' })} />
           : activeTab === 'morning'
-          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} forceShowMorning={true} />
+          ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} forceShowMorning={true} onForceDone={() => setActiveTab('dnes')} />
           : activeTab === 'dnes'
           ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} />
           : (
