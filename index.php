@@ -341,7 +341,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .layout.onenon-active .sidebar-right{display:none!important}
 .onenon-people-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .onenon-people-list{flex:1;overflow-y:auto;padding:8px}
-.onenon-main{flex:1;min-width:0;overflow-y:auto;padding:16px 20px}
+.onenon-main{flex:1;min-width:0;overflow-y:auto;padding:16px 20px 80px}
 /* Person card */
 .onenon-person-row{margin-bottom:4px}
 .onenon-person-item-btn{width:100%;background:none;border:1px solid transparent;border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer;text-align:left;font-family:var(--font);transition:all .15s}
@@ -368,7 +368,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-note-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .onenon-note-actions{display:flex;gap:4px}
 .onenon-mood{color:#F5A623;font-size:13px;letter-spacing:1px}
-.onenon-tag-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin:2px 3px 2px 0;background:var(--accent-bg);color:var(--accent)}
+.onenon-tag-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin:2px 3px 2px 0;background:var(--accent-bg);color:var(--accent)}.onenon-tag-chip.tag-vykon{background:#DCFCE7;color:var(--success)}.onenon-tag-chip.tag-rozvoj{background:#F5F3FF;color:var(--purple)}.onenon-tag-chip.tag-osobni{background:#FEF3C7;color:var(--warning)}.onenon-tag-chip.tag-sla{background:#FEE2E2;color:var(--danger)}.onenon-tag-chip.tag-feedback{background:var(--accent-bg);color:var(--accent)}
 .onenon-action-item{display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:13px}
 .onenon-action-check{width:14px;height:14px;border-radius:3px;border:2px solid var(--accent);background:none;display:inline-block;flex-shrink:0}
 .onenon-action-check.done{border-color:var(--border);background:var(--bg)}
@@ -418,9 +418,10 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-splneno-item{font-size:12px;color:var(--text-3);text-decoration:line-through;padding:4px 14px;border-bottom:1px solid var(--border)}
 .onenon-splneno-item:last-child{border-bottom:none}
 .onenon-bar-date{font-size:9px;color:var(--text-3);margin-top:2px;text-align:center;white-space:nowrap}
-.onenon-bottom-tabs{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:0;padding:0}
-.onenon-btab{flex:1;padding:10px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-2);font-family:var(--font);transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
-.onenon-btab.active{color:var(--text);border-bottom:2px solid var(--accent)}
+.onenon-bottom-tabs{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B3468;border-radius:30px;display:flex;align-items:center;padding:5px;gap:2px;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:201}
+.onenon-btab{padding:8px 18px;border-radius:24px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap}
+.onenon-btab.active{background:#fff;color:#1B3468}
+.onenon-btab:hover:not(.active){color:#fff}
 .onenon-note-actions{display:flex;gap:4px;align-items:center}
 .onenon-note-link{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-3);padding:2px 6px;border-radius:4px;font-family:var(--font)}
 .onenon-note-link:hover{color:var(--danger)}
@@ -2480,13 +2481,13 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                     {selectedProfile.potential && (
                       <div className="onenon-metric">
                         <span className="onenon-metric-label">Potenciál</span>
-                        <span className="onenon-metric-val" style={{color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--text-2)'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
+                        <span style={{background:selectedProfile.potential==='high'?'#F5F3FF':selectedProfile.potential==='medium'?'#FEF3C7':'#EFF6FF',color:selectedProfile.potential==='high'?'var(--purple)':selectedProfile.potential==='medium'?'var(--warning)':'var(--accent)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,border:'1px solid currentColor',display:'inline-block'}}>{potLabels[selectedProfile.potential] || selectedProfile.potential}</span>
                       </div>
                     )}
                     {selectedProfile.mgmt_effort && (
                       <div className="onenon-metric">
                         <span className="onenon-metric-label">Náročnost řízení</span>
-                        <span className="onenon-metric-val">{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
+                        <span style={{background:selectedProfile.mgmt_effort==='low'?'#DCFCE7':selectedProfile.mgmt_effort==='medium'?'#FEF3C7':'#FEE2E2',color:selectedProfile.mgmt_effort==='low'?'var(--success)':selectedProfile.mgmt_effort==='medium'?'var(--warning)':'var(--danger)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:12,border:'1px solid currentColor',display:'inline-block'}}>{mgmtLabels[selectedProfile.mgmt_effort] || selectedProfile.mgmt_effort}</span>
                       </div>
                     )}
                     {selectedProfile.strength && (
@@ -2586,6 +2587,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
               <div style={{display:'flex',flexDirection:'column',minHeight:0}}>
                 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10,borderBottom:'1px solid var(--border)',paddingBottom:8}}>
                   <span style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.05em',color:'var(--text-2)'}}>Timeline zápisů ({notes.length})</span>
+                  <button style={{background:'none',border:'none',cursor:'pointer',fontSize:11,color:'var(--accent)',fontWeight:600,fontFamily:'var(--font)',padding:0}}>filtrovat</button>
                 </div>
                 {notes.length === 0 && <div style={{color:'var(--text-3)',fontSize:13}}>Zatím žádné záznamy</div>}
                 {notes.map(n => {
@@ -2596,7 +2598,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
                         <div>
                           <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
                             <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>{n.meeting_date && new Date(n.meeting_date).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'})}</span>
-                            {(n.tags || []).map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}
+                            {(n.tags || []).map(t => <span key={t} className={'onenon-tag-chip ' + ({výkon:'tag-vykon',rozvoj:'tag-rozvoj',osobní:'tag-osobni',SLA:'tag-sla',feedback:'tag-feedback'}[t]||'')}>{t}</span>)}
                           </div>
                           <div style={{display:'flex',alignItems:'center',gap:8}}>
                             {daysAgo !== null && <span style={{fontSize:11,color:'var(--text-3)'}}>{daysAgo} dní</span>}
@@ -2628,7 +2630,7 @@ function OneOnOneView({ daktelaToken, onContextChange, onConnectDaktela }) {
             </div>
 
             {/* Bottom tabs */}
-            <div className="onenon-bottom-tabs" style={{marginTop:16}}>
+            <div className="onenon-bottom-tabs">
               <button className={'onenon-btab' + (contentTab === 'detail' ? ' active' : '')} onClick={() => setContentTab('detail')}>↑ 1on1 detail</button>
               <button className={'onenon-btab' + (contentTab === 'prep' ? ' active' : '')} onClick={() => { setContentTab('prep'); setPrepDoc(true); }}>📋 Prep modal</button>
             </div>
@@ -3306,7 +3308,7 @@ function App() {
 
       {/* Bottom tab bar */}
       {ReactDOM.createPortal(
-        <div className="bottom-tabs">
+        <div className="bottom-tabs" style={{display: activeTab === 'onenon' ? 'none' : undefined}}>
           {[
             { key: 'dnes', label: '✦ Dnes' },
             { key: 'all', label: '# Matice' },
