@@ -570,10 +570,16 @@ function NavSidebar({ activeTab, onTab }) {
       <div className="nav-sep" />
       <div className="nav-spacer" />
       <button className="nav-item" title="AI Chat" style={{color:'#7C3AED'}} onClick={() => onTab('chat')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </button>
+      <button className="nav-item" title="Rychlé přidání (Cmd+K)" onClick={() => onTab('quickcapture')}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       </button>
       <button className="nav-item" title="Nastavení" onClick={() => onTab('settings')}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button className="nav-item" title="Odhlásit" onClick={() => onTab('logout')}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </button>
     </nav>
   );
@@ -3277,26 +3283,15 @@ function App() {
       {/* Header actions */}
       {ReactDOM.createPortal(
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Hledat..."
-            style={{height:34,padding:'0 10px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background:'var(--bg)',color:'var(--text)',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
-            onFocus={e => e.target.style.width='240px'}
-            onBlur={e => e.target.style.width='160px'}
-          />
           {q1DeadlineTasks.length > 0 && <Q1AlertBadge tasks={q1DeadlineTasks} onEditTask={handleEditTask} />}
-          <button className="btn btn-ghost header-desktop-only" onClick={handleAiSuggest} disabled={aiLoading}>
-            {aiLoading ? '...' : '✦ AI'}
+          <button className="btn btn-ghost" onClick={handleAiSuggest} disabled={aiLoading} style={{fontSize:'13px',display:'flex',alignItems:'center',gap:'5px'}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            {aiLoading ? '...' : 'AI'}
           </button>
-          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Task</button>
-          <button className="btn btn-ghost" style={{fontSize:'12px',padding:'6px 10px'}} onClick={() => setQuickCapture(true)} title="Cmd+K">⚡</button>
-          <button className="btn btn-ghost header-desktop-only" style={{fontSize:'12px'}} onClick={() => setModal({ type: 'settings' })}>⚙</button>
-          <button className="btn btn-ghost header-desktop-only" style={{fontSize:'12px'}} onClick={async () => {
-            await apiFetch('logout', 'POST');
-            window.location.href = '/tasks/login.php';
-          }}>↩</button>
+          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })} style={{background:'var(--blue)',borderColor:'var(--blue)'}}>Nový task</button>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'var(--blue)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,cursor:'default',flexShrink:0,userSelect:'none'}} title={CURRENT_USER}>
+            {(CURRENT_USER||'?').slice(0,2).toUpperCase()}
+          </div>
         </div>,
         document.getElementById('headerActions')
       )}
@@ -3323,6 +3318,8 @@ function App() {
       {ReactDOM.createPortal(
         <NavSidebar activeTab={activeTab} onTab={tab => {
           if (tab === 'settings') { setModal({ type: 'settings' }); return; }
+          if (tab === 'quickcapture') { setQuickCapture(true); return; }
+          if (tab === 'logout') { apiFetch('logout', 'POST').then(() => { window.location.href = '/tasks/login.php'; }); return; }
           if (tab === 'chat') return;
           setActiveTab(tab);
         }} />,
