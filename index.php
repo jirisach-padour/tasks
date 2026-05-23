@@ -1740,66 +1740,49 @@ function ChatPanel() {
 
   return (
     <div className="rs-panel">
-      <div
-        style={{display:'flex',alignItems:'center',justifyContent:'space-between',cursor:'pointer',userSelect:'none'}}
-        onClick={() => setOpen(v => !v)}
-      >
-        <span style={{fontSize:'11px',fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'0.06em'}}>
-          AI Asistent
-        </span>
-        <span style={{fontSize:'14px',color:'var(--text-3)'}}>{open ? '▲' : '▼'}</span>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'10px'}}>
+        <span style={{fontSize:'11px',fontWeight:700,color:'var(--text-2)',textTransform:'uppercase',letterSpacing:'0.06em'}}>AI Chat</span>
+        <span style={{fontSize:'10px',background:'#F5F3FF',color:'#7C3AED',padding:'1px 6px',borderRadius:4,fontWeight:600}}>Haiku</span>
       </div>
-      {open && (
-        <div style={{marginTop:'10px'}}>
-          <div style={{maxHeight:'280px',overflowY:'auto',marginBottom:'8px',display:'flex',flexDirection:'column',gap:'6px'}}>
-            {history.length === 0 && (
-              <div style={{fontSize:'11px',color:'var(--grey-text)',fontStyle:'italic',padding:'8px 0'}}>
-                Zeptej se na cokoli — priority, co teď dělat, jak formulovat mail...
-              </div>
-            )}
-            {history.map((h, i) => (
-              <div key={i} style={{
-                fontSize:'12px',
-                padding:'6px 9px',
-                borderRadius:'8px',
-                background: h.role === 'user' ? '#EBF0FF' : '#F4F5F7',
-                alignSelf: h.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth:'90%',
-                whiteSpace:'pre-wrap',
-                lineHeight:'1.4',
-              }}>
-                {h.content}
-              </div>
-            ))}
-            {loading && (
-              <div style={{fontSize:'12px',padding:'6px 9px',borderRadius:'8px',background:'#F4F5F7',alignSelf:'flex-start',color:'var(--grey-text)'}}>
-                ...
-              </div>
-            )}
-            <div ref={bottomRef} />
+      <div style={{maxHeight:'280px',overflowY:'auto',marginBottom:'8px',display:'flex',flexDirection:'column',gap:'6px'}}>
+        {history.length === 0 && (
+          <div style={{fontSize:'11px',color:'var(--grey-text)',fontStyle:'italic',padding:'8px 0'}}>
+            Zeptej se na cokoli — priority, co teď dělat, jak formulovat mail...
           </div>
-          <div style={{display:'flex',gap:'6px'}}>
-            <textarea
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="Napiš otázku... (Enter = odeslat)"
-              rows={2}
-              style={{flex:1,fontSize:'12px',padding:'6px 8px',borderRadius:'6px',border:'1px solid var(--grey-border)',resize:'none',fontFamily:'var(--font)'}}
-            />
-            <button
-              onClick={handleSend}
-              disabled={loading || !input.trim()}
-              style={{background:'var(--blue)',color:'#fff',border:'none',borderRadius:'6px',padding:'0 10px',fontSize:'13px',cursor:'pointer',flexShrink:0,opacity: loading || !input.trim() ? 0.5 : 1}}
-            >↑</button>
+        )}
+        {history.map((h, i) => (
+          <div key={i} style={{
+            fontSize:'12px',padding:'6px 9px',borderRadius:'8px',
+            background: h.role === 'user' ? '#EBF0FF' : '#F4F5F7',
+            alignSelf: h.role === 'user' ? 'flex-end' : 'flex-start',
+            maxWidth:'90%',whiteSpace:'pre-wrap',lineHeight:'1.4',
+          }}>
+            {h.content}
           </div>
-          {history.length > 0 && (
-            <button
-              onClick={() => setHistory([])}
-              style={{marginTop:'6px',background:'none',border:'none',fontSize:'10px',color:'var(--grey-text)',cursor:'pointer',padding:0}}
-            >Smazat historii</button>
-          )}
-        </div>
+        ))}
+        {loading && (
+          <div style={{fontSize:'12px',padding:'6px 9px',borderRadius:'8px',background:'#F4F5F7',alignSelf:'flex-start',color:'var(--grey-text)'}}>...</div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+      <div style={{display:'flex',gap:'6px'}}>
+        <textarea
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Zeptej se AI…"
+          rows={2}
+          style={{flex:1,fontSize:'12px',padding:'6px 8px',borderRadius:'6px',border:'1px solid var(--grey-border)',resize:'none',fontFamily:'var(--font)'}}
+        />
+        <button
+          onClick={handleSend}
+          disabled={loading || !input.trim()}
+          style={{background:'var(--blue)',color:'#fff',border:'none',borderRadius:'6px',padding:'0 10px',fontSize:'18px',cursor:'pointer',flexShrink:0,opacity: loading || !input.trim() ? 0.5 : 1}}
+        >→</button>
+      </div>
+      {history.length > 0 && (
+        <button onClick={() => setHistory([])} style={{marginTop:'6px',background:'none',border:'none',fontSize:'10px',color:'var(--grey-text)',cursor:'pointer',padding:0}}>Smazat historii</button>
+      )}
     </div>
   );
 }
