@@ -335,8 +335,8 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .prep-footer{display:flex;gap:8px;padding:10px 18px;background:var(--grey-bg);border-radius:0 0 12px 12px}
 /* Toast */
 /* 1on1 layout */
-.onenon-layout{display:grid;grid-template-columns:260px 1fr;height:100%;overflow:hidden;gap:0}
-.onenon-people-sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--surface);position:relative}
+.onenon-layout{display:grid;grid-template-columns:260px 1fr;height:100%;overflow:visible;gap:0}
+.onenon-people-sidebar{border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:visible;background:var(--surface);position:relative}
 .layout.onenon-active{grid-template-columns:60px 1fr!important}
 .layout.onenon-active .sidebar-right{display:none!important}
 .onenon-people-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
