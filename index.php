@@ -95,7 +95,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .quadrant.q-urgent .task-card{background:#fff;border-color:#FDE68A}
 /* Task card */
 .task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
-.task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}
+.task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}.task-card:hover .task-add-daily{opacity:1!important}
 .tc-cb{width:15px;height:15px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .15s}
 .quadrant.q-urgent_important .tc-cb{border-color:#FCA5A5}
 .quadrant.q-important .tc-cb{border-color:#93C5FD}
@@ -121,7 +121,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .add-inline input{flex:1;height:28px;padding:0 8px;border:1px dashed var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);outline:none;background:transparent;color:var(--text)}
 .add-inline input:focus{border-color:var(--accent);border-style:solid;background:var(--surface)}
 .add-inline input::placeholder{color:var(--text-3)}
-.add-inline button{height:28px;padding:0 12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer}
+.add-inline button{display:none}
 /* Checklist */
 .cl-item{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--grey-border)}
 .cl-item:last-child{border-bottom:none}
@@ -529,10 +529,10 @@ function toast(msg) {
 }
 
 const QUADRANTS = [
-  { key: 'urgent_important', label: '🔴 Urgentní + Důležité' },
-  { key: 'important',        label: '🔵 Důležité' },
-  { key: 'urgent',           label: '🟠 Urgentní' },
-  { key: 'other',            label: '⚪ Backlog' },
+  { key: 'urgent_important', label: 'Urgentní + Důležité' },
+  { key: 'important',        label: 'Důležité' },
+  { key: 'urgent',           label: 'Urgentní' },
+  { key: 'other',            label: 'Backlog' },
 ];
 
 const Q_LABELS = {
@@ -986,7 +986,7 @@ function TaskCard({ task, onToggleDone, onEdit, onDelete, onInlineEdit, onDragSt
       </div>
       <button className="task-del" onClick={e => { e.stopPropagation(); onDelete(task); }} title="Smazat">×</button>
       {onAddToDaily && (
-        <button className="task-del" title="Přidat do Dnes" onClick={e => { e.stopPropagation(); onAddToDaily(task); }} style={{color:'var(--navy)',fontSize:'11px',fontWeight:700,marginLeft:'-2px'}}>+D</button>
+        <button className="task-del task-add-daily" title="Přidat do Dnes" onClick={e => { e.stopPropagation(); onAddToDaily(task); }} style={{color:'var(--navy)',fontSize:'11px',fontWeight:700,marginLeft:'-2px',opacity:0,transition:'opacity .15s'}}>+D</button>
       )}
     </div>
   );
@@ -1037,7 +1037,7 @@ function Quadrant({ q, tasks, filter, onToggleDone, onEdit, onDelete, onAddTask,
         <input
           value={addTitle}
           onChange={e => setAddTitle(e.target.value)}
-          placeholder="Přidat task..."
+          placeholder={'Přidat ' + (q.key === 'urgent_important' ? 'urgentní task…' : q.key === 'important' ? 'důležitý task…' : q.key === 'urgent' ? 'urgentní…' : 'do backlogu…')}
           onKeyDown={e => e.key === 'Enter' && handleQuickAdd()}
         />
         <button onClick={handleQuickAdd}>+</button>
@@ -1095,8 +1095,8 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete, onEdit })
   return (
     <div className="rs-panel">
       <div className="rs-title">
-        Rychlý checklist
-        {todayDone > 0 && <span style={{fontSize:10,background:'var(--accent-bg)',color:'var(--accent)',borderRadius:10,padding:'1px 7px',fontWeight:700,marginLeft:6}}>{todayDone} dnes</span>}
+        <span>Rychlý checklist {todayDone > 0 && <span style={{fontSize:10,background:'var(--accent-bg)',color:'var(--accent)',borderRadius:10,padding:'1px 7px',fontWeight:700,marginLeft:6}}>{todayDone} dnes</span>}</span>
+        <span className="rs-title-action" onClick={() => document.querySelector('.cl-add-row input')?.focus()}>+ přidat</span>
       </div>
       {open.map(i => renderItem(i, false))}
       {done.length > 0 && done.map(i => renderItem(i, true))}
@@ -1104,7 +1104,7 @@ function ChecklistPanel({ items, todayDone, onAdd, onToggle, onDelete, onEdit })
         <input
           value={newTitle}
           onChange={e => setNewTitle(e.target.value)}
-          placeholder="Přidat položku..."
+          placeholder="Nová položka…"
           onKeyDown={e => e.key === 'Enter' && handleAdd()}
         />
         <button onClick={handleAdd}>+</button>
@@ -3374,6 +3374,22 @@ function App() {
           ? <DnesView tasks={tasks} calEvents={calEvents} onToggleDone={handleToggleDone} onEdit={handleEditTask} onRemoveFromDaily={handleRemoveFromDaily} onReorder={handleDnesReorder} onBatchAddToDaily={handleBatchAddToDaily} onBatchRemoveFromDaily={handleBatchRemoveFromDaily} />
           : (
             <>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+                <div style={{fontSize:'20px',fontWeight:700,color:'var(--text)'}}>Eisenhowerova matice</div>
+                <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+                  {[{key:'work',label:'Pracovní'},{key:'all',label:'Vše'}].map(t => (
+                    <button key={t.key} onClick={() => setActiveTab(t.key)}
+                      style={{fontSize:'12px',padding:'6px 12px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background: activeTab===t.key ? 'var(--accent-bg)' : '#fff',color: activeTab===t.key ? 'var(--accent)' : 'var(--text-2)',fontFamily:'var(--font)',cursor:'pointer',fontWeight: activeTab===t.key ? 600 : 400}}>
+                      {t.label}
+                    </button>
+                  ))}
+                  <button className="btn btn-primary" onClick={handleAiSuggest} disabled={aiLoading}
+                    style={{fontSize:'12px',padding:'6px 14px',display:'flex',alignItems:'center',gap:'5px'}}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    {aiLoading ? 'Analyzuji...' : 'AI návrh'}
+                  </button>
+                </div>
+              </div>
               <div className="matrix">
                 {QUADRANTS.map(q => (
                   <Quadrant
@@ -3391,12 +3407,7 @@ function App() {
                   />
                 ))}
               </div>
-              <div className="action-row">
-                <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>+ Nový task</button>
-                <button className="btn btn-secondary" onClick={handleAiSuggest} disabled={aiLoading}>
-                  {aiLoading ? 'Analyzuji...' : '✦ AI návrh priorit'}
-                </button>
-              </div>
+
             </>
           ),
         document.getElementById('mainContent')
