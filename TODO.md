@@ -10,6 +10,7 @@
 ## Fronta
 
 - [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ: v detailu osoby zobrazit OPEN tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token + mapování person→daktela login
+- [ ] **Hezčí globální nastavení** — redesign Settings modalu; změna avatara (upload nebo výběr barvy/iniciál)
 - [ ] **Mood trend chart v 1on1** — mini bar chart nálady (posledních 4 záznamy) v person detailu pod open items
 - [ ] Push notifikace / reminder pro overdue tasky
 - [ ] Export tasků (CSV, JSON)
