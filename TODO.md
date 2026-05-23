@@ -3,10 +3,9 @@
 ## Bugs — k opravě
 
 - [ ] **Připravit schůzku v 1on1** — rozsypaná grafika tlačítka/dialogu
-- [ ] **Ovládací prvky v Tasks neodpovídají redesignu** — divné/staré UI prvky přes celou appku
 - [ ] **Checklist a Daktela tickety v matici** — vypadají jinak než v návrhu (srovnat s preview)
 - [ ] **Volný čas v denním kalendáři** — nepočítá se správně, zkontrolovat dle návrhu
-- [ ] **Ranní rituál — Přeskočit nefunguje** — po kliknutí na Přeskočit modal nezmizí
+- [ ] **Důkladné porovnání grafiky: realita vs. návrh** — projít každou obrazovku (Matice, Dnes, 1on1, Ranní rituál, Modaly, Sidebar) a zdokumentovat všechny odchylky od designu; opravit po jednom
 
 ## Fronta
 
@@ -16,6 +15,11 @@
 - [ ] Export tasků (CSV, JSON)
 - [ ] Tmavý režim
 - [ ] Export do Google Docs — po dokončení dne/týdne generovat přehled
+
+## Dokončeno 2026-05-23
+
+- [x] **Ranní rituál — Přeskočit nefunguje** — opraveno 2026-05-23 (forceShowMorning prop + onForceDone callback)
+- [x] **Ovládací prvky v Tasks neodpovídají redesignu** — opraveno 2026-05-23 (header: AI + Nový task modrý + avatar; NavSidebar: ⚡ + ↩; search vlevo nahoře; všechny btn-primary modré)
 
 ## Dokončeno 2026-05-22
 
