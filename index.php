@@ -3280,6 +3280,20 @@ function App() {
 
   return (
     <>
+      {/* Header search */}
+      {ReactDOM.createPortal(
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Hledat..."
+          style={{height:34,padding:'0 10px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background:'var(--bg)',color:'var(--text)',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
+          onFocus={e => e.target.style.width='240px'}
+          onBlur={e => e.target.style.width='160px'}
+        />,
+        document.getElementById('headerSearch')
+      )}
+
       {/* Header actions */}
       {ReactDOM.createPortal(
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
