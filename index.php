@@ -386,7 +386,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .onenon-open-item-from{font-size:10px;color:var(--text-3);margin-left:auto;flex-shrink:0}
 /* AI badge */
 .onenon-ai-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;background:var(--danger);color:#fff;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer}
-.onenon-ai-popover{position:absolute;top:28px;right:0;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:1000;padding:6px 0}
+.onenon-ai-popover{position:absolute;top:28px;left:0;min-width:280px;max-width:360px;max-height:380px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);z-index:1000;padding:6px 0}
 .onenon-ai-group{border-bottom:1px solid var(--border)}
 .onenon-ai-group:last-child{border-bottom:none}
 .onenon-ai-group-header{display:flex;align-items:center;justify-content:space-between;padding:6px 14px;font-weight:700;font-size:13px;color:var(--text);cursor:pointer;background:var(--bg)}
