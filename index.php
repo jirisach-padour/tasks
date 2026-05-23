@@ -20,8 +20,14 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 /* Header */
 .app-header{background:#fff;border-bottom:1px solid var(--border);padding:0;box-shadow:var(--shadow-sm)}
 .container{max-width:1600px;margin:0 auto;padding:0 24px}
-.header-inner{display:flex;align-items:center;justify-content:space-between;height:52px;padding:0 20px}
+.header-inner{display:flex;align-items:center;justify-content:flex-start;height:52px;padding:0 20px;gap:12px}
 .app-header h1{color:var(--text);font-size:15px;font-weight:700;letter-spacing:-.2px}
+.header-sep{width:1px;height:20px;background:var(--border);flex-shrink:0}
+.header-search-wrap{flex:1;max-width:340px;display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0 10px;height:34px;color:var(--text-2)}
+.header-search-wrap input{background:none;border:none;outline:none;font-size:13px;color:var(--text);font-family:var(--font);flex:1;min-width:0}
+.header-search-wrap input::placeholder{color:var(--text-3)}
+.header-search-kbd{font-size:10px;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;white-space:nowrap;flex-shrink:0}
+.header-spacer{flex:1}
 .header-desc{color:var(--text-2);font-size:11px;margin-top:1px}
 .header-actions{display:flex;gap:8px;align-items:center}
 .header-desktop-only{display:inline-flex}
@@ -34,7 +40,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .nav-item{width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);transition:all .15s;border:none;background:none;font-size:19px;position:relative;font-family:var(--font)}
 .nav-item:hover{background:var(--bg);color:var(--text)}
 .nav-item.active{color:var(--accent);background:var(--accent-bg)}
-.nav-item.active::before{content:'';position:absolute;left:-2px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
+.nav-item.active::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:var(--accent);border-radius:0 3px 3px 0}
 .bottom-tabs{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B3468;border-radius:30px;display:flex;align-items:center;padding:5px;gap:2px;box-shadow:0 4px 20px rgba(0,0,0,.25);z-index:200}
 .bottom-tab{padding:8px 18px;border-radius:24px;border:none;background:transparent;color:rgba(255,255,255,.65);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;white-space:nowrap}
 .bottom-tab.active{background:#fff;color:#1B3468}
@@ -470,7 +476,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 
 <header class="app-header">
   <div class="header-inner">
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;border-radius:7px">
         <rect width="32" height="32" rx="6" fill="#1B3468"/>
         <rect x="6" y="6" width="9" height="9" rx="2" fill="#E05C4E"/>
@@ -478,13 +484,13 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
         <rect x="6" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.45)"/>
         <rect x="17" y="17" width="9" height="9" rx="2" fill="rgba(255,255,255,0.18)"/>
       </svg>
-      <div>
-        <h1>Tasks</h1>
-      </div>
+      <h1>Tasks</h1>
     </div>
-    <div style="flex:1;max-width:340px;margin:0 16px">
-      <div id="headerSearch"></div>
+    <div class="header-sep"></div>
+    <div class="header-search-wrap" id="headerSearch">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     </div>
+    <div class="header-spacer"></div>
     <div class="header-actions" id="headerActions"></div>
   </div>
   <div class="tab-bar" id="tabBar"></div>
@@ -1273,7 +1279,7 @@ function MorningRitual({ tasks, calEvents, onConfirm, onSkip }) {
   return (
     <div className="morning-ritual">
       <div style={{fontSize:'24px',marginBottom:'6px'}}>🌅</div>
-      <div className="morning-title">Dobré ráno!</div>
+      <div className="morning-title">Dobré ráno, {(CURRENT_USER||''). split('.')[0].charAt(0).toUpperCase() + (CURRENT_USER||''). split('.')[0].slice(1)} 👋</div>
       <div className="morning-sub">{dayName} · {todayEvents.length > 0 ? todayEvents.length + ' schůzek' : 'žádné schůzky'} · ~{freeHours}h volného</div>
       <div className="morning-stats">
         <div className="morning-stat">
@@ -1304,7 +1310,7 @@ function MorningRitual({ tasks, calEvents, onConfirm, onSkip }) {
       <div className="morning-btns">
         <button className="btn-morning-skip" onClick={onSkip}>Přeskočit</button>
         <button className="btn-morning-go" onClick={() => onConfirm(Array.from(checked))}>
-          Potvrdit a začít →
+          Spustit den →
         </button>
       </div>
     </div>
@@ -3282,15 +3288,15 @@ function App() {
     <>
       {/* Header search */}
       {ReactDOM.createPortal(
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Hledat..."
-          style={{height:34,padding:'0 10px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background:'var(--bg)',color:'var(--text)',fontSize:'13px',fontFamily:'var(--font)',outline:'none',width:160,transition:'width .2s'}}
-          onFocus={e => e.target.style.width='240px'}
-          onBlur={e => e.target.style.width='160px'}
-        />,
+        <>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Hledat tasky…"
+          />
+          <span className="header-search-kbd">⌘K</span>
+        </>,
         document.getElementById('headerSearch')
       )}
 
@@ -3302,8 +3308,11 @@ function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             {aiLoading ? '...' : 'AI'}
           </button>
-          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })}>Nový task</button>
-          <div style={{width:32,height:32,borderRadius:'50%',background:'var(--blue)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:700,cursor:'default',flexShrink:0,userSelect:'none'}} title={CURRENT_USER}>
+          <button className="btn btn-primary" onClick={() => setModal({ type: 'task' })} style={{display:'flex',alignItems:'center',gap:'5px'}}>
+            <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><path d="M6 1v10M1 6h10"/></svg>
+            Nový task
+          </button>
+          <div style={{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg, #1B3468, #2563EB)',color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:700,cursor:'default',flexShrink:0,userSelect:'none'}} title={CURRENT_USER}>
             {(CURRENT_USER||'?').slice(0,2).toUpperCase()}
           </div>
         </div>,
