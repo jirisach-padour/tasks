@@ -179,7 +179,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .history-time{font-size:11px;color:var(--grey-text);margin-left:auto;white-space:nowrap}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:var(--white);border-radius:12px;padding:28px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.modal{background:var(--white);border-radius:12px;padding:28px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}.modal-box{background:var(--white);border-radius:12px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
 .modal h2{font-size:16px;font-weight:700;margin-bottom:20px}
 .form-group{margin-bottom:16px}
 .form-group label{display:block;font-size:12px;font-weight:600;color:var(--grey-text);margin-bottom:5px;text-transform:uppercase;letter-spacing:.3px}
@@ -315,7 +315,7 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .whatnow-task:hover{background:#DBEAFE}
 .whatnow-dismiss{font-size:11px;color:var(--text-3);cursor:pointer;text-align:right;margin-top:7px}
 /* 1on1 Prep */
-.prep-modal-body{padding:0;max-height:70vh;overflow-y:auto}
+.prep-modal-body{padding:0;flex:1;overflow-y:auto;max-height:60vh}
 .prep-header{background:var(--navy);color:#fff;padding:14px 18px;border-radius:12px 12px 0 0}
 .prep-person-name{font-size:17px;font-weight:800;margin-bottom:2px}
 .prep-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
