@@ -178,7 +178,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .history-task:hover{background:var(--grey-bg)}
 .history-time{font-size:11px;color:var(--grey-text);margin-left:auto;white-space:nowrap}
 /* Modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
 .modal{background:var(--white);border-radius:12px;padding:28px;width:100%;max-width:520px;box-shadow:0 8px 40px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
 .modal h2{font-size:16px;font-weight:700;margin-bottom:20px}
 .form-group{margin-bottom:16px}
@@ -318,6 +318,8 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .prep-modal-body{padding:0;max-height:70vh;overflow-y:auto}
 .prep-header{background:var(--navy);color:#fff;padding:14px 18px;border-radius:12px 12px 0 0}
 .prep-person-name{font-size:17px;font-weight:800;margin-bottom:2px}
+.prep-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.prep-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.9);background:rgba(255,255,255,.12)}
 .prep-date-line{font-size:12px;opacity:.65}
 .prep-section{padding:12px 18px;border-bottom:1px solid var(--grey-bg)}
 .prep-section:last-child{border-bottom:none}
@@ -2153,63 +2155,64 @@ function PrepDocModal({ person, notes, profile, onClose }) {
     navigator.clipboard.writeText(lines.join('\n')).catch(() => {});
   }
 
+  const potentialColor = { low: 'var(--success)', medium: 'var(--warning)', high: 'var(--accent)' };
+  const potentialLabel = { low: 'Nízký potenciál', medium: 'Střední potenciál', high: 'Vysoký potenciál' };
+  const narocnostLabel = { low: 'Nízká náročnost', medium: 'Střední náročnost', high: 'Vysoká náročnost' };
+  const narocnostColor = { low: 'var(--accent)', medium: 'var(--warning)', high: 'var(--danger)' };
+
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal-box" style={{padding:0,maxWidth:480,width:'95vw'}}>
+      <div className="modal-box" style={{padding:0,maxWidth:520,width:'95vw'}}>
         <div className="prep-header">
           <div className="prep-person-name">1on1 s {person}</div>
           <div className="prep-date-line">{today}{daysSince !== null ? ' · Poslední schůzka: ' + daysSince + ' dní' : ''}</div>
+          <div className="prep-chips">
+            {daysSince !== null && <span className="prep-chip">● {daysSince} dní</span>}
+            {openItems.length > 0 && <span className="prep-chip">⚡ {openItems.length} open action items</span>}
+            {moodTrend && <span className="prep-chip">{moodTrend === 'zlepšení' ? '↑' : moodTrend === 'zhoršení' ? '↓' : '→'} nálada {moodTrend}</span>}
+            {recentTags.slice(0,2).map(t => <span key={t} className="prep-chip">{t}</span>)}
+          </div>
         </div>
         <div className="prep-modal-body">
-          {lastNote && (
+
+          {profile && (
             <div className="prep-section">
-              <div className="prep-section-label">Nálada & tagy</div>
-              <div style={{fontSize:13,marginBottom:4}}>
-                {prevNote && prevNote.mood && lastNote.mood && (
-                  <span>{'★'.repeat(prevNote.mood) + '☆'.repeat(5-prevNote.mood)} → {'★'.repeat(lastNote.mood) + '☆'.repeat(5-lastNote.mood)}
-                    {moodTrend && <span style={{color: moodTrend === 'zlepšení' ? 'var(--green)' : moodTrend === 'zhoršení' ? 'var(--red)' : 'var(--grey-text)',fontWeight:700,marginLeft:6}}>↑ {moodTrend}</span>}
-                  </span>
-                )}
-                {!prevNote && lastNote.mood && <span>{'★'.repeat(lastNote.mood) + '☆'.repeat(5-lastNote.mood)}</span>}
+              <div className="prep-section-label">Profil</div>
+              <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap',marginBottom:8}}>
+                {profile.performance > 0 && <span style={{fontSize:13}}>{'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</span>}
+                {profile.potential && <span style={{background: profile.potential==='high'?'#DCFCE7':profile.potential==='medium'?'#FEF3C7':'#F0F9FF',color:potentialColor[profile.potential]||'var(--text-2)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:11,border:'1px solid currentColor'}}>{potentialLabel[profile.potential]||profile.potential}</span>}
+                {profile.management_difficulty && <span style={{background:'#EFF6FF',color:'var(--accent)',padding:'2px 9px',borderRadius:20,fontWeight:700,fontSize:11,border:'1px solid var(--accent)'}}>{narocnostLabel[profile.management_difficulty]||profile.management_difficulty}</span>}
               </div>
-              {recentTags.length > 0 && <div>{recentTags.map(t => <span key={t} className="onenon-tag-chip">{t}</span>)}</div>}
+              {profile.strength && <div style={{fontSize:12,color:'var(--text)',marginBottom:3}}>💪 <strong>Silná stránka:</strong> {profile.strength}</div>}
+              {profile.development && <div style={{fontSize:12,color:'var(--text)'}}>🎯 <strong>Rozvoj:</strong> {profile.development}</div>}
             </div>
           )}
 
           {(openItems.length > 0 || doneItems.length > 0) && (
             <div className="prep-section">
-              <div className="prep-section-label">Action items ({openItems.length} otevřených)</div>
+              <div className="prep-section-label">Open action items ({openItems.length})</div>
               {openItems.map((it, i) => (
                 <div key={i} className="prep-ai-item">
                   <div className="prep-ai-cb" />
                   <div style={{flex:1,fontSize:13}}>{it.text}</div>
-                  <div className="prep-ai-from">z {it.from}</div>
+                  <div className="prep-ai-from">ze {it.from}</div>
                 </div>
               ))}
               {doneItems.map((it, i) => (
                 <div key={i} className="prep-ai-item">
                   <div className="prep-ai-cb done" />
                   <div className="prep-ai-done" style={{flex:1,fontSize:13}}>{it.text}</div>
-                  <div className="prep-ai-from" style={{color:'var(--green)'}}>splněno</div>
+                  <div className="prep-ai-from" style={{color:'var(--success)'}}>splněno</div>
                 </div>
               ))}
             </div>
           )}
 
-          {profile && (
-            <div className="prep-section">
-              <div className="prep-section-label">Profil</div>
-              <div style={{fontSize:12,display:'flex',gap:12,flexWrap:'wrap'}}>
-                {profile.performance > 0 && <span>Výkon: {'★'.repeat(profile.performance)}{'☆'.repeat(5-profile.performance)}</span>}
-                {profile.potential && <span style={{background:potentialBg[profile.potential]||'#eee',padding:'1px 7px',borderRadius:8,fontWeight:700,fontSize:11}}>{profile.potential}</span>}
-                {profile.strength && <span>💪 {profile.strength}</span>}
-                {profile.development && <span>🎯 {profile.development}</span>}
-              </div>
-            </div>
-          )}
-
           <div className="prep-section">
-            <div className="prep-section-label" style={{marginBottom:8}}>Navrhovaná témata</div>
+            <div className="prep-section-label" style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+              Navrhovaná témata
+              {aiTopics && <span style={{fontSize:9,background:'#F5F3FF',color:'#7C3AED',padding:'1px 5px',borderRadius:4,fontWeight:700,textTransform:'none',letterSpacing:0}}>AI</span>}
+            </div>
             {!aiTopics && !aiLoading && (
               <button className="btn btn-secondary" style={{fontSize:12}} onClick={loadAiTopics}>✦ Vygenerovat pomocí AI</button>
             )}
