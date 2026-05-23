@@ -55,7 +55,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .panel+.panel{margin-top:14px}
 .section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 /* Right sidebar */
-.sidebar-right{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;height:100%}
+.sidebar-right{border-left:1px solid var(--border);background:var(--surface);overflow-y:auto;display:flex;flex-direction:column;position:sticky;top:52px;max-height:calc(100vh - 52px)}
 .sidebar-left{display:none!important}
 #mainContent{overflow-y:auto;padding:20px}
 .rs-panel{border-bottom:1px solid var(--border);padding:14px 16px}
@@ -91,11 +91,11 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .q-add-btn{background:none;border:none;cursor:pointer;color:var(--text-2);font-size:18px;line-height:1;padding:0 2px;font-weight:300}
 .q-add-btn:hover{color:var(--text)}
 .quadrant.q-urgent_important .task-card{background:#fff;border-color:#FECACA}
-.quadrant.q-urgent_important .task-card:hover{border-color:#FCA5A5;box-shadow:var(--shadow-md)}
+.quadrant.q-urgent_important .task-card:hover{border-color:#FCA5A5;box-shadow:0 4px 12px rgba(0,0,0,.10);transform:translateY(-1px)}
 .quadrant.q-urgent .task-card{background:#fff;border-color:#FDE68A}
 /* Task card */
 .task-card{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--surface);border-radius:var(--radius-sm);margin-bottom:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
-.task-card:hover{border-color:#CBD5E1;box-shadow:var(--shadow-md)}.task-card:hover .task-add-daily{opacity:1!important}
+.task-card:hover{border-color:#CBD5E1;box-shadow:0 4px 12px rgba(0,0,0,.10);transform:translateY(-1px)}.task-card:hover .task-add-daily{opacity:1!important}.task-card:hover .task-del{opacity:1}
 .tc-cb{width:15px;height:15px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .15s}
 .quadrant.q-urgent_important .tc-cb{border-color:#FCA5A5}
 .quadrant.q-important .tc-cb{border-color:#93C5FD}
@@ -114,8 +114,8 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .badge{font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;white-space:nowrap}
 .badge-daktela{background:#FFF4E0;color:#A06000}
 .badge-ai{background:#E8F0FE;color:#1a56db}
-.task-del{background:none;border:none;cursor:pointer;color:var(--grey-border);font-size:14px;padding:0;flex-shrink:0;margin-top:1px}
-.task-del:hover{color:#E63327}
+.task-del{background:none;border:none;cursor:pointer;color:var(--grey-border);font-size:14px;padding:0;flex-shrink:0;margin-top:1px;opacity:0.25;transition:opacity .15s}
+.task-del:hover{color:#E63327;opacity:1}
 /* Add task inline */
 .add-inline{display:flex;gap:6px;margin-top:8px}
 .add-inline input{flex:1;height:28px;padding:0 8px;border:1px dashed var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:var(--font);outline:none;background:transparent;color:var(--text)}
@@ -215,7 +215,7 @@ body{font-family:var(--font);font-size:14px;background:var(--bg);color:var(--tex
 .sidebar-mobile-panels{display:none}
 /* Loading */
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.6);z-index:300;display:flex;align-items:center;justify-content:center}
-.spinner{width:32px;height:32px;border:3px solid var(--grey-border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}
+.spinner{width:32px;height:32px;border:3px solid var(--grey-border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite}input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.btn:disabled{opacity:0.55;cursor:not-allowed}
 input[type=search]::placeholder{color:var(--text-3)}
 input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 /* Overdue */
@@ -223,8 +223,8 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .task-card.overdue .task-title{color:#c0392b}
 .overdue-badge{font-size:10px;font-weight:700;color:#E63327;background:#FEE8E7;padding:1px 6px;border-radius:4px}
 /* Drag & drop */
-.task-card.dragging{opacity:.4}
-.quadrant.drag-over{background:#EBF0FF;border-color:#1B3468}
+.task-card.dragging{opacity:.45;transform:scale(1.02);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.quadrant.drag-over{background:#EBF0FF;border:2px dashed var(--accent)!important}
 /* Inline edit */
 .task-title-input{font-size:13px;font-weight:500;width:100%;border:none;border-bottom:1px solid var(--navy);background:transparent;outline:none;font-family:var(--font);padding:0;color:var(--navy)}
 /* Q1 alert badge */
@@ -244,8 +244,8 @@ input[type=search]::-webkit-search-cancel-button{opacity:.4;cursor:pointer}
 .qc-hint{font-size:11px;color:var(--grey-text);margin-top:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* Stale task */
-.task-card.stale-mid{border-left:3px solid var(--warning) !important}
-.task-card.stale-old{border-left:3px solid var(--danger) !important;opacity:.82}
+.task-card.stale-mid{border-left:3px solid var(--warning) !important;background:#FFFBEB}
+.task-card.stale-old{border-left:3px solid var(--danger) !important;background:#FFF5F5}
 .stale-age{font-size:10px;font-weight:600;padding:1px 5px;border-radius:4px;color:var(--warning)}
 .stale-age.warn{color:var(--danger)}
 /* Task description */
@@ -3481,7 +3481,7 @@ function App() {
 
       {loading && ReactDOM.createPortal(
         <div className="loading-overlay">
-          <div className="spinner"></div>
+          <div style={{textAlign:'center'}}><div className="spinner" style={{margin:'0 auto'}}></div><div style={{marginTop:10,fontSize:12,color:'var(--text-2)',fontWeight:500}}>Načítám...</div></div>
         </div>,
         document.body
       )}
