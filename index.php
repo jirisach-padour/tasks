@@ -3517,7 +3517,7 @@ function App() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
                 <div style={{fontSize:'20px',fontWeight:700,color:'var(--text)'}}>Eisenhowerova matice</div>
                 <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
-                  {[{key:'work',label:'Pracovní'},{key:'all',label:'Vše'}].map(t => (
+                  {[{key:'work',label:'Pracovní'},{key:'personal',label:'Osobní'},{key:'all',label:'Vše'}].map(t => (
                     <button key={t.key} onClick={() => setActiveTab(t.key)}
                       style={{fontSize:'12px',padding:'6px 12px',border:'1px solid var(--border)',borderRadius:'var(--radius-sm)',background: activeTab===t.key ? 'var(--accent-bg)' : '#fff',color: activeTab===t.key ? 'var(--accent)' : 'var(--text-2)',fontFamily:'var(--font)',cursor:'pointer',fontWeight: activeTab===t.key ? 600 : 400}}>
                       {t.label}
