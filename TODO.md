@@ -2,6 +2,9 @@
 
 ## Bugs — k opravě
 
+- [ ] **Action items v 1on1 se otevírají špatně** — screenshot k dodání; zjistit a opravit chování otevírání/zobrazení seznamu action items
+- [ ] **Responsivní design — mobil** — vyladit zobrazení na mobilních zařízeních BEZ dopadu na PC; konkrétně: FAB tlačítko pro přidání rychlého tasku se překrývá se spodním fixním pilem; projít celý layout na <600px
+
 - [x] **Připravit schůzku v 1on1** — opraveno 2026-05-23 (portal do #modals, modal-box CSS, signal chips, profil sekce, z-index)
 - [x] **Checklist a Daktela tickety v matici** — opraveno 2026-05-23
 - [x] **Volný čas v denním kalendáři** — OK 2026-05-23
