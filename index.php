@@ -1800,7 +1800,6 @@ function ChatPanel() {
             >Smazat historii</button>
           )}
         </div>
-      )}
     </div>
   );
 }
