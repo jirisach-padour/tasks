@@ -289,6 +289,126 @@ ssh hetzner-personal "cd /var/www/app/tasks && git log --oneline -5"
 
 ---
 
+## Kompletní redesign — 2026-05-22–23
+
+### Design systém (nové CSS proměnné)
+
+Starý design: navy gradient header, `--red`, `--navy`, `--grey-bg`.
+Nový design: čistě bílý, neutrální, akcent modrá.
+
+```
+--bg: #F7F7F8            stránkové pozadí (světle šedé)
+--surface: #FFFFFF        karty, panely, modaly
+--surface-2: #F0F0F2      Q4 kvadrant, sekundární pozadí
+--border: #E4E4E7         všechny bordery
+--text: #18181B           primární text
+--text-2: #71717A         sekundární (popisky, meta)
+--text-3: #A1A1AA         placeholder, disabled
+--accent: #2563EB         primární modrá (tlačítka, active nav)
+--accent-bg: #EFF6FF      světlé pozadí pro accent (Q2 kvadrant)
+--danger: #DC2626 / --danger-bg: #FFF5F5    Q1, overdue
+--warning: #D97706 / --warning-bg: #FFFBEB  Q3, stale, termíny
+--success: #16A34A / --success-bg: #F0FDF4  hotovo, přesné odhady
+--purple: #7C3AED / --purple-bg: #F5F3FF    all-day events, high potential
+--shadow-sm: 0 1px 3px rgba(0,0,0,.06)
+--shadow-md: 0 4px 12px rgba(0,0,0,.08)
+--radius: 10px / --radius-sm: 6px
+```
+
+### Layout
+
+```
+┌────────────────────────────────────────────────────────┐
+│  app-header (52px bílý, shadow-sm, border-bottom)      │
+│  logo | sep | search | AI btn | Nový task | avatar     │
+├──────┬─────────────────────────────────────┬───────────┤
+│ nav  │                                     │  sidebar  │
+│ 60px │  main-content (flex-1)              │  pravý    │
+│ side │  záložky: Matice / Dnes / 1on1      │  panely   │
+│ bar  │                                     │           │
+└──────┴─────────────────────────────────────┴───────────┘
+```
+
+**NavSidebar** (levý 60px pruh, bílý, border-right):
+- `.nav-item` = 44×44px icon button
+- Aktivní: `color: --accent; background: --accent-bg` + `::before` pruh 3px --accent vlevo
+- `nav-sep` = 28px horizontální oddělovač
+
+**app-header** (52px): bílé, border-bottom, shadow-sm; prvky: název (15px bold), separator (1px 20px), search box (max 340px, výška 34px), AI btn, "Nový task" (btn-primary), avatar.
+
+### Eisenhower matrix — kvadranty vizuální hierarchie
+
+| Kvadrant | Pozadí | Top border | Label barva |
+|---|---|---|---|
+| Q1 Urgentní+Důležité | `--danger-bg` | 3px `--danger` | `--danger` bold 800 |
+| Q2 Důležité | `--surface` bílé | 3px `--accent` | `--accent` bold 700 |
+| Q3 Urgentní | `--warning-bg` | 3px `--warning` | `--warning` bold 700 |
+| Q4 Ostatní | `--surface-2` šedé | žádný | `--text-3` |
+
+Q-count badge barvy odpovídají kvadrantu.
+
+### Modal portal pattern
+
+Modaly renderovat přes `ReactDOM.createPortal` do `<div id="modals">` (v body mimo React root).
+
+**Důvod:** Modaly uvnitř `.quadrant` nebo `.sidebar` dědí jejich stacking context → zobrazí se pod jiným prvkem nebo jsou oříznuté.
+
+```jsx
+// v App return (mimo root content):
+<div id="modals"></div>
+
+// v komponentě:
+{open && ReactDOM.createPortal(
+  <MyModal onClose={() => setOpen(false)} />,
+  document.getElementById('modals')
+)}
+```
+
+Týká se PrepDocModal, TaskModal, OneOnOneModal — vše co musí být nad vším ostatním.
+
+**`.modal-box` vs `.modal`:**
+- `.modal` = padding:28px, jednoduché
+- `.modal-box` = bez paddingu, `display:flex; flex-direction:column; overflow:hidden` — pro modaly s fixním headerem a scrollovatelným obsahem
+
+### 1on1 redesign
+
+**Layout:** CSS grid `260px auto` — levý sloupec osoby, pravý detail.
+
+**SignalChip komponenta:**
+- `type`: `'ok'` (zelená), `'warn'` (oranžová), `'info'` (modrá), `'purple'`
+- Zobrazuje: dny od poslední schůzky, počet open items, nálada trend (↑↓→), high potential
+
+**ActionItemsPopover fix:**
+- Popover se otevírá DOPRAVA (`left:0`), ne doleva (`right:0`) — jinak přeteče mimo viewport
+
+### Calendar 1on1 mapování
+
+**DB tabulka:**
+```sql
+calendar_1on1_mappings (
+  id INT PK,
+  event_keyword VARCHAR(100) UNIQUE,  -- klíčové slovo v názvu Google Cal eventu
+  person VARCHAR(100),                 -- jméno v onenon_people
+  active TINYINT(1) DEFAULT 1
+)
+```
+
+**API:**
+- `calendar?sub=onenon_scan` GET — vrátí eventy matchující klíčová slova
+- `settings?sub=onenon_mappings` GET — vrátí mapování
+- `settings?sub=onenon_mappings` POST — přepíše mapování (DELETE + INSERT)
+
+**OneOnOneMappingModal** — UI pro správu mapování, přístup z 1on1 záložky.
+
+### Ranní rituál fix
+
+Tlačítko "Přeskočit" nenavigoval na Dnes záložku → `forceShowMorning` prop + `onForceDone` callback:
+```jsx
+<DnesView forceShowMorning={true} onForceDone={() => setActiveTab('dnes')} />
+```
+
+---
+
 ## Babel standalone omezení
 
 - **IIFE v JSX je fatální** (blank page bez erroru) — logiku vždy do proměnných před `return`
