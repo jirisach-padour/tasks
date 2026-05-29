@@ -219,3 +219,50 @@ Všechny přes `api.php?action=X`, session auth.
 - **ChatPanel + api/chat.php** — Claude Haiku, stateless history, panel v pravém sidebaru pod CalendarPanel
 - **Denní cron** — `cron/daily_context.php` → `tasks-context.md`; crontab `0 6 * * *` jako apache
 - **Samoučení** — `estimated_minutes` + `actual_minutes`; `DoneTimeModal` po dokončení; KpiPanel přesnost odhadů; AI accuracy context
+
+---
+
+## Kompletní redesign — 2026-05-22–23
+
+### Design systém
+
+Starý design: navy gradient header. Nový: čistě bílý, neutrální, akcent modrá.
+
+**CSS proměnné:**
+- `--bg: #F7F7F8` (stránka), `--surface: #FFFFFF` (karty), `--surface-2: #F0F0F2` (Q4)
+- `--text: #18181B`, `--text-2: #71717A`, `--text-3: #A1A1AA`
+- `--accent: #2563EB`, `--accent-bg: #EFF6FF`
+- `--danger: #DC2626 / --danger-bg: #FFF5F5` (Q1, overdue)
+- `--warning: #D97706 / --warning-bg: #FFFBEB` (Q3, stale)
+- `--success: #16A34A / --success-bg: #F0FDF4`
+- `--purple: #7C3AED / --purple-bg: #F5F3FF` (all-day events, high potential)
+- `--shadow-sm`, `--shadow-md`, `--radius: 10px`, `--radius-sm: 6px`
+
+### Layout
+
+Header 52px (bílý, border-bottom, shadow-sm) + NavSidebar 60px vlevo (bílý, border-right) + main + pravý sidebar.
+
+**NavSidebar:** `.nav-item` 44×44px; aktivní = `--accent-bg` + `::before` 3px accent pruh vlevo.
+
+### Kvadranty vizuální hierarchie
+
+| Q | Pozadí | Top border |
+|---|---|---|
+| Q1 | `--danger-bg` | 3px `--danger` |
+| Q2 | `--surface` bílé | 3px `--accent` |
+| Q3 | `--warning-bg` | 3px `--warning` |
+| Q4 | `--surface-2` šedé | žádný |
+
+### Modal portal pattern — KRITICKÉ
+
+Modaly MUSÍ renderovat přes `ReactDOM.createPortal(..., document.getElementById('modals'))`.
+`<div id="modals">` v App return mimo content. Bez toho modaly dědí stacking context a zobrazí se pod jinými prvky.
+
+**`.modal-box`** pro modaly s fixním headerem + scrollovatelným obsahem: `display:flex; flex-direction:column; overflow:hidden; max-height:90vh`.
+
+### 1on1 redesign
+
+- CSS grid `260px auto`, SignalChip (type: ok/warn/info/purple)
+- ActionItemsPopover: `left:0` (ne right:0) — jinak přeteče mimo viewport
+- `calendar_1on1_mappings` tabulka + `OneOnOneMappingModal` + `calendar?sub=onenon_scan`
+- `forceShowMorning` prop + `onForceDone` callback pro správné přeskočení ranního rituálu
