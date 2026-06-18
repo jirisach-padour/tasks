@@ -11,7 +11,7 @@ requireAuth();
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%231B3468'/><rect x='6' y='6' width='9' height='9' rx='2' fill='%23E05C4E'/><rect x='17' y='6' width='9' height='9' rx='2' fill='rgba(255,255,255,0.4)'/><rect x='6' y='17' width='9' height='9' rx='2' fill='rgba(255,255,255,0.4)'/><rect x='17' y='17' width='9' height='9' rx='2' fill='rgba(255,255,255,0.15)'/></svg>">
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.27.1/babel.min.js"></script>
 <style>
 :root{--bg:#F7F7F8;--surface:#FFFFFF;--surface-2:#F0F0F2;--border:#E4E4E7;--text:#18181B;--text-2:#71717A;--text-3:#A1A1AA;--accent:#2563EB;--accent-bg:#EFF6FF;--blue:#2563EB;--blue-hover:#1d4ed8;--danger:#DC2626;--danger-bg:#FFF5F5;--warning:#D97706;--warning-bg:#FFFBEB;--success:#16A34A;--success-bg:#F0FDF4;--purple:#7C3AED;--purple-bg:#F5F3FF;--navy:#1B3468;--radius:10px;--radius-sm:6px;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;--shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);--red:#DC2626;--red-hover:#b91c1c;--grey-bg:#F7F7F8;--grey-border:#E4E4E7;--grey-text:#71717A;--white:#FFFFFF}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
