@@ -130,6 +130,19 @@ details.more .rows { padding: 0 18px 10px; }
 .toast button { background: none; border: 0; color: var(--accent); font-weight: 600; }
 .slpop { padding: 0 18px 14px; display: none; }
 .slpop.on { display: block; }
+.konec { display: none; max-width: 640px; margin: 40px auto; padding: 0 20px; }
+.konec .card { padding: 22px 24px; display: grid; gap: 10px; }
+.konec .k-t { font-size: 18px; font-weight: 650; }
+.konec .k-m { color: var(--text-2); }
+body.konec-on .konec { display: block; }
+body.konec-on .wrap, body.konec-on .quick, body.konec-on .fokus-banner { display: none; }
+.bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--surface-2); margin: 4px 0 8px; }
+.bar .b1, .leg .b1 { background: var(--accent); }
+.bar .b2, .leg .b2 { background: var(--text-3); }
+.leg { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-2); flex-wrap: wrap; }
+.leg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+.wip { margin-top: 10px; font-size: 13px; }
+.wip span { color: var(--text-2); }
 body.fokus .hide-in-focus { display: none; }
 .fokus-banner { display: none; max-width: 1240px; margin: 12px auto 0; padding: 0 20px; }
 .fokus-banner div { background: var(--accent-bg); color: var(--accent); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; }
@@ -145,7 +158,8 @@ body.fokus .fokus-banner { display: block; }
   <span class="conn"><i></i>Práce připojena · 14:35</span>
 </header>
 
-<div class="demo">Ukázka: <button id="d-zak" class="on">5 zákazníků čeká</button><button id="d-zak1">1 zákazník čeká</button><button id="d-fokus">Focus time (po dopoledne)</button></div>
+<div class="demo">Ukázka: <button id="d-zak" class="on">5 zákazníků čeká</button><button id="d-zak1">1 zákazník čeká</button><button id="d-fokus">Focus time (po dopoledne)</button><button id="d-konec">Po pracovní době</button></div>
+<div class="konec"><div class="card"><div class="k-t">Práce je na dnes zavřená.</div><div class="k-m">Zítra začni: <b>Nacenění SMS notifikace — FITHAM</b> (dlužíme, reopen 10:00). Pracovní položky se ukážou zase v 8:00 — nic ti mezitím neuteče.</div><div class="k-m">Osobní: Servis auta · pátek</div><button class="btn" id="konec-ukaz">Přesto ukázat práci</button></div></div>
 <div class="fokus-banner"><div>Focus time do 12:00 — vidíš jen strategický blok a to, co hoří v řádu hodin. Ostatní počká.</div></div>
 
 <div class="quick hide-in-focus">
@@ -232,6 +246,14 @@ body.fokus .fokus-banner { display: block; }
       </div>
     </section>
     <section class="card hide-in-focus">
+      <header><h2>Tento týden</h2></header>
+      <div class="list">
+        <div class="bar"><span style="width:58%" class="b1"></span><span style="width:42%" class="b2"></span></div>
+        <div class="leg"><span><i class="b1"></i>Zákazníci a lidé 58 %</span><span><i class="b2"></i>Vlastní nástroje 42 %</span></div>
+        <div class="wip">Rozpracované vlastní projekty: <b>7</b> <span>— doporučeno nejvýš 3. Karel v 360 zmínil hodně paralelních projektů.</span></div>
+      </div>
+    </section>
+    <section class="card hide-in-focus">
       <header><h2>Příprava 1:1 — Lucie</h2></header>
       <div class="feedback">
         <div class="k">Feedback, který dlužíš</div>
@@ -258,6 +280,8 @@ function navrhZakaznici(vic) {
 }
 document.getElementById('d-zak').onclick = () => navrhZakaznici(true);
 document.getElementById('d-zak1').onclick = () => navrhZakaznici(false);
+document.getElementById('d-konec').onclick = e => { document.body.classList.toggle('konec-on'); e.target.classList.toggle('on'); };
+document.getElementById('konec-ukaz').onclick = () => { document.body.classList.remove('konec-on'); document.getElementById('d-konec').classList.remove('on'); };
 document.getElementById('d-fokus').onclick = e => { document.body.classList.toggle('fokus'); e.target.classList.toggle('on'); };
 let navrhPosledni = null, navrhTimer = null;
 function navrhHotovo(el, text) {

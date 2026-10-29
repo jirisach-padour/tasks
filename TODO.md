@@ -27,6 +27,8 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] Čekám na: datum připomenutí, sám se vrátí do TOP 10 v den připomenutí
 - [ ] Tlačítko „špatně zařazeno“ + důvod → kandidát na pravidlo (Claude ho na vyžádání převede do prioritizace_pravidla.md)
 - [ ] Příprava 1on1: nahoře „konkrétní feedback, který dlužíš“
+- [ ] Po pracovní době a o víkendu: práce zavřená („zítra začni: …“), jen osobní; tlačítko „přesto ukázat“ (JS nechce být rušen mimo pracovní dobu, historie vyčerpání 2025)
+- [ ] Tento týden: podíl času zákazníci a lidé × vlastní nástroje + počet rozpracovaných vlastních projektů (limit 3; 360 feedback: hodně paralelních projektů)
 - [ ] Červená jen pro SLA v hodinách a zákazníka, který čeká; ostatní neutrálně (bez alarmové únavy)
 
 - [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
