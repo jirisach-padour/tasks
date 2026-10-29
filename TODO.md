@@ -10,6 +10,16 @@
 - [x] **Volný čas v denním kalendáři** — OK 2026-05-23
 - [x] **Důkladné porovnání grafiky: realita vs. návrh** — hotovo 2026-05-23 — projít každou obrazovku (Matice, Dnes, 1on1, Ranní rituál, Modaly, Sidebar) a zdokumentovat všechny odchylky od designu; opravit po jednom
 
+## Refaktor 2026-10 — návrh k diskusi (nezahájeno)
+
+- [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
+- [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
+- [ ] F2 Import API (token) — data nosí skill z Claude Code (Daktela MCP, operations, Fellow), server nic nevolá přes VPN
+- [ ] F3 Fellow: action items a poznámky ze schůzek (oficiální MCP fellow.app/mcp pro skill, Developer API pro dokončení položek)
+- [ ] F4 Prioritizace přes skill prioritizuj (export/import s odůvodněním), stav v DB místo ~/.claude/priorities-state.md
+- [ ] F5 UI: ranní pohled = 3–5 závazků + timeline + „čekám na“; matice jen jako pomocný pohled
+- [ ] F6 Vyhodit Anthropic API (ai, what_now, prep_topics, chat) — pravidlo z 19. 10.
+
 ## Fronta
 
 - [ ] **Daktela problémové tickety v 1on1** — POZDĚJŠÍ: v detailu osoby zobrazit OPEN tickety kde je agent přiřazen a jsou OPEN/SLA risk; vyžaduje Daktela token + mapování person→daktela login
