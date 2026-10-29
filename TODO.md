@@ -21,6 +21,13 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] Kompatibilita: tabulky tasks a onenon_* čtou Team Hub MCP (~/team-hub-mcp/server.py) a hourly-radar; daktela_tickets = JSON ["name"] — sloupce jen přidávat
 - [ ] Export API: GET otevřených tasků s tokenem, povolená jen IP operations
 - [ ] Nové GUI (vanilla JS) + tests/run.sh + smoke test UI
+- [ ] GUI návrh v2 (UX revize 29. 10.): režim „Teď“ = 1 další věc + 2 v pořadí, TOP 10 sbalený; stabilní pořadí (posun jen při události, štítky nové/posunuto, nepřeskládat pod rukama)
+- [ ] Focus time z kalendáře (po dopoledne, pá odpoledne): skrýt vše kromě SLA v hodinách, ukázat strategický blok
+- [ ] Ranní výběr 3 závazků (2 min) + páteční výběr 1–2 strategických věcí do pondělního focus time (timebox do kalendáře)
+- [ ] Čekám na: datum připomenutí, sám se vrátí do TOP 10 v den připomenutí
+- [ ] Tlačítko „špatně zařazeno“ + důvod → kandidát na pravidlo (Claude ho na vyžádání převede do prioritizace_pravidla.md)
+- [ ] Příprava 1on1: nahoře „konkrétní feedback, který dlužíš“
+- [ ] Červená jen pro SLA v hodinách a zákazníka, který čeká; ostatní neutrálně (bez alarmové únavy)
 
 - [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
 - [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
