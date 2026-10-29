@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../lib/Kalendar.php';
 require_once __DIR__ . '/../config.php';
 
 function getCalendarToken(): ?string {
@@ -35,7 +36,7 @@ function fetchEventsDays(string $token, int $days, int $maxResults = 30): array 
     $tomorrowDate = (new DateTime('tomorrow', new DateTimeZone($tz)))->format('Y-m-d');
     $dayLabels = ['Ne','Po','Út','St','Čt','Pá','So'];
     $url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?'
-        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>$maxResults,'fields'=>'items(id,summary,start,end)']);
+        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>$maxResults,'fields'=>'items(id,summary,start,end,attendees(self,responseStatus))']);
     $ch2 = curl_init($url);
     curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token], CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => true]);
     $resp = curl_exec($ch2);
@@ -52,7 +53,7 @@ function fetchEventsDays(string $token, int $days, int $maxResults = 30): array 
         $dow      = (int)(new DateTime($date, new DateTimeZone($tz)))->format('w');
         $label    = $date === $todayDate ? 'Dnes' : ($date === $tomorrowDate ? 'Zítra' : $dayLabels[$dow] . ' ' . substr($date, 8, 2) . '.' . substr($date, 5, 2) . '.');
         $durationH = (!$allDay && $endRaw) ? round((strtotime($endRaw) - strtotime($startRaw)) / 3600, 1) : 1;
-        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH];
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH,'rsvp'=>kalRsvp($e)];
     }
     return $events;
 }
@@ -65,7 +66,7 @@ function fetchEvents(string $token): array {
     $tomorrowDate = (new DateTime('tomorrow', new DateTimeZone($tz)))->format('Y-m-d');
     $dayLabels = ['Ne','Po','Út','St','Čt','Pá','So'];
     $url = 'https://www.googleapis.com/calendar/v3/calendars/primary/events?'
-        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>30,'fields'=>'items(id,summary,start,end)']);
+        . http_build_query(['timeMin'=>$today,'timeMax'=>$end7,'singleEvents'=>'true','orderBy'=>'startTime','maxResults'=>30,'fields'=>'items(id,summary,start,end,attendees(self,responseStatus))']);
     $ch2 = curl_init($url);
     curl_setopt_array($ch2, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token], CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYPEER => true]);
     $resp = curl_exec($ch2);
@@ -82,7 +83,7 @@ function fetchEvents(string $token): array {
         $dow      = (int)(new DateTime($date, new DateTimeZone($tz)))->format('w');
         $label    = $date === $todayDate ? 'Dnes' : ($date === $tomorrowDate ? 'Zítra' : $dayLabels[$dow] . ' ' . substr($date, 8, 2) . '.' . substr($date, 5, 2) . '.');
         $durationH = (!$allDay && $endRaw) ? round((strtotime($endRaw) - strtotime($startRaw)) / 3600, 1) : 1;
-        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH];
+        $events[] = ['id'=>$e['id'],'title'=>$e['summary']??'(bez názvu)','date'=>$date,'time'=>$time,'allDay'=>$allDay,'start'=>$startRaw,'end'=>$endRaw,'dayLabel'=>$label,'durationH'=>$durationH,'rsvp'=>kalRsvp($e)];
     }
     return $events;
 }
