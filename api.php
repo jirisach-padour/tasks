@@ -14,11 +14,11 @@ match($action) {
     'daktela'        => require __DIR__ . '/api/daktela.php',
     'daktela_cache'  => require __DIR__ . '/api/daktela.php',
     'calendar'       => require __DIR__ . '/api/calendar.php',
-    'ai_suggest'     => require __DIR__ . '/api/ai.php',
-    'what_now'       => require __DIR__ . '/api/what_now.php',
-    'prep_topics'    => require __DIR__ . '/api/prep_topics.php',
-    'chat'           => require __DIR__ . '/api/chat.php',
-    'onenon'         => require __DIR__ . '/api/onenon.php',
+    // 29. 10.: AI funkce (Anthropic API) zrušeny, 1on1 se přesunulo do Priority na operations
+    'ai_suggest', 'what_now', 'prep_topics', 'chat', 'onenon' => (function() {
+        http_response_code(410);
+        echo json_encode(['error' => 'Zrušeno: 1on1 je v Priority na operations, AI funkce nejsou.']);
+    })(),
     'settings'        => require __DIR__ . '/api/settings.php',
     'todo'           => (function() {
         $md = file_get_contents(__DIR__ . '/TODO.md');
