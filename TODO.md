@@ -15,12 +15,12 @@
 Rozhodnuto 2026-10-29: Tasks = soukromý projekt bez firemních dat; TOP 10 počítá nová služba „priority“ na operations (VPN),
 tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté testy. Pravidla: portfolio projects/prioritizace_pravidla.md.
 
-- [ ] F0 Úklid: vyhodit Anthropic API (ai, what_now, prep_topics, chat + klíč), Daktela proxy a cache
-- [ ] F4c Schůzky: příprava jen u RSVP accepted (calendar.php doplnit attendees/self/responseStatus)
+- [x] F0: Anthropic API pryč (endpointy 410, klíč smazán, záloha /etc/tasks/secrets.php.bak-20261029) — 2026-10-29; Daktela proxy zůstává jen pro stary.php
+- [x] RSVP v calendar.php (lib/Kalendar.php) + příprava jen u potvrzených — 2026-10-29
 - [ ] F4d Slack zpráva od Karla/vedení s úkolem bez tasku → upozornit (C.17) — v priority na operations
 - [ ] Kompatibilita: tabulky tasks a onenon_* čtou Team Hub MCP (~/team-hub-mcp/server.py) a hourly-radar; daktela_tickets = JSON ["name"] — sloupce jen přidávat
 - [ ] Export API: GET otevřených tasků s tokenem, povolená jen IP operations
-- [ ] Nové GUI (vanilla JS) + tests/run.sh + smoke test UI
+- [x] Nové GUI (index.php + js/novy.js + js/logika.js, stará verze stary.php) + testy na serveru (logika, GUI v node, kalendář, web) — 2026-10-29
 - [ ] GUI návrh v2 (UX revize 29. 10.): režim „Teď“ = 1 další věc + 2 v pořadí, TOP 10 sbalený; stabilní pořadí (posun jen při události, štítky nové/posunuto, nepřeskládat pod rukama)
 - [ ] Focus time z kalendáře (po dopoledne, pá odpoledne): skrýt vše kromě SLA v hodinách, ukázat strategický blok
 - [ ] Ranní výběr 3 závazků (2 min) + páteční výběr 1–2 strategických věcí do pondělního focus time (timebox do kalendáře)
@@ -39,6 +39,14 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] F4b Slack: zprávy bez reakce v DM + 4 management kanálech (Karel nahoře) — jen čtení, user token
 - [ ] F5 UI: ranní pohled = 3–5 závazků + timeline + „čekám na“; matice jen jako pomocný pohled
 - [ ] F6 Vyhodit Anthropic API (ai, what_now, prep_topics, chat) — pravidlo z 19. 10.
+
+## Po přepnutí 29. 10. — zbývá
+- [ ] Ověřit v prohlížeči: propojení klíčem (Priority → Propojit), CORS/Private Network v Chrome na VPN, odkliknutí, úprava úkolu
+- [ ] Smazat pracovní tasky na hetzneru (164, shodné s pr_tasks 29. 10.) — jen po potvrzení JS
+- [ ] Tento týden: podíl času zákazníci × nástroje — chybí zdroj dat (navrhnout)
+- [ ] Kalendář přesunout na operations (OAuth klient z kpi-dashboardu, redirect URI) — dnes jede z hetzneru
+- [ ] Páteční výběr strategického bloku + timebox do kalendáře (zatím ruční výběr v GUI)
+- [ ] stary.php + api/daktela.php + onenon_* tabulky na hetzneru smazat po týdnu bez potřeby
 
 ## Fronta
 
