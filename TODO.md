@@ -10,7 +10,17 @@
 - [x] **Volný čas v denním kalendáři** — OK 2026-05-23
 - [x] **Důkladné porovnání grafiky: realita vs. návrh** — hotovo 2026-05-23 — projít každou obrazovku (Matice, Dnes, 1on1, Ranní rituál, Modaly, Sidebar) a zdokumentovat všechny odchylky od designu; opravit po jednom
 
-## Refaktor 2026-10 — návrh k diskusi (nezahájeno)
+## Refaktor 2026-10 — schváleno 2026-10-29 (nezahájeno)
+
+Rozhodnuto 2026-10-29: Tasks = soukromý projekt bez firemních dat; TOP 10 počítá nová služba „priority“ na operations (VPN),
+tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté testy. Pravidla: portfolio projects/prioritizace_pravidla.md.
+
+- [ ] F0 Úklid: vyhodit Anthropic API (ai, what_now, prep_topics, chat + klíč), Daktela proxy a cache
+- [ ] F4c Schůzky: příprava jen u RSVP accepted (calendar.php doplnit attendees/self/responseStatus)
+- [ ] F4d Slack zpráva od Karla/vedení s úkolem bez tasku → upozornit (C.17) — v priority na operations
+- [ ] Kompatibilita: tabulky tasks a onenon_* čtou Team Hub MCP (~/team-hub-mcp/server.py) a hourly-radar; daktela_tickets = JSON ["name"] — sloupce jen přidávat
+- [ ] Export API: GET otevřených tasků s tokenem, povolená jen IP operations
+- [ ] Nové GUI (vanilla JS) + tests/run.sh + smoke test UI
 
 - [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
 - [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
