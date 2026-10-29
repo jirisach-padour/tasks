@@ -16,7 +16,8 @@
 - [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
 - [ ] F2 Sběr bez AI: cron na hetzneru volá Daktela API (čtecí token) a Fellow Developer API; operations pushuje CHS/response monitor/czdelivery přes import endpoint s tokenem
 - [ ] F3 Fellow přes Developer API (cron, webhooky): action items a poznámky; dokončení položky z appky zpět do Fellow
-- [ ] F4 Prioritizace deterministickým skóre v PHP (čekání zákazníka, SLA, MRR/tier, CHS trend, termín slibu, stáří Q2) s čitelným odůvodněním; Claude skill jen na vyžádání, žádné extra tokeny
+- [ ] F4 TOP 10 napříč zdroji podle portfolio projects/prioritizace_pravidla.md: Jev čte poslední komentář + parent (kdo drží krok, kategorie, slib), PHP řadí podle žebříčku, tier z accountu; u každé položky důvod + citace zdroje; Claude jen na vyžádání
+- [ ] F4b Slack: zprávy bez reakce v DM + 4 management kanálech (Karel nahoře) — jen čtení, user token
 - [ ] F5 UI: ranní pohled = 3–5 závazků + timeline + „čekám na“; matice jen jako pomocný pohled
 - [ ] F6 Vyhodit Anthropic API (ai, what_now, prep_topics, chat) — pravidlo z 19. 10.
 
