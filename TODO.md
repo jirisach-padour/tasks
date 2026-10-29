@@ -14,9 +14,9 @@
 
 - [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
 - [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
-- [ ] F2 Import API (token) — data nosí skill z Claude Code (Daktela MCP, operations, Fellow), server nic nevolá přes VPN
-- [ ] F3 Fellow: action items a poznámky ze schůzek (oficiální MCP fellow.app/mcp pro skill, Developer API pro dokončení položek)
-- [ ] F4 Prioritizace přes skill prioritizuj (export/import s odůvodněním), stav v DB místo ~/.claude/priorities-state.md
+- [ ] F2 Sběr bez AI: cron na hetzneru volá Daktela API (čtecí token) a Fellow Developer API; operations pushuje CHS/response monitor/czdelivery přes import endpoint s tokenem
+- [ ] F3 Fellow přes Developer API (cron, webhooky): action items a poznámky; dokončení položky z appky zpět do Fellow
+- [ ] F4 Prioritizace deterministickým skóre v PHP (čekání zákazníka, SLA, MRR/tier, CHS trend, termín slibu, stáří Q2) s čitelným odůvodněním; Claude skill jen na vyžádání, žádné extra tokeny
 - [ ] F5 UI: ranní pohled = 3–5 závazků + timeline + „čekám na“; matice jen jako pomocný pohled
 - [ ] F6 Vyhodit Anthropic API (ai, what_now, prep_topics, chat) — pravidlo z 19. 10.
 
