@@ -1,46 +1,33 @@
-# Tasks kontext — 2026-05-17 16:09
+# Tasks kontext — 2026-10-29 20:11
 
 ## Denní plán (2 tasků)
-- [urgent_important] nikola clickup - revize
-- [important] Renda - slack
+- [urgent_important] Napsat Vaškovi Čadovi a Reném: která infra témata je konkrétně zajímají [2026-10-21]
+- [important] podivat se na ustrednu, zpracovat ptazky pro sefa zakaznikce, projdi di, priprav srt otazek na co by ses podle statistik zeptal
 
 ## Otevřené tasky dle kvadrantů
-- Q1: 4
-- Q2: 5
-- Q3: 1
-- Q4: 5
-- **Celkem: 15**
+- Q1: 9
+- Q2: 3
+- Q3: 4
+- Q4: 2
+- **Celkem: 18**
 
-## Prošlé tasky (1)
-- [urgent_important] Implementace standup - naplánovat — prošlo 2026-05-08
+## Prošlé tasky (3)
+- [other] Uprava CZ delivery dashboardu — prošlo 2026-09-07
+- [urgent_important] Zajistit materiály infra – Vašek Čada — prošlo 2026-09-25
+- [urgent_important] Napsat Vaškovi Čadovi a Reném: která infra témata je konkrétně zajímají — prošlo 2026-10-21
 
 ## Otevřené 1on1 action items
 **Jitka Palinková:**
 - Niky clickup - revize, sync 1:3
 **Karel Vůjtek:**
-- Mišo - odměna / volno za rockaway
-- Milan - konzultant, posun na L2
-- co dál s L1
+- Milan - konzultant, posun na L2 - poslat návrh
 **Lucie Pokorná:**
-- Václav - buddy na zvedačku
-**Michal Cúth:**
-- K2 - T-LED napsat - napsat salesákovi ať domluví další kroky
-- Fletstok - zavolat
-- Electree - pošlou automatizace, ale chtějí z FingoCZ přenést číslo. T Hyben domluvi náš trunk
-- Autosklo - uzavřít
-- Mišo zjistit dovolenou a zadat
-- Zajistit peníze / volno za Rockaway
+- QA s Vaškem
 **Milan Brzek:**
 - MIlan a L2
 - Konzulrtace, kariani postup
-**Nikola Janešová:**
-- Niky a potíže s fireflies - špatně se zobrazuje přepis
-**René Heryán:**
-- nedotazena instalave fuzeinvest
-- priority - pomoc
 **Václav Čada:**
-- jak vypadá toto: https://daktela.daktela.com/tickets/update/862142
-- ticket PEARS HEALTH CYBER
-- NESTÍHÁ CLICKUP!!!!
-- Vytisknout manuuál na zvedačky Vaškovi
-- Nativní slack konektor do claudu - jek se na to tváříme z pohledu zabezpečení
+- csat otevira tickty
+**Václav Osladil:**
+- Mikulecky - probrat s Martinem a porvtdit robem s konektivitou
+- Testovaci Azure tenant pro support
