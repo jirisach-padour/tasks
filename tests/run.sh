@@ -3,5 +3,8 @@
 cd "$(dirname "$0")/.."
 chyb=0
 for f in $(find . -name "*.php" -not -path "./.git/*"); do php -l "$f" >/dev/null 2>&1 || { echo "CHYBA syntaxe: $f"; chyb=1; }; done
+for f in js/*.js; do node --check "$f" 2>/dev/null || { echo "CHYBA syntaxe: $f"; chyb=1; }; done
+node tests/logika_test.js || chyb=1
+php tests/kalendar_test.php || chyb=1
 bash tests/web_test.sh || chyb=1
 [ $chyb = 0 ] && echo "VŠE OK" || { echo "SELHALO"; exit 1; }
