@@ -60,5 +60,30 @@
         return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     }
 
-    Object.assign(exp, { rezim, ted, znacky, slackSouhrn, datum, esc });
+    /** Počty pro dlaždice přehledu. */
+    function dlazdice(tedData, prUkoly, osobni, lide, dnesIso) {
+        const p = (tedData && tedData.polozky) || [];
+        const po = u => u.status !== 'done' && u.due_date && u.due_date < dnesIso;
+        return { cekaji: p.filter(x => x.skupina === 1 || x.skupina === 2).length, dluh: p.filter(x => x.skupina === 3).length,
+                 slack: ((tedData && tedData.slack) || []).length, poTerminu: (prUkoly || []).filter(po).length + (osobni || []).filter(po).length,
+                 jedenOn1: (lide || []).reduce((s, l) => s + (Number(l.otevrenych) || 0), 0) };
+    }
+
+    const SLOUPCE = ['urgent_important', 'important', 'urgent', 'other', 'ceka', 'osobni'];
+    function sloupec(u, typ) {
+        if (typ === 'personal') return 'osobni';
+        return u.ceka_na ? 'ceka' : (SLOUPCE.includes(u.quadrant) ? u.quadrant : 'other');
+    }
+
+    /** Změna po přetažení do sloupce: data pro uložení, {zeptat: true} pro Čekám na, null = nejde/beze změny. */
+    function presun(u, typ, cil) {
+        if ((typ === 'personal') !== (cil === 'osobni')) return null;
+        if (sloupec(u, typ) === cil || cil === 'osobni') return null;
+        if (cil === 'ceka') return { zeptat: true };
+        const d = { quadrant: cil };
+        if (u.ceka_na) { d.ceka_na = null; d.pripomenout = null; }
+        return d;
+    }
+
+    Object.assign(exp, { rezim, ted, znacky, slackSouhrn, datum, esc, dlazdice, sloupec, presun, SLOUPCE });
 })(typeof module !== 'undefined' ? module.exports : (window.TL = {}));

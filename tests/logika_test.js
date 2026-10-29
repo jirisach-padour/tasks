@@ -41,4 +41,19 @@ t(s.karel === 2 && s.kanaly === 1 && s.dm === 1, 'slack souhrn');
 // Datum
 t(L.datum('2026-10-07') === '7. 10.', 'datum krátce');
 t(L.esc('<a href="x">') === '&lt;a href=&quot;x&quot;&gt;', 'escape HTML');
+// Dlaždice přehledu
+const dl = L.dlazdice({ polozky: [p(1, 'a'), p(2, 'b'), p(2, 'c'), p(3, 'd'), p(6, 'e')], slack: [{}, {}] },
+    [{ status: 'open', due_date: '2026-10-01' }, { status: 'open', due_date: null }], [{ status: 'open', due_date: '2026-10-28' }], [{ otevrenych: 2 }, { otevrenych: 1 }], '2026-10-29');
+t(dl.cekaji === 3 && dl.dluh === 1 && dl.slack === 2 && dl.poTerminu === 2 && dl.jedenOn1 === 3, 'dlaždice počty');
+t(L.dlazdice(null, [], [], [], '2026-10-29').cekaji === 0, 'dlaždice bez pracovních dat');
+
+// Tabule: sloupec úkolu a přesun tažením
+t(L.sloupec({ quadrant: 'important' }, 'work') === 'important', 'sloupec podle kvadrantu');
+t(L.sloupec({ quadrant: 'important', ceka_na: 'Ilia' }, 'work') === 'ceka', 'čekám na má vlastní sloupec');
+t(L.sloupec({ quadrant: 'urgent' }, 'personal') === 'osobni', 'osobní zvlášť');
+t(JSON.stringify(L.presun({ quadrant: 'other' }, 'work', 'urgent_important')) === JSON.stringify({ quadrant: 'urgent_important' }), 'přesun mezi kvadranty');
+t(JSON.stringify(L.presun({ quadrant: 'other', ceka_na: 'X', pripomenout: '2026-11-01' }, 'work', 'important')) === JSON.stringify({ quadrant: 'important', ceka_na: null, pripomenout: null }), 'z čekám na zpět do kvadrantu smaže čekání');
+t(L.presun({ quadrant: 'other' }, 'work', 'ceka').zeptat === true, 'do čekám na → zeptat se kdo a kdy');
+t(L.presun({ quadrant: 'other' }, 'work', 'osobni') === null && L.presun({ quadrant: 'other' }, 'personal', 'important') === null, 'mezi prací a osobním nejde');
+t(L.presun({ quadrant: 'important' }, 'work', 'important') === null, 'stejný sloupec = nic');
 process.exit(chyb ? 1 : 0);

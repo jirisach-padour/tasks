@@ -83,6 +83,7 @@ function tgVykresli() {
     const v = tgPohled();
     document.querySelectorAll('.tg-nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v || (v === 'osoba' && a.dataset.v === 'lide')));
     const main = document.getElementById('tg-main');
+    main.classList.toggle('siroke', v === 'ukoly');
     if (v === 'ukoly') main.innerHTML = renderUkolyPohled();
     else if (v === 'lide') main.innerHTML = renderLidePohled();
     else if (v === 'osoba') { main.innerHTML = '<p class="tg-muted">Načítám…</p>'; tgNactiOsobu(decodeURIComponent(location.hash.slice(7))); return; }
@@ -106,10 +107,11 @@ function renderTedPohled() {
     const fokus = rezim === 'focus';
     let html = '';
     if (fokus) html += '<div class="tg-banner" style="margin:0 0 14px;padding:0"><div>Focus time — vidíš jen strategický blok a to, co hoří v řádu hodin. <button data-akce="konec-focus">Ukončit focus</button></div></div>';
+    if (!fokus) html += renderDlazdice();
     html += '<div class="tg-wrap"><div class="tg-col">';
     if (tg.prace) {
         const hlavniVidet = r.hlavni && (!fokus || r.hlavni.skupina === 1);
-        html += '<section class="tg-card"><header><h2>Teď</h2><span class="tg-grow"></span><span class="tg-sub">pořadí se mění jen při události</span></header>';
+        html += '<section class="tg-card"><header><h2>Teď</h2><span class="tg-grow"></span><span class="tg-sub">' + esc(new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })) + '</span></header>';
         if (!r.hlavni) html += '<div class="tg-next"><div class="big">Nic nehoří.</div><div class="why">Žádný zákazník na tebe nečeká.</div></div>';
         else if (hlavniVidet) html += renderHlavni(r.hlavni, znacky);
         else html += '<div class="tg-next"><div class="why">Nic nehoří v řádu hodin. Pracuj na strategickém bloku.</div></div>';
@@ -127,36 +129,42 @@ function renderTedPohled() {
     return html;
 }
 
+/** Důvod bez opakování názvu skupiny („Zákazník čeká: Zákazník čeká 26 h“ → „26 h“). */
+function tgDuvod(x) {
+    const d = String(x.duvod || ''), s = String(x.skupina_nazev || '');
+    return d.toLowerCase().startsWith(s.toLowerCase()) ? d.slice(s.length).replace(/^[\s:·-]+/, '') : d;
+}
 function tgJeHot(x) { return [1, 2, 3].includes(x.skupina); }
 function tgTier(x) { return x.tier ? '<span class="tg-tag' + (/1[AB]/.test(x.tier) ? ' tier1' : '') + '">' + esc(x.tier) + '</span>' : ''; }
 function tgZnacka(z) { return z === 'nove' ? '<span class="tg-tag nove">nové</span>' : z === 'nahoru' ? '<span class="tg-tag nahoru">↑ posunuto</span>' : ''; }
 function tgIdx(x) { return tg.zobrazene.indexOf(x); }
 
 function renderHlavni(x, znacky) {
-    return '<div class="tg-next' + (tgJeHot(x) ? ' hot' : '') + '"><div class="lbl">Další krok</div>' +
-        '<div class="big">' + esc(x.titul) + tgTier(x) + tgZnacka(znacky[x.klic]) + '</div>' +
-        '<div class="why"><b>' + esc(x.skupina_nazev) + ':</b> ' + esc(x.duvod) + (x.zakaznik ? ' · ' + esc(x.zakaznik) : '') + '</div>' +
+    const duvod = tgDuvod(x);
+    return '<div class="tg-next' + (tgJeHot(x) ? ' hot' : '') + '"><div class="lbl">' + esc(x.skupina_nazev) + (duvod ? ' · ' + esc(duvod) : '') + tgZnacka(znacky[x.klic]) + '</div>' +
+        '<div class="big">' + esc(x.titul) + '</div>' +
+        '<div class="why">' + (x.zakaznik ? '<b>' + esc(x.zakaznik) + '</b>' : '') + (x.tier ? (x.zakaznik ? ' · ' : '') + esc(x.tier) : '') + '</div>' +
         (x.citace ? '<div class="tg-cite">' + esc(x.citace) + '</div>' : '') +
         '<div class="tg-acts">' + (x.url ? '<a class="tg-btn pri" href="' + esc(x.url) + '" target="_blank" rel="noopener">Otevřít</a>' : '') +
-        '<button class="tg-btn" data-akce="hotovo" data-i="' + tgIdx(x) + '">Hotovo</button>' +
+        '<button class="tg-btn" data-akce="hotovo" data-i="' + tgIdx(x) + '">✓ Hotovo</button>' +
         '<button class="tg-btn ghost" data-akce="spatne" data-i="' + tgIdx(x) + '">Špatně zařazeno…</button></div></div>';
 }
 
 function renderRadky(pole, od, znacky) {
     return '<ul class="tg-rows">' + pole.map((x, i) => '<li class="' + (tgJeHot(x) ? 'hot' : '') + '" data-rozbal="1"><span class="r">' + (od + i) + '</span>' +
         '<span class="t">' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titul) + '</a>' : esc(x.titul)) + tgTier(x) + tgZnacka(znacky[x.klic]) + '</span>' +
-        '<span class="w">' + esc(x.skupina_nazev) + ' · ' + esc(x.duvod) + (x.zakaznik ? ' · ' + esc(x.zakaznik) : '') + '</span>' +
+        '<span class="w">' + [x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : ''), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
         (x.citace ? '<span class="c tg-cite">' + esc(x.citace) + '</span>' : '') +
-        '<span class="a"><button class="tg-btn mini" data-akce="hotovo" data-i="' + tgIdx(x) + '">Hotovo</button><button class="tg-btn mini ghost" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">?</button></span></li>').join('') + '</ul>';
+        '<span class="a"><button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
 
 function renderSlack() {
     const z = (tg.ted && tg.ted.slack) || [];
     if (!z.length) return '<div class="tg-slack"><span class="tg-sub">Slack: na všechno jsi reagoval.</span></div>';
     const s = TL.slackSouhrn(z);
-    let h = '<div class="tg-slack"><button data-akce="slack">Bez tvé reakce:' + (s.karel ? ' Karel <b>' + s.karel + '</b>' : '') + (s.kanaly ? ' kanály <b>' + s.kanaly + '</b>' : '') + (s.dm ? ' DM <b>' + s.dm + '</b>' : '') + '</button></div>';
+    let h = '<div class="tg-slack"><span class="tg-sub">Slack</span><button data-akce="slack">Bez tvé reakce:' + (s.karel ? ' Karel <b>' + s.karel + '</b>' : '') + (s.kanaly ? ' kanály <b>' + s.kanaly + '</b>' : '') + (s.dm ? ' DM <b>' + s.dm + '</b>' : '') + '</button></div>';
     if (tg.otevrenoSlack) h += '<div class="tg-slackpop"><ul class="tg-rows">' + z.map((m, i) => '<li><span class="r">·</span><span class="t"><a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + esc(m.autor_jmeno) + '</a> <span class="tg-sub">' + esc(m.kanal_nazev) + ' · ' + esc(m.kdy.slice(5, 16)) + '</span></span>' +
-        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a"><button class="tg-btn mini" data-akce="slack-hotovo" data-i="' + i + '">Vyřízeno</button></span></li>').join('') + '</ul></div>';
+        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a"><button class="tg-ib ok" data-akce="slack-hotovo" data-i="' + i + '" title="Vyřízeno">✓</button></span></li>').join('') + '</ul></div>';
     return h;
 }
 
@@ -165,10 +173,10 @@ function renderStrategicky() {
     if (!s || !s.kandidati.length) return '';
     const v = s.vybrany || s.kandidati[0];
     const vybrany = !!s.vybrany;
-    return '<section class="tg-card"><header><h2>Strategický blok</h2><span class="tg-grow"></span><span class="tg-sub">' + (vybrany ? 'vybráno na tento týden · patří do pondělního focus time' : 'návrh: nejdéle ležící důležitá věc') + '</span></header>' +
-        '<div class="tg-pad"><div style="font-weight:600">' + esc(v.title) + '</div><div class="tg-muted" style="font-size:13px">Leží ' + v.dni + ' dní.</div>' +
+    return '<section class="tg-card tg-strat"><header><h2>Strategický blok</h2><span class="tg-grow"></span><span class="tg-sub">' + (vybrany ? 'vybráno na tento týden · patří do pondělního focus time' : 'návrh: nejdéle ležící důležitá věc') + '</span></header>' +
+        '<div class="tg-pad"><div class="nazev">' + esc(v.title) + '</div><div class="tg-muted" style="font-size:13.5px">Leží ' + v.dni + ' dní — jediná věc, kterou tento týden posouváš dlouhodobě.</div>' +
         '<div class="tg-acts">' + (vybrany ? '<button class="tg-btn" data-akce="prace-hotovo" data-id="' + v.id + '">Hotovo</button>' : '<button class="tg-btn pri" data-akce="strat-vyber" data-id="' + v.id + '">Vybrat na tento týden</button>') +
-        '<select data-akce="strat-jiny" class="tg-btn"><option value="">Jiný…</option>' + s.kandidati.map(k => '<option value="' + k.id + '">' + esc(k.title.slice(0, 60)) + ' (' + k.dni + ' d)</option>').join('') + '</select></div></div></section>';
+        '<select data-akce="strat-jiny" class="tg-btn"><option value="">Vybrat jiný…</option>' + s.kandidati.map(k => '<option value="' + k.id + '">' + esc(k.title.slice(0, 60)) + ' (' + k.dni + ' d)</option>').join('') + '</select></div></div></section>';
 }
 
 function renderCekam() {
@@ -233,20 +241,27 @@ function renderZavreno() {
         '<div><button class="tg-btn" data-akce="ukaz-praci">Přesto ukázat práci</button></div></div></div>';
 }
 
+function renderDlazdice() {
+    const d = TL.dlazdice(tg.prace ? tg.ted : null, tg.prUkoly, tg.osobni, tg.lide, tgDnesIso());
+    const dl = (n, popis, cil, hot) => '<a class="tg-tile' + (hot && n ? ' hot' : '') + (n ? '' : ' nula') + '" href="' + cil + '"><b>' + n + '</b><span>' + popis + '</span></a>';
+    return '<div class="tg-tiles">' + (tg.prace ? dl(d.cekaji, 'zákazníků čeká', '#ted', true) + dl(d.dluh, 'dlužíme', '#ted', true) +
+        dl(d.slack, 'Slack bez reakce', '#ted-slack', false) : '') + dl(d.poTerminu, 'po termínu', '#ukoly', true) + (tg.prace ? dl(d.jedenOn1, 'úkolů z 1on1', '#lide', false) : '') + '</div>';
+}
+
+const TG_SLOUPCE = { urgent_important: 'Hoří', important: 'Důležité', urgent: 'Urgentní', other: 'Ostatní', ceka: 'Čekám na', osobni: 'Osobní' };
 function renderUkolyPohled() {
-    const kv = { urgent_important: 'Urgentní a důležité', important: 'Důležité', urgent: 'Urgentní', other: 'Ostatní' };
-    const otevrene = tg.prUkoly.filter(u => u.status === 'open');
-    let h = '<div class="tg-wrap"><div class="tg-col">';
-    if (tg.prace) {
-        for (const k of Object.keys(kv)) {
-            const u = otevrene.filter(x => x.quadrant === k && !x.ceka_na);
-            if (u.length) h += '<section class="tg-card"><header><h2>Práce — ' + kv[k] + '</h2><span class="tg-sub">' + u.length + '</span></header><div class="tg-pad">' + u.map(x => renderUkol(x, 'work')).join('') + '</div></section>';
-        }
-        h += renderCekam();
-    }
-    h += '</div><aside class="tg-col"><section class="tg-card"><header><h2>Osobní</h2></header><div class="tg-pad">' +
-        (tg.osobni.filter(u => u.status !== 'done').map(u => renderUkol(u, 'personal')).join('') || '<span class="tg-muted">Nic.</span>') + '</div></section></aside></div>';
-    return h;
+    const karty = { urgent_important: [], important: [], urgent: [], other: [], ceka: [], osobni: [] };
+    if (tg.prace) tg.prUkoly.filter(u => u.status === 'open').forEach(u => karty[TL.sloupec(u, 'work')].push(['work', u]));
+    tg.osobni.filter(u => u.status !== 'done').forEach(u => karty.osobni.push(['personal', u]));
+    const dnes = tgDnesIso();
+    const karta = ([typ, u]) => '<div class="tg-kanban-karta" draggable="true" data-typ="' + typ + '" data-id="' + u.id + '">' +
+        '<div class="tg-task"><input type="checkbox" data-akce="ukol-hotovo" data-typ="' + typ + '" data-id="' + u.id + '"><span class="t" data-akce="ukol-uprav" data-typ="' + typ + '" data-id="' + u.id + '">' + esc(u.title) +
+        (u.ceka_na ? '<div class="m who">' + esc(u.ceka_na) + (u.pripomenout ? ' · ' + TL.datum(u.pripomenout) : '') + '</div>' : u.due_date ? '<div class="m' + (u.due_date < dnes ? ' late' : '') + '">' + (u.due_date < dnes ? 'po termínu ' : '') + TL.datum(u.due_date) + '</div>' : '') +
+        '</span></div></div>';
+    const sloupce = tg.prace ? TL.SLOUPCE : ['osobni'];
+    return '<div class="tg-kanban-hlava"><h2>Úkoly</h2><span class="tg-sub">přetáhni kartu do jiného sloupce · klik na název = upravit</span></div>' +
+        '<div class="tg-kanban">' + sloupce.map(k => '<section class="tg-kanban-sloupec" data-sloupec="' + k + '"><header><span>' + TG_SLOUPCE[k] + '</span><span class="tg-sub">' + karty[k].length + '</span></header>' +
+        '<div class="tg-kanban-karty">' + (karty[k].map(karta).join('') || '<div class="tg-kanban-prazdno">Přetáhni sem</div>') + '</div></section>').join('') + '</div>';
 }
 
 function renderLidePohled() {
@@ -377,7 +392,45 @@ document.getElementById('tg-motiv').addEventListener('click', () => {
     tgLs('tg_motiv', r.dataset.theme);
 });
 
-window.addEventListener('hashchange', tgVykresli);
+// ---------- přetahování na tabuli ----------
+let tgTah = null;
+document.addEventListener('dragstart', e => {
+    const k = e.target.closest && e.target.closest('.tg-kanban-karta');
+    if (!k) return;
+    tgTah = { typ: k.dataset.typ, id: k.dataset.id };
+    k.classList.add('tah'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', k.dataset.id);
+});
+document.addEventListener('dragend', e => { const k = e.target.closest && e.target.closest('.tg-kanban-karta'); if (k) k.classList.remove('tah'); document.querySelectorAll('.tg-kanban-sloupec.nad').forEach(s => s.classList.remove('nad')); });
+document.addEventListener('dragover', e => {
+    const s = e.target.closest && e.target.closest('.tg-kanban-sloupec');
+    if (!s || !tgTah) return;
+    e.preventDefault();
+    document.querySelectorAll('.tg-kanban-sloupec.nad').forEach(x => { if (x !== s) x.classList.remove('nad'); });
+    s.classList.add('nad');
+});
+document.addEventListener('drop', e => {
+    const s = e.target.closest && e.target.closest('.tg-kanban-sloupec');
+    if (!s || !tgTah) return;
+    e.preventDefault();
+    const { typ, id } = tgTah; tgTah = null;
+    const u = (typ === 'personal' ? tg.osobni : tg.prUkoly).find(x => String(x.id) === String(id));
+    const zmena = u && TL.presun(u, typ, s.dataset.sloupec);
+    if (!zmena) { tgVykresli(); if (u && (typ === 'personal') !== (s.dataset.sloupec === 'osobni')) tgToast('Mezi prací a osobním přesouvat nejde.'); return; }
+    if (zmena.zeptat) {
+        tgDialog('<h3>Čekám na</h3><p class="tg-muted" style="margin-top:0">' + esc(u.title) + '</p><div class="tg-form"><div class="row"><label>Na koho čekáš<input name="kdo" required></label>' +
+            '<label>Připomenout<input type="date" name="kdy"></label></div><span class="tg-err" id="tg-dlg-chyba"></span></div><div class="tg-acts"><button class="tg-btn" value="zrusit" formnovalidate>Zrušit</button><button class="tg-btn pri" value="ok">Uložit</button></div>',
+            f => tgPriority('ukol_ulozit', { id: Number(id), ceka_na: f.kdo.value, pripomenout: f.kdy.value || null }).then(r => { if (r.chyba) { document.getElementById('tg-dlg-chyba').textContent = r.chyba; return false; } tgNacti(); return true; }));
+        tgVykresli();
+        return;
+    }
+    Object.assign(u, zmena); tgVykresli();   // hned ukázat, uložit na pozadí
+    tgPriority('ukol_ulozit', Object.assign({ id: Number(id) }, zmena)).then(r => { if (r.chyba) tgToast(r.chyba); tgNacti(); });
+});
+
+window.addEventListener('hashchange', () => {
+    if (location.hash === '#ted-slack') { tg.otevrenoSlack = true; history.replaceState(null, '', '#ted'); }
+    tgVykresli();
+});
 document.addEventListener('visibilitychange', () => { if (!document.hidden) tgNacti(); });
 setInterval(() => { if (!document.hidden && !document.getElementById('tg-dlg').open) tgNacti(); }, 5 * 60 * 1000);
 tgNacti();

@@ -1,154 +1,238 @@
+/* Tasks — vzhled v2 (29. 10.): klidná hierarchie, jedna výrazná věc, ostatní tiše. */
 :root {
-    --bg: #F6F6F7; --surface: #FFFFFF; --surface-2: #F1F1F3; --border: #E4E4E7;
-    --text: #18181B; --text-2: #5F5F68; --text-3: #A1A1AA;
-    --accent: #2563EB; --accent-bg: #EEF4FF; --hot: #DC2626; --hot-bg: #FEF2F2;
-    --ok: #15803D; --ok-bg: #EEFBF2; --purple: #7C3AED; --purple-bg: #F4F0FF;
-    --radius: 12px; --shadow: 0 1px 2px rgba(0,0,0,.04), 0 1px 8px rgba(0,0,0,.03);
+    --bg: #F4F4F1; --surface: #FFFFFF; --surface-2: #F0EFEB; --line: #E7E5DF; --line-2: #D9D6CE;
+    --text: #1C1B19; --text-2: #5E5B54; --text-3: #9C988E;
+    --accent: #3B5BDB; --accent-2: #EDF1FF; --accent-ink: #2F49B5;
+    --hot: #D9480F; --hot-2: #FFF1E8; --ok: #2B8A3E; --ok-2: #EBF8EE; --purple: #7048E8; --purple-2: #F3EFFF; --amber: #B7791F;
+    --r: 14px; --r-sm: 9px;
+    --shadow: 0 1px 2px rgba(28,27,25,.04), 0 4px 16px rgba(28,27,25,.04);
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-        --bg: #0E0E11; --surface: #17171B; --surface-2: #1F1F24; --border: #2A2A31;
-        --text: #F2F2F4; --text-2: #A3A3AD; --text-3: #6B6B75;
-        --accent: #6EA8FF; --accent-bg: #16233D; --hot: #F87171; --hot-bg: #2B1414;
-        --ok: #4ADE80; --ok-bg: #11251A; --purple: #B79CFF; --purple-bg: #221A38; --shadow: none;
+        --bg: #121211; --surface: #1B1B19; --surface-2: #242421; --line: #2C2B28; --line-2: #3A3935;
+        --text: #EEECE7; --text-2: #A9A59C; --text-3: #6F6C64;
+        --accent: #7C93F2; --accent-2: #1E2541; --accent-ink: #A9B8F7;
+        --hot: #FF8A4C; --hot-2: #33200F; --ok: #5CC274; --ok-2: #14261A; --purple: #A68CFF; --purple-2: #251D3D; --amber: #E3A64B;
+        --shadow: none;
     }
 }
 :root[data-theme="dark"] {
-    --bg: #0E0E11; --surface: #17171B; --surface-2: #1F1F24; --border: #2A2A31;
-    --text: #F2F2F4; --text-2: #A3A3AD; --text-3: #6B6B75;
-    --accent: #6EA8FF; --accent-bg: #16233D; --hot: #F87171; --hot-bg: #2B1414;
-    --ok: #4ADE80; --ok-bg: #11251A; --purple: #B79CFF; --purple-bg: #221A38; --shadow: none;
+    --bg: #121211; --surface: #1B1B19; --surface-2: #242421; --line: #2C2B28; --line-2: #3A3935;
+    --text: #EEECE7; --text-2: #A9A59C; --text-3: #6F6C64;
+    --accent: #7C93F2; --accent-2: #1E2541; --accent-ink: #A9B8F7;
+    --hot: #FF8A4C; --hot-2: #33200F; --ok: #5CC274; --ok-2: #14261A; --purple: #A68CFF; --purple-2: #251D3D; --amber: #E3A64B;
+    --shadow: none;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 14.5px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 var(--font); font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
 a { color: inherit; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
-.tg-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
-.tg-top h1 { font-size: 16px; margin: 0; }
-.tg-nav { display: flex; gap: 2px; margin-left: 8px; }
-.tg-nav a { text-decoration: none; padding: 6px 12px; border-radius: 8px; color: var(--text-2); }
-.tg-nav a.on { background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+/* ---- hlavička ---- */
+.tg-top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; padding: 12px 28px;
+          background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.tg-top h1 { font-size: 17px; margin: 0; letter-spacing: -.02em; font-weight: 700; }
+.tg-nav { display: flex; gap: 2px; background: var(--surface-2); padding: 3px; border-radius: 10px; }
+.tg-nav a { text-decoration: none; padding: 5px 14px; border-radius: 8px; color: var(--text-2); font-size: 14px; font-weight: 500; }
+.tg-nav a.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .tg-grow { flex: 1; }
-.tg-conn { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--text-2); }
-.tg-conn i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
-.tg-conn.ok i { background: var(--ok); }
-.tg-conn.off i { background: var(--hot); }
-.tg-ikona { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; color: var(--text-2); text-decoration: none; font-size: 13px; }
-@media (max-width: 640px) { .tg-conn span { display: none; } .tg-top { padding: 10px 16px; gap: 8px; } .tg-nav a { padding: 6px 8px; } }
+.tg-conn { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-3); }
+.tg-conn i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.tg-conn.ok i { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-2); }
+.tg-conn.off i { background: var(--hot); box-shadow: 0 0 0 3px var(--hot-2); }
+.tg-ikona { display: inline-grid; place-items: center; width: 32px; height: 32px; background: none; border: 0; border-radius: 8px; color: var(--text-2); text-decoration: none; font-size: 15px; }
+.tg-ikona:hover { background: var(--surface-2); }
+@media (max-width: 640px) { .tg-conn span { display: none; } .tg-top { padding: 10px 16px; gap: 10px; } .tg-nav a { padding: 5px 10px; } }
 
-.tg-banner { max-width: 1240px; margin: 12px auto 0; padding: 0 16px; }
-.tg-banner > div { background: var(--accent-bg); color: var(--accent); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-.tg-banner button { background: none; border: 1px solid currentColor; border-radius: 6px; padding: 2px 10px; color: inherit; font-size: 13px; }
+.tg-banner { max-width: 1180px; margin: 16px auto 0; padding: 0 28px; }
+.tg-banner > div { background: var(--accent-2); color: var(--accent-ink); border-radius: var(--r-sm); padding: 11px 16px; font-size: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.tg-banner button, .tg-banner .tg-btn { background: var(--surface); border: 0; border-radius: 7px; padding: 3px 11px; color: var(--accent-ink); font-size: 13px; font-weight: 600; }
+@media (max-width: 640px) { .tg-banner { padding: 0 16px; } }
 
-.tg-quick { display: flex; gap: 8px; padding: 12px 16px 0; max-width: 1240px; margin: 0 auto; }
-.tg-quick input { flex: 1; min-width: 0; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
-.tg-quick select { padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+/* ---- rychlé přidání ---- */
+.tg-quick { display: flex; gap: 0; max-width: 1180px; margin: 20px auto 0; padding: 0 28px; }
+.tg-quick input { flex: 1; min-width: 0; padding: 13px 16px 13px 44px; border-radius: var(--r) 0 0 var(--r); border: 1px solid var(--line); border-right: 0; background: var(--surface) no-repeat 16px 50% / 16px;
+                  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C988E' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E"); box-shadow: var(--shadow); }
+.tg-quick input:focus { outline: none; border-color: var(--accent); }
+.tg-quick select { appearance: none; padding: 0 34px 0 16px; border-radius: 0 var(--r) var(--r) 0; border: 1px solid var(--line); background: var(--surface-2) no-repeat right 12px center / 12px; color: var(--text-2); font-size: 14px; font-weight: 500;
+                   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C988E' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+@media (max-width: 640px) { .tg-quick { padding: 0 16px; margin-top: 14px; } }
 
-#tg-main { max-width: 1240px; margin: 0 auto; padding: 16px 16px 48px; }
-.tg-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px; align-items: start; }
+/* ---- rozložení ---- */
+#tg-main { max-width: 1180px; margin: 0 auto; padding: 22px 28px 64px; }
+.tg-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; align-items: start; }
 @media (max-width: 960px) { .tg-wrap { grid-template-columns: 1fr; } }
-.tg-col { display: grid; gap: 18px; align-content: start; min-width: 0; }
+@media (max-width: 640px) { #tg-main { padding: 16px 16px 48px; } }
+.tg-col { display: grid; gap: 22px; align-content: start; min-width: 0; }
 
-.tg-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); min-width: 0; }
-.tg-card > header { display: flex; align-items: baseline; gap: 10px; padding: 14px 18px 8px; flex-wrap: wrap; }
-.tg-card > header h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-2); margin: 0; }
-.tg-sub { font-size: 12.5px; color: var(--text-3); }
-.tg-pad { padding: 0 18px 14px; }
+.tg-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); min-width: 0; overflow: hidden; }
+.tg-card > header { display: flex; align-items: baseline; gap: 10px; padding: 16px 20px 6px; flex-wrap: wrap; }
+.tg-card > header h2 { font-size: 15px; font-weight: 650; letter-spacing: -.01em; margin: 0; color: var(--text); }
+.tg-sub { font-size: 13px; color: var(--text-3); }
+.tg-sub a { color: var(--text-2); }
+.tg-pad { padding: 4px 20px 16px; }
 .tg-muted { color: var(--text-2); }
 
-.tg-next { padding: 4px 18px 16px; }
-.tg-next .lbl { font-size: 12px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
-.tg-next .big { font-size: 20px; font-weight: 650; letter-spacing: -.01em; margin: 2px 0 4px; overflow-wrap: anywhere; }
-.tg-next .why { color: var(--text-2); }
-.tg-next .why b { color: var(--text); }
-.tg-next.hot .why b { color: var(--hot); }
-.tg-cite { margin-top: 8px; font-size: 13px; color: var(--text-2); border-left: 2px solid var(--border); padding-left: 10px; overflow-wrap: anywhere; }
-.tg-acts { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
-.tg-btn { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 8px; padding: 5px 12px; font-size: 13px; text-decoration: none; display: inline-block; }
-.tg-btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; }
-.tg-btn.ghost { border-color: transparent; color: var(--text-3); }
-.tg-btn.mini { padding: 2px 9px; font-size: 12.5px; }
+/* ---- Teď: hlavní položka ---- */
+#tg-main .tg-card:first-child:has(.tg-next) > header { padding-bottom: 0; }
+.tg-next { position: relative; margin: 10px 14px 14px; padding: 18px 20px 18px 22px; border-radius: 12px; background: var(--surface-2); }
+.tg-next::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 0 4px 4px 0; background: var(--accent); }
+.tg-next.hot { background: var(--hot-2); }
+.tg-next.hot::before { background: var(--hot); }
+.tg-next .lbl { display: inline-flex; gap: 8px; align-items: center; font-size: 12.5px; font-weight: 600; color: var(--accent-ink); }
+.tg-next.hot .lbl { color: var(--hot); }
+.tg-next .big { font-size: 23px; font-weight: 700; letter-spacing: -.025em; line-height: 1.25; margin: 6px 0 6px; overflow-wrap: anywhere; }
+.tg-next .why { color: var(--text-2); font-size: 14.5px; }
+.tg-next .why b { font-weight: 600; color: var(--text); }
+.tg-cite { margin-top: 10px; font-size: 14px; color: var(--text-2); font-style: italic; padding-left: 12px; border-left: 2px solid var(--line-2); overflow-wrap: anywhere; }
+.tg-acts { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
-.tg-waiting { border-top: 1px solid var(--border); padding: 12px 18px 14px; }
-.tg-waiting h3 { margin: 0 0 6px; font-size: 13px; display: flex; gap: 8px; }
+.tg-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); background: var(--surface); color: var(--text); border-radius: 9px; padding: 7px 14px; font-size: 14px; font-weight: 500; text-decoration: none; line-height: 1.2; }
+.tg-btn:hover { border-color: var(--text-3); }
+.tg-btn.pri { background: var(--text); border-color: var(--text); color: var(--surface); }
+.tg-btn.pri:hover { opacity: .88; }
+.tg-btn.ghost { border-color: transparent; background: none; color: var(--text-3); padding-left: 6px; padding-right: 6px; }
+.tg-btn.ghost:hover { color: var(--text-2); }
+.tg-btn.mini { padding: 4px 10px; font-size: 13px; }
+select.tg-btn { appearance: none; padding-right: 28px; background: var(--surface) no-repeat right 9px center / 11px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C988E' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); max-width: 220px; }
+.tg-ib { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid transparent; background: none; color: var(--text-3); font-size: 15px; }
+.tg-ib:hover { background: var(--surface-2); color: var(--text); }
+.tg-ib.ok:hover { background: var(--ok-2); color: var(--ok); }
+
+/* ---- seznamy ---- */
+.tg-waiting { padding: 6px 20px 12px; }
+.tg-waiting h3 { margin: 4px 0 4px; font-size: 13px; font-weight: 600; color: var(--text-2); display: flex; gap: 8px; align-items: baseline; }
 .tg-waiting.cekaji h3 { color: var(--hot); }
 .tg-waiting h3 span { color: var(--text-3); font-weight: 500; }
 
 .tg-rows { list-style: none; margin: 0; padding: 0; }
-.tg-rows li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 0; border-top: 1px solid var(--border); cursor: pointer; }
+.tg-rows li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 1px 12px; padding: 11px 0; border-top: 1px solid var(--line); cursor: pointer; }
 .tg-rows li:first-child { border-top: 0; }
-.tg-rows .r { color: var(--text-3); font-weight: 700; font-variant-numeric: tabular-nums; }
-.tg-rows li.hot .r { color: var(--hot); }
+.tg-rows .r { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--text-2); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 1px; }
+.tg-rows li.hot .r { background: var(--hot-2); color: var(--hot); }
 .tg-rows .t { font-weight: 600; overflow-wrap: anywhere; }
 .tg-rows .t a { text-decoration: none; }
-.tg-rows .t a:hover { text-decoration: underline; }
-.tg-rows .w { grid-column: 2; font-size: 13px; color: var(--text-2); }
-.tg-rows .c { grid-column: 2; display: none; }
+.tg-rows .t a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tg-rows .w { grid-column: 2; font-size: 13.5px; color: var(--text-2); }
+.tg-rows .c { grid-column: 2; display: none; margin-top: 6px; }
 .tg-rows li.open .c { display: block; }
-.tg-rows .a { grid-row: 1 / span 2; grid-column: 3; display: flex; gap: 6px; align-items: start; }
-.tg-tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
-.tg-tag.tier1 { background: var(--hot-bg); color: var(--hot); }
-.tg-tag.nove { background: var(--accent-bg); color: var(--accent); }
-.tg-tag.nahoru { background: var(--ok-bg); color: var(--ok); }
-@media (max-width: 640px) { .tg-rows li { grid-template-columns: 20px minmax(0, 1fr); } .tg-rows .a { grid-row: auto; grid-column: 2; } }
+.tg-rows .a { grid-row: 1 / span 2; grid-column: 3; display: flex; gap: 2px; align-items: start; opacity: .55; transition: opacity .15s; }
+.tg-rows li:hover .a { opacity: 1; }
+.tg-tag { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: var(--surface-2); color: var(--text-2); margin-left: 8px; vertical-align: 2px; white-space: nowrap; letter-spacing: 0; }
+.tg-tag.tier1 { background: var(--hot-2); color: var(--hot); }
+.tg-tag.nove { background: var(--accent-2); color: var(--accent-ink); }
+.tg-tag.nahoru { background: var(--ok-2); color: var(--ok); }
+.tg-pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--surface); color: inherit; }
+@media (max-width: 640px) { .tg-rows li { grid-template-columns: 24px minmax(0, 1fr); } .tg-rows .a { grid-row: auto; grid-column: 2; opacity: 1; } }
 
-details.tg-more { border-top: 1px solid var(--border); }
-details.tg-more summary { list-style: none; cursor: pointer; padding: 10px 18px; font-size: 13px; color: var(--text-2); }
+details.tg-more { border-top: 1px solid var(--line); }
+details.tg-more summary { list-style: none; cursor: pointer; padding: 12px 20px; font-size: 13.5px; color: var(--text-2); font-weight: 500; }
 details.tg-more summary::-webkit-details-marker { display: none; }
-details.tg-more .tg-rows { padding: 0 18px 10px; }
+details.tg-more summary:hover { color: var(--text); }
+details.tg-more .tg-rows { padding: 0 20px 10px; }
 
-.tg-slack { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 14px; }
-.tg-slack button { border: 0; display: inline-flex; gap: 8px; align-items: center; padding: 5px 10px; border-radius: 99px; background: var(--purple-bg); color: var(--purple); font-size: 13px; }
-.tg-slack b { background: var(--purple); color: var(--surface); border-radius: 99px; padding: 0 7px; font-size: 11.5px; }
-.tg-slackpop { padding: 0 18px 12px; }
+.tg-slack { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--line); align-items: center; }
+.tg-slack button { border: 0; display: inline-flex; gap: 8px; align-items: center; padding: 6px 12px; border-radius: 99px; background: var(--purple-2); color: var(--purple); font-size: 13.5px; font-weight: 500; }
+.tg-slack b { background: var(--purple); color: var(--surface); border-radius: 99px; min-width: 20px; padding: 0 6px; font-size: 12px; text-align: center; }
+.tg-slackpop { padding: 0 20px 12px; }
 
-.tg-task { display: flex; gap: 10px; align-items: start; padding: 7px 0; border-top: 1px solid var(--border); }
+/* ---- úkoly ---- */
+.tg-task { display: flex; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--line); }
 .tg-task:first-child { border-top: 0; }
-.tg-task input { margin-top: 4px; accent-color: var(--accent); }
+.tg-task input[type=checkbox] { appearance: none; flex: none; width: 19px; height: 19px; margin: 2px 0 0; border: 1.5px solid var(--line-2); border-radius: 50%; background: var(--surface); cursor: pointer; display: grid; place-items: center; transition: all .12s; }
+.tg-task input[type=checkbox]:hover { border-color: var(--ok); }
+.tg-task input[type=checkbox]:checked { background: var(--ok); border-color: var(--ok); }
+.tg-task input[type=checkbox]:checked::after { content: ""; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
 .tg-task .t { flex: 1; min-width: 0; cursor: pointer; overflow-wrap: anywhere; }
-.tg-task .m { font-size: 12px; color: var(--text-3); }
+.tg-task .t:hover { color: var(--accent-ink); }
+.tg-task .m { font-size: 12.5px; color: var(--text-3); margin-top: 1px; }
 .tg-task .m.late { color: var(--hot); }
 .tg-task .m.who { color: var(--purple); }
-.tg-task.done { opacity: .45; text-decoration: line-through; }
+.tg-task.done { opacity: .45; }
+.tg-task.done .t { text-decoration: line-through; }
 
-.tg-ev { display: grid; grid-template-columns: 48px 1fr; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--border); }
-.tg-ev:first-child { border-top: 0; }
-.tg-ev .h { font-variant-numeric: tabular-nums; color: var(--text-2); font-size: 13px; }
+/* ---- strategický blok ---- */
+.tg-strat { background: linear-gradient(135deg, var(--accent-2), var(--surface) 70%); }
+.tg-strat .nazev { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+
+/* ---- Dnes: časová osa ---- */
+.tg-ev { position: relative; display: grid; grid-template-columns: 46px 1fr; gap: 12px; padding: 8px 0 10px; }
+.tg-ev::before { content: ""; position: absolute; left: 55px; top: 14px; width: 9px; height: 9px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line-2); }
+.tg-ev::after { content: ""; position: absolute; left: 60px; top: 27px; bottom: -8px; width: 1px; background: var(--line); }
+.tg-ev:last-child::after { display: none; }
+.tg-ev > span:last-child { padding-left: 18px; }
+.tg-ev .h { font-variant-numeric: tabular-nums; color: var(--text-3); font-size: 13px; padding-top: 2px; text-align: right; }
 .tg-ev .n { font-weight: 600; overflow-wrap: anywhere; }
-.tg-ev .p { font-size: 12px; color: var(--accent); font-weight: 600; }
-.tg-ev .q { font-size: 12px; color: var(--text-3); }
-.tg-ev.now { background: var(--accent-bg); margin: 0 -18px; padding: 7px 18px; }
+.tg-ev .p { font-size: 12.5px; color: var(--accent-ink); font-weight: 500; }
+.tg-ev .q { font-size: 12.5px; color: var(--text-3); }
+.tg-ev.now::before { border-color: var(--accent); background: var(--accent); box-shadow: 0 0 0 4px var(--accent-2); }
+.tg-ev.now .n { color: var(--accent-ink); }
 
-.tg-prep { font-size: 13.5px; }
-.tg-prep .k { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin-top: 8px; }
+.tg-prep { font-size: 14px; }
+.tg-prep .k { font-size: 12px; font-weight: 600; color: var(--text-3); margin-top: 10px; }
 .tg-prep ul { margin: 4px 0 0; padding-left: 18px; }
 
-.tg-zavreno { max-width: 640px; margin: 30px auto; }
-.tg-zavreno .tg-card { padding: 22px 24px; display: grid; gap: 10px; }
-.tg-zavreno .k-t { font-size: 18px; font-weight: 650; }
+/* ---- zavřeno ---- */
+.tg-zavreno { max-width: 600px; margin: 40px auto; }
+.tg-zavreno .tg-card { padding: 28px 30px; display: grid; gap: 12px; }
+.tg-zavreno .k-t { font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
 
-.tg-detail-hlava { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
-.tg-detail-hlava h2 { margin: 0; font-size: 20px; }
-.tg-zapis { border-top: 1px solid var(--border); padding: 12px 0; }
-.tg-zapis:first-of-type { border-top: 0; padding-top: 0; }
-.tg-zapis-text { white-space: pre-wrap; margin-top: 6px; overflow-wrap: anywhere; }
+/* ---- detail osoby ---- */
+.tg-detail-hlava { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.tg-detail-hlava a { text-decoration: none; }
+.tg-detail-hlava h2 { margin: 0; font-size: 24px; letter-spacing: -.02em; }
+.tg-zapis { border-top: 1px solid var(--line); padding: 14px 0; }
+.tg-zapis:first-of-type { border-top: 0; padding-top: 4px; }
+.tg-zapis-text { white-space: pre-wrap; margin-top: 6px; color: var(--text-2); overflow-wrap: anywhere; }
 .tg-profil { margin: 0; }
-.tg-profil dt { font-size: 12px; color: var(--text-2); margin-top: 8px; }
-.tg-profil dd { margin: 0; }
-.tg-form { display: grid; gap: 8px; }
-.tg-form input, .tg-form textarea, .tg-form select { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); width: 100%; }
-.tg-form label { font-size: 12.5px; color: var(--text-2); display: grid; gap: 4px; }
-.tg-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tg-profil dt { font-size: 12px; font-weight: 600; color: var(--text-3); margin-top: 10px; }
+.tg-profil dd { margin: 2px 0 0; }
+
+/* ---- formuláře, dialog, toast ---- */
+.tg-form { display: grid; gap: 10px; }
+.tg-form input, .tg-form textarea, .tg-form select { padding: 9px 12px; border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--surface); width: 100%; }
+.tg-form input:focus, .tg-form textarea:focus, .tg-form select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-2); }
+.tg-form label { font-size: 12.5px; font-weight: 600; color: var(--text-2); display: grid; gap: 5px; }
+.tg-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tg-err { color: var(--hot); font-size: 13px; }
 
-dialog#tg-dlg { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); width: min(520px, calc(100vw - 32px)); padding: 18px; }
-dialog#tg-dlg::backdrop { background: rgba(0,0,0,.35); }
-dialog#tg-dlg h3 { margin: 0 0 12px; font-size: 16px; }
+dialog#tg-dlg { border: 0; border-radius: 16px; background: var(--surface); color: var(--text); width: min(520px, calc(100vw - 32px)); padding: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog#tg-dlg::backdrop { background: rgba(20,20,18,.4); backdrop-filter: blur(2px); }
+dialog#tg-dlg h3 { margin: 0 0 14px; font-size: 18px; letter-spacing: -.01em; }
 dialog#tg-dlg .tg-acts { justify-content: flex-end; }
 
-.tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--surface); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; display: none; gap: 14px; align-items: center; box-shadow: 0 6px 20px rgba(0,0,0,.25); z-index: 20; max-width: calc(100vw - 32px); }
+.tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--text); color: var(--surface); border-radius: 12px; padding: 11px 16px; font-size: 14px; display: none; gap: 16px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,.25); z-index: 20; max-width: calc(100vw - 32px); }
 .tg-toast.on { display: flex; }
 .tg-toast button { background: none; border: 0; color: var(--accent); font-weight: 600; }
+
+/* ---- dlaždice přehledu ---- */
+.tg-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.tg-tile { display: grid; gap: 2px; padding: 14px 16px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); text-decoration: none; transition: transform .12s, border-color .12s; }
+.tg-tile:hover { transform: translateY(-1px); border-color: var(--line-2); }
+.tg-tile b { font-size: 26px; font-weight: 700; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tg-tile span { font-size: 13px; color: var(--text-2); }
+.tg-tile.hot b { color: var(--hot); }
+.tg-tile.nula b { color: var(--text-3); }
+
+/* ---- tabule ---- */
+.tg-kanban-hlava { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.tg-kanban-hlava h2 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+.tg-kanban { display: grid; grid-template-columns: repeat(6, minmax(190px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: start; }
+@media (max-width: 1100px) { .tg-kanban { grid-template-columns: repeat(6, 250px); } }
+.tg-kanban-sloupec { background: var(--surface-2); border-radius: var(--r); padding: 10px; min-height: 160px; transition: background .12s, box-shadow .12s; }
+.tg-kanban-sloupec.nad { background: var(--accent-2); box-shadow: inset 0 0 0 2px var(--accent); }
+.tg-kanban-sloupec > header { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 6px 10px; font-size: 13.5px; font-weight: 650; }
+.tg-kanban-sloupec[data-sloupec="urgent_important"] > header span:first-child { color: var(--hot); }
+.tg-kanban-sloupec[data-sloupec="ceka"] > header span:first-child { color: var(--purple); }
+.tg-kanban-karty { display: grid; gap: 8px; }
+.tg-kanban-karta { background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 2px 12px; box-shadow: var(--shadow); cursor: grab; }
+.tg-kanban-karta:hover { border-color: var(--line-2); }
+.tg-kanban-karta.tah { opacity: .4; cursor: grabbing; }
+.tg-kanban-karta .tg-task { border-top: 0; padding: 9px 0; }
+.tg-kanban-prazdno { font-size: 13px; color: var(--text-3); text-align: center; padding: 18px 0; border: 1.5px dashed var(--line-2); border-radius: 10px; }
+#tg-main.siroke { max-width: 1600px; }

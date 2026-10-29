@@ -68,8 +68,9 @@ function spust(hash, opts) {
 (async () => {
     let r = await spust('#ted');
     t(r.html.includes('Výpadek &lt;SMS&gt;'), 'Teď: hlavní položka s escapovaným názvem');
+    t(r.html.includes('tg-tiles') && r.html.includes('zákazníků čeká') && r.html.includes('po termínu'), 'Teď: dlaždice přehledu');
     t(r.html.includes('Čekají na tebe'), 'Teď: víc čekajících zákazníků → všichni');
-    t(r.html.includes('Tier 1B'), 'Teď: tier');
+    t(r.html.includes('Tier 1B') && !r.html.includes('Zákazník čeká · Zákazník čeká'), 'Teď: tier, důvod bez opakování');
     t(r.html.includes('Karel'), 'Teď: Slack pruh s Karlem');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
@@ -80,8 +81,9 @@ function spust(hash, opts) {
     t(r.banner.hidden === true, 'připojeno: bez banneru');
 
     r = await spust('#ukoly');
-    t(r.html.includes('Práce — Urgentní a důležité') && r.html.includes('Infra témata'), 'Úkoly: práce po kvadrantech');
-    t(r.html.includes('Osobní') && r.html.includes('Servis auta'), 'Úkoly: osobní');
+    t(r.html.includes('data-sloupec="urgent_important"') && r.html.includes('Infra témata'), 'Úkoly: tabule, práce ve sloupci Hoří');
+    t(r.html.includes('data-sloupec="ceka"') && r.html.includes('Fix filtrů'), 'Úkoly: sloupec Čekám na');
+    t(r.html.includes('data-sloupec="osobni"') && r.html.includes('Servis auta') && r.html.includes('draggable="true"'), 'Úkoly: osobní sloupec, karty přetahovatelné');
 
     r = await spust('#lide');
     t(r.html.includes('René Heryán'), '1on1: seznam lidí');

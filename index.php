@@ -13,7 +13,9 @@ header('Referrer-Policy: no-referrer');
 <meta name="robots" content="noindex, nofollow">
 <title>Tasks</title>
 <script>try { const m = localStorage.getItem('tg_motiv'); if (m) document.documentElement.dataset.theme = m; } catch (e) {}</script>
-<link rel="stylesheet" href="css/novy.css?v=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/novy.css?v=3">
 </head>
 <body>
 <header class="tg-top">
@@ -39,7 +41,7 @@ header('Referrer-Policy: no-referrer');
 <dialog id="tg-dlg"><form method="dialog" id="tg-dlg-form"></form></dialog>
 <div class="tg-toast" id="tg-toast"><span></span><button type="button">Zpět</button></div>
 
-<script src="js/logika.js?v=1"></script>
-<script src="js/novy.js?v=1"></script>
+<script src="js/logika.js?v=2"></script>
+<script src="js/novy.js?v=3"></script>
 </body>
 </html>
