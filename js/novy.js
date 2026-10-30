@@ -5,7 +5,7 @@
 const TG_PR = 'https://operations.daktela.com/padour/priority/api.php';
 const TG_PRIORITY_WEB = 'https://operations.daktela.com/padour/priority/';
 const esc = TL.esc;
-const tg = { klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: false };
+const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: false };
 
 // ---------- úložiště a klíč ----------
 function tgLs(k, v) {
@@ -41,12 +41,13 @@ function tgNacti() {
     const osobni = tgHetzner('tasks&type=personal').then(d => { tg.osobni = d.tasks || []; }).catch(() => { tg.osobni = []; });
     const kal = tgHetzner('calendar').then(d => { tg.udalosti = d.events || []; }).catch(() => { tg.udalosti = []; });
     const prace = !tg.klic ? Promise.resolve(tg.prace = false) : Promise.all([
-        tgPriority('ted'), tgPriority('ukoly'), tgPriority('lide'), tgPriority('strategicky'),
-    ]).then(([t, u, l, s]) => {
+        tgPriority('ted'), tgPriority('ukoly'), tgPriority('lide'), tgPriority('strategicky'), tgPriority('kalendar'),
+    ]).then(([t, u, l, s, k]) => {
         tg.prace = true; tg.chybaPrace = null;
         tg.ted = t; tg.prUkoly = u.ukoly || []; tg.lide = l.lide || []; tg.strat = s;
+        tg.kalPrace = (k && k.events && k.events.length) ? k.events : null;   // pracovní kalendář z operations má přednost
     }).catch(e => { tg.prace = false; tg.chybaPrace = e.message; });
-    return Promise.all([osobni, kal, prace]).then(tgVykresli);
+    return Promise.all([osobni, kal, prace]).then(() => { if (tg.prace && tg.kalPrace) tg.udalosti = tg.kalPrace; }).then(tgVykresli);
 }
 
 // ---------- obecné ----------

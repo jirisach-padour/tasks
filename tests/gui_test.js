@@ -19,6 +19,7 @@ const dnes = new Date(); const iso = d => d.getFullYear() + '-' + String(d.getMo
 const DATA = {
     'api.php?action=tasks&type=personal': { tasks: [{ id: 1, title: 'Servis auta', status: 'open', due_date: null, quadrant: 'other' }] },
     'api.php?action=calendar': { connected: true, events: [
+        { title: 'Jen záloha hetzner', date: iso(dnes), time: '22:00', allDay: false, start: iso(dnes) + 'T22:00:00', end: iso(dnes) + 'T22:15:00', durationH: 0.25, rsvp: null },
         { title: '1:1 — René', date: iso(dnes), time: '23:00', allDay: false, start: iso(dnes) + 'T23:00:00', end: iso(dnes) + 'T23:30:00', durationH: 0.5, rsvp: 'accepted' },
         { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' }] },
     ted: { polozky: [
@@ -31,6 +32,9 @@ const DATA = {
     ukoly: { ukoly: [
         { id: 10, title: 'Infra témata', status: 'open', quadrant: 'urgent_important', due_date: '2026-10-21', ceka_na: null, pripomenout: null },
         { id: 11, title: 'Fix filtrů', status: 'open', quadrant: 'other', due_date: null, ceka_na: 'Ilia', pripomenout: '2026-11-03' }] },
+    kalendar: { connected: true, events: [
+        { title: '1:1 — René', date: iso(dnes), time: '23:00', allDay: false, start: iso(dnes) + 'T23:00:00', end: iso(dnes) + 'T23:30:00', durationH: 0.5, rsvp: 'accepted' },
+        { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' },{ title: 'Z operations: L1 team talk', date: iso(dnes), time: '23:10', allDay: false, start: iso(dnes) + 'T23:10:00', end: iso(dnes) + 'T23:40:00', durationH: 0.5, rsvp: 'accepted' }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
     osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }] },
@@ -79,6 +83,7 @@ function spust(hash, opts) {
     t(r.html.includes('Příprava — René Heryán'), 'Příprava 1:1 podle potvrzené schůzky');
     t(!r.html.includes('<SMS>') && !r.html.includes('undefined'), 'Teď: žádný neescapovaný text ani undefined');
     t(r.banner.hidden === true, 'připojeno: bez banneru');
+    t(r.html.includes('Z operations: L1 team talk') && !r.html.includes('Jen záloha hetzner'), 'Dnes: pracovní kalendář z operations má přednost');
 
     r = await spust('#ukoly');
     t(r.html.includes('data-sloupec="urgent_important"') && r.html.includes('Infra témata'), 'Úkoly: tabule, práce ve sloupci Hoří');
@@ -100,6 +105,7 @@ function spust(hash, opts) {
     r = await spust('#ted', { bezVpn: true });
     t(r.banner.hidden === false && r.banner.innerHTML.includes('VPN'), 'Bez VPN: banner');
     t(r.html.includes('Servis auta') && !r.html.includes('Výpadek'), 'Bez VPN: jen osobní');
+    t(r.html.includes('Jen záloha hetzner'), 'Bez VPN: kalendář ze zálohy na hetzneru');
 
     r = await spust('#ted', { klic: false });
     t(r.banner.innerHTML.includes('Propojit'), 'Bez klíče: návod na propojení');

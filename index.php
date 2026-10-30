@@ -42,6 +42,6 @@ header('Referrer-Policy: no-referrer');
 <div class="tg-toast" id="tg-toast"><span></span><button type="button">Zpět</button></div>
 
 <script src="js/logika.js?v=2"></script>
-<script src="js/novy.js?v=3"></script>
+<script src="js/novy.js?v=4"></script>
 </body>
 </html>
