@@ -148,6 +148,7 @@ function renderHlavni(x, znacky) {
         (x.citace ? '<div class="tg-cite">' + esc(x.citace) + '</div>' : '') +
         '<div class="tg-acts">' + (x.url ? '<a class="tg-btn pri" href="' + esc(x.url) + '" target="_blank" rel="noopener">Otevřít</a>' : '') +
         '<button class="tg-btn" data-akce="hotovo" data-i="' + tgIdx(x) + '">✓ Hotovo</button>' +
+        (x.slack_zdroj ? '<button class="tg-btn" data-akce="slack-ukol" data-i="' + tgIdx(x) + '">+ úkol</button>' : '') +
         '<button class="tg-btn ghost" data-akce="spatne" data-i="' + tgIdx(x) + '">Špatně zařazeno…</button></div></div>';
 }
 
@@ -156,7 +157,7 @@ function renderRadky(pole, od, znacky) {
         '<span class="t">' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titul) + '</a>' : esc(x.titul)) + tgTier(x) + tgZnacka(znacky[x.klic]) + '</span>' +
         '<span class="w">' + [x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : ''), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
         (x.citace ? '<span class="c tg-cite">' + esc(x.citace) + '</span>' : '') +
-        '<span class="a"><button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
+        '<span class="a">' + (x.slack_zdroj ? '<button class="tg-ib" data-akce="slack-ukol" data-i="' + tgIdx(x) + '" title="Udělat z toho úkol">+</button>' : '') + '<button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
 
 function renderSlack() {
@@ -165,7 +166,7 @@ function renderSlack() {
     const s = TL.slackSouhrn(z);
     let h = '<div class="tg-slack"><span class="tg-sub">Slack</span><button data-akce="slack">Bez tvé reakce:' + (s.karel ? ' Karel <b>' + s.karel + '</b>' : '') + (s.kanaly ? ' kanály <b>' + s.kanaly + '</b>' : '') + (s.dm ? ' DM <b>' + s.dm + '</b>' : '') + '</button></div>';
     if (tg.otevrenoSlack) h += '<div class="tg-slackpop"><ul class="tg-rows">' + z.map((m, i) => '<li><span class="r">·</span><span class="t"><a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + esc(m.autor_jmeno) + '</a> <span class="tg-sub">' + esc(m.kanal_nazev) + ' · ' + esc(m.kdy.slice(5, 16)) + '</span></span>' +
-        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a"><button class="tg-ib ok" data-akce="slack-hotovo" data-i="' + i + '" title="Vyřízeno">✓</button></span></li>').join('') + '</ul></div>';
+        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a">' + (m.ma_ukol ? '<span class="tg-tag">úkol</span>' : '<button class="tg-ib" data-akce="slack-ukol-m" data-i="' + i + '" title="Udělat z toho úkol">+</button>') + '<button class="tg-ib ok" data-akce="slack-hotovo" data-i="' + i + '" title="Vyřízeno">✓</button></span></li>').join('') + '</ul></div>';
     return h;
 }
 
@@ -359,6 +360,12 @@ document.addEventListener('click', e => {
     else if (a === 'slack-hotovo') {
         const m = tg.ted.slack[Number(el.dataset.i)], x = { zdroj: 'slack', klic: m.klic, udalost: 'x' };
         tgHotovoPolozka(x, true).then(() => tgToast('Vyřízeno — na Slack se nic nezapsalo.', () => tgHotovoPolozka(x, false)));
+    } else if (a === 'slack-ukol' || a === 'slack-ukol-m') {
+        const m = a === 'slack-ukol' ? tg.zobrazene[Number(el.dataset.i)] : tg.ted.slack[Number(el.dataset.i)];
+        const text = m.text || m.citace || m.titul, zdroj = m.slack_zdroj || ('slack:' + m.klic);
+        const kdo = m.autor_jmeno || 'Karel';
+        tgPriority('ukol_ulozit', { title: (kdo + ' — ' + String(text).replace(/\s+/g, ' ')).slice(0, 120), description: String(text) + '\n' + (m.url || ''), quadrant: 'urgent_important', zdroj })
+            .then(r => { if (r.chyba) tgToast(r.chyba); else { tgToast('Úkol založen — zpráva už v TOP nesvítí.'); tgNacti(); } });
     } else if (a === 'ukol-uprav') tgUpravUkol(el.dataset.typ, el.dataset.id);
     else if (a === 'prace-hotovo') tgUkolHotovo('work', el.dataset.id, true).then(() => tgToast('Hotovo.', () => tgUkolHotovo('work', el.dataset.id, false)));
     else if (a === 'strat-vyber') tgPriority('strategicky', { id: Number(el.dataset.id) }).then(tgNacti);

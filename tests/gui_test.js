@@ -26,8 +26,9 @@ const DATA = {
         { skupina: 2, skupina_nazev: 'Zákazník čeká', klic: '1', zdroj: 'ticket', udalost: 'a', titul: 'Výpadek <SMS>', duvod: 'Zákazník čeká 26 h', citace: '„Kdy?“', tier: 'Tier 1B', zakaznik: 'FITHAM', url: 'https://x/1' },
         { skupina: 3, skupina_nazev: 'Dlužíme', klic: '2', zdroj: 'ticket', udalost: 'b', titul: 'Nacenění', duvod: 'Dlužíme', citace: null, tier: 'Tier 3', zakaznik: 'X', url: 'https://x/2' },
         { skupina: 2, skupina_nazev: 'Zákazník čeká', klic: '3', zdroj: 'ticket', udalost: 'c', titul: 'Routing', duvod: 'čeká', citace: null, tier: 'bez tieru', zakaznik: 'Y', url: 'https://x/3' },
+        { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: 'C:1', zdroj: 'slack', udalost: 'x', titul: 'Karel — Dneska ten Solver?', duvod: 'Karel na Slacku, bez tvé reakce a bez úkolu', citace: null, tier: null, zakaznik: '', url: 'https://s/1', slack_zdroj: 'slack:C:1' },
         { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: '4', zdroj: 'ukol', udalost: '', titul: 'Billing', duvod: 'Termín', citace: null, tier: null, zakaznik: '', url: null }],
-        slack: [{ klic: 'C:1', kanal_nazev: '#support_management', autor_jmeno: 'Karel Vůjtek', text: 'Dneska ten Solver?', kdy: '2026-10-29 12:27:13', poradi: 0, url: 'https://s/1' }],
+        slack: [{ klic: 'C:1', kanal_nazev: '#support_management', autor_jmeno: 'Karel Vůjtek', text: 'Dneska ten Solver?', kdy: '2026-10-29 12:27:13', poradi: 0, url: 'https://s/1', ma_ukol: false }],
         sber: { kdy: '2026-10-29 21:00:00', ticketu: 51, slack: 1 } },
     ukoly: { ukoly: [
         { id: 10, title: 'Infra témata', status: 'open', quadrant: 'urgent_important', due_date: '2026-10-21', ceka_na: null, pripomenout: null },
@@ -76,6 +77,7 @@ function spust(hash, opts) {
     t(r.html.includes('Čekají na tebe'), 'Teď: víc čekajících zákazníků → všichni');
     t(r.html.includes('Tier 1B') && !r.html.includes('Zákazník čeká · Zákazník čeká'), 'Teď: tier, důvod bez opakování');
     t(r.html.includes('Karel'), 'Teď: Slack pruh s Karlem');
+    t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
     t(r.html.includes('Servis auta'), 'Teď: osobní úkol');
