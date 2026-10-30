@@ -136,7 +136,7 @@ function spust(hash, opts) {
     t(r.html.includes('Flákač &lt;b&gt;') && !r.html.includes('Flákač <b>'), 'Tým: jména escapovaná');
     t(r.html.includes('tr class="vyrazne"') && r.html.includes('výrazně pod') && r.html.includes('málo dat'), 'Tým: stavy výrazně pod a málo dat');
     t(r.html.includes('▼ -0,30') && r.html.includes('▲ +0,12'), 'Tým: trend proti minulému období');
-    t(r.html.includes('úvazek 0,8') && r.html.includes('★ 2') && r.html.includes('! 1'), 'Tým: úvazek a ohlasy zákazníků');
+    t(r.html.includes('router 0,8') && r.html.includes('★ 2') && r.html.includes('! 1'), 'Tým: úvazek a ohlasy zákazníků');
     t(r.html.indexOf('René Heryán') < r.html.indexOf('Flákač'), 'Tým: pořadí podle API (nejlepší nahoře)');
     t(r.html.includes('tg-zatez hot') && r.html.includes('(35)'), 'Tým: zátěž nad mediánem zvýrazněná, průměr období');
     t(r.html.includes('tg-nalada n4') && r.html.includes('4/5') && r.html.includes('tg-trend nahoru">▲'), 'Tým: nálada z 1on1 se šipkou');
