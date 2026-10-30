@@ -41,7 +41,7 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 
 ## Po přepnutí 29. 10. — zbývá
 - [ ] Ověřit v prohlížeči: propojení klíčem (Priority → Propojit), CORS/Private Network v Chrome na VPN, odkliknutí, úprava úkolu
-- [ ] Smazat pracovní tasky na hetzneru (164, shodné s pr_tasks 29. 10.) — jen po potvrzení JS
+- [x] Smazat pracovní tasky na hetzneru (164) + tabulky onenon_*, calendar_1on1_mappings — po ověření každého řádku proti Priority, záloha šifrovaně v priority-zaloha (hetzner-tasks-1on1-pred-smazanim-2026-10-30); cron daily_context byl ještě v crontabu apache → odstraněn, tasks-context.md smazán — implementováno 2026-10-30
 - [ ] Tento týden: podíl času zákazníci × nástroje — chybí zdroj dat (navrhnout)
 - [x] (hotovo v Priority 2026-10-30, pracovní kalendář) Kalendář přesunout na operations (OAuth klient z kpi-dashboardu, redirect URI) — dnes jede z hetzneru
 - [ ] Páteční výběr strategického bloku + timebox do kalendáře (zatím ruční výběr v GUI)

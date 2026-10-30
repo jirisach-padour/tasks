@@ -22,7 +22,7 @@
   config.php         (~45 ř)   — requireAuth(), buildQuery(), DB konstanty
   login.php                    — přihlašovací stránka (bez auth guardu)
   oauth-callback.php (~55 ř)   — Google OAuth callback (curl, SameSite=Lax)
-  tasks-context.md             — denní export pro MCP (cron 6:00, apache vlastník)
+  (tasks-context.md a cron daily_context zrušeny 30. 10. 2026; pracovní úkoly a 1on1 jsou jen v Priority na operations)
   TODO.md                      — otevřené úkoly a bugy
   DOKUMENTACE.md               — tento soubor
   api/
