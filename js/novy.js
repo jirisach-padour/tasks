@@ -296,6 +296,19 @@ function tgTrend(x) {
     if (Math.abs(x) < 0.05) return '<span class="tg-muted" title="proti předchozímu období">→</span>';
     return '<span class="tg-trend ' + (x > 0 ? 'nahoru' : 'dolu') + '" title="proti předchozímu stejně dlouhému období">' + (x > 0 ? '▲ +' : '▼ ') + tgCislo(x, 2) + '</span>';
 }
+/** Zátěž teď proti mediánu týmu: o třetinu nad = přetížený, pod polovinou = volno (fakt, ne hodnocení). */
+function tgZatez(x, m) {
+    if (x.zatez === null) return '—';
+    const p = m.zatez ? x.zatez / m.zatez : 1;
+    return '<span class="tg-zatez ' + (p >= 1.33 ? 'hot' : p <= 0.5 ? 'nizka' : '') + '" title="' + (x.tickety ?? '?') + ' otevřených ticketů, medián týmu ' + tgCislo(m.zatez || 0, 0) + '">' + x.zatez + '</span>' +
+        (x.zatez_prum !== null ? ' <span class="tg-sub">(' + x.zatez_prum + ')</span>' : '');
+}
+/** Nálada z 1on1: hodnota 1–5, šipka proti předchozí, stáří. */
+function tgNalada(n) {
+    if (!n) return '<span class="tg-muted" title="v 1on1 zatím nehodnoceno">—</span>';
+    const sip = n.predtim === null || n.predtim === n.hodnota ? '' : n.hodnota > n.predtim ? ' <span class="tg-trend nahoru">▲</span>' : ' <span class="tg-trend dolu">▼</span>';
+    return '<span class="tg-nalada n' + n.hodnota + '" title="1on1 ' + esc(TL.datum(n.kdy)) + (tgDny(n.kdy) > 45 ? ' — staré' : '') + '">' + n.hodnota + '/5</span>' + sip + (tgDny(n.kdy) > 45 ? ' <span class="tg-sub">staré</span>' : '');
+}
 function renderTymPohled() {
     if (!tg.prace) return '<p class="tg-muted">Srovnání týmu je na operations — připoj se na VPN.</p>';
     const d = tg.tym[tg.tymDni];
@@ -319,7 +332,7 @@ function renderTymPohled() {
     };
     return '<section class="tg-card"><header><h2>Tým CZ-L1</h2><span class="tg-sub">' + TL.datum(d.od) + ' – ' + TL.datum(d.do) + '</span>' + prepinac + '</header><div class="tg-pad tg-tym-wrap">' +
         '<table class="tg-tym"><thead><tr><th>Člověk</th><th>Index proti týmu</th><th></th><th class="c" title="tickety, na kterých pracoval">Tickety</th><th class="c" title="e-maily, hovory, chaty, SMS, WhatsApp">Komunikace</th><th class="c">Komentáře</th><th class="c" title="Project Time, jedna aktivita nejvýš 4 h">Vykázáno h</th><th class="c" title="dní s aspoň jednou aktivitou">Dní</th><th class="c">Trend</th><th class="c" title="zátěž teď podle Ticket Routeru (otevřené tickety); v závorce průměr období">Zátěž</th><th class="c" title="přidělené tickety na den s prací a úvazek">Přiděleno</th><th class="c" title="pracovní dny bez jediné aktivity a bez evidované absence">Bez práce</th><th class="c" title="nálada z posledního 1on1 (1–5)">Nálada</th><th class="c">Ohlasy</th></tr></thead><tbody>' +
-        d.lide.map(radek).join('') + '<tr class="median"><td class="jm">Medián týmu</td><td class="idx"><span class="n">1,00</span></td><td></td><td class="c">' + tgCislo(m.tk, 1) + '</td><td class="c">' + tgCislo(m.kom, 1) + '</td><td class="c">' + tgCislo(m.koment, 1) + '</td><td class="c">' + tgCislo(m.cas, 1) + '</td><td colspan="3"></td></tr></tbody></table>' +
+        d.lide.map(radek).join('') + '<tr class="median"><td class="jm">Medián týmu</td><td class="idx"><span class="n">1,00</span></td><td></td><td class="c">' + tgCislo(m.tk, 1) + '</td><td class="c">' + tgCislo(m.kom, 1) + '</td><td class="c">' + tgCislo(m.koment, 1) + '</td><td class="c">' + tgCislo(m.cas, 1) + '</td><td colspan="2"></td><td class="c">' + (m.zatez ? tgCislo(m.zatez, 0) : '—') + '</td><td class="c">' + (m.prideleno ? tgCislo(m.prideleno, 1) : '—') + '</td><td colspan="3"></td></tr></tbody></table>' +
         '<p class="tg-pozn">Hodnoty na den s prací a na úvazek. Index = průměr poměrů tickety, komunikace a vykázaný čas k mediánu týmu; v normě od 0,90, pod týmem 0,70–0,90. Den bez aktivity se nepočítá (dovolená ani nemoc v datech nejsou) — počet dní je ve sloupci Dní. Zdroj: aktivity v Daktele, jen čtení.</p></div></section>';
 }
 
@@ -364,6 +377,7 @@ function tgNactiOsobu(jmeno) {
         main.innerHTML = '<div class="tg-detail-hlava"><a href="#lide" class="tg-muted">← 1on1</a><h2>' + esc(o.jmeno) + '</h2>' + (o.popis ? '<span class="tg-muted">' + esc(o.popis) + '</span>' : '') + '</div>' +
             '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) +
             '<section class="tg-card"><header><h2>Nový zápis</h2></header><div class="tg-pad"><form class="tg-form" id="tg-zapis"><input type="date" name="d" value="' + tgDnesIso() + '" required>' +
+            '<label class="tg-nalada-vyber">Nálada <select name="m"><option value="">neuvedeno</option><option value="5">5 — výborná</option><option value="4">4 — dobrá</option><option value="3">3 — neutrální</option><option value="2">2 — horší</option><option value="1">1 — špatná</option></select></label>' +
             '<textarea name="n" rows="4" placeholder="Co jste probírali…"></textarea><textarea name="u" rows="2" placeholder="Úkoly — jeden na řádek (jen u aktuální schůzky)"></textarea>' +
             '<div><button class="tg-btn pri" type="submit">Uložit zápis</button> <span class="tg-err" id="tg-zapis-chyba"></span></div></form></div></section>' +
             '<section class="tg-card"><header><h2>Historie (' + o.zapisy.length + ')</h2></header><div class="tg-pad">' + (o.zapisy.map(z =>
@@ -377,7 +391,7 @@ function tgNactiOsobu(jmeno) {
         document.getElementById('tg-zapis').addEventListener('submit', e => {
             e.preventDefault();
             const f = e.target;
-            tgPriority('zapis_pridat', { person: o.jmeno, meeting_date: f.d.value, notes: f.n.value, action_items: f.u.value.split('\n') })
+            tgPriority('zapis_pridat', { person: o.jmeno, meeting_date: f.d.value, notes: f.n.value, action_items: f.u.value.split('\n'), mood: f.m.value })
                 .then(d => { if (d.chyba) document.getElementById('tg-zapis-chyba').textContent = d.chyba; else { tgToast('Zápis uložen.'); tgNactiOsobu(o.jmeno); } });
         });
     }).catch(() => { document.getElementById('tg-main').innerHTML = '<p class="tg-muted">1on1 je na operations — připoj se na VPN.</p>'; });

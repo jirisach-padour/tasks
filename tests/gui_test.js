@@ -38,10 +38,10 @@ const DATA = {
     kalendar: { connected: true, events: [
         { title: '1:1 — René', date: iso(dnes), time: '23:00', allDay: false, start: iso(dnes) + 'T23:00:00', end: iso(dnes) + 'T23:30:00', durationH: 0.5, rsvp: 'accepted' },
         { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' },{ title: 'Z operations: L1 team talk', date: iso(dnes), time: '23:10', allDay: false, start: iso(dnes) + 'T23:10:00', end: iso(dnes) + 'T23:40:00', durationH: 0.5, rsvp: 'accepted' }] },
-    tym: { od: '2026-10-01', do: '2026-10-29', dni: 30, median: { tk: 9, kom: 7, koment: 4, cas: 3 }, lide: [
-        { login: 'rene_heryan', jmeno: 'René Heryán', osoba: 'René Heryán', kapacita: 0.8, dnu: 20, tk: 10, kom: 8, koment: 4, cas: 3, index: 1.1, stav: 'ok', trend: 0.12, ohlasy: { pochvala: 2 } },
-        { login: 'x_y', jmeno: 'Flákač <b>', osoba: null, kapacita: 1, dnu: 18, tk: 4, kom: 3, koment: 1, cas: 1, index: 0.45, stav: 'vyrazne', trend: -0.3, ohlasy: { stiznost: 1 } },
-        { login: 'nov', jmeno: 'Nováček', osoba: null, kapacita: 1, dnu: 2, tk: 1, kom: 1, koment: 0, cas: 0, index: null, stav: 'malo_dat', trend: null, ohlasy: {} }] },
+    tym: { od: '2026-10-01', do: '2026-10-29', dni: 30, median: { tk: 9, kom: 7, koment: 4, cas: 3, zatez: 25, prideleno: 2 }, lide: [
+        { login: 'rene_heryan', jmeno: 'René Heryán', osoba: 'René Heryán', kapacita: 0.8, dnu: 20, tk: 10, kom: 8, koment: 4, cas: 3, index: 1.1, stav: 'ok', trend: 0.12, ohlasy: { pochvala: 2 }, zatez: 40, tickety: 21, zatez_prum: 35, prideleno: 2.5, bez_prace: 0, nalada: { hodnota: 4, kdy: '2026-10-20', predtim: 2 } },
+        { login: 'x_y', jmeno: 'Flákač <b>', osoba: null, kapacita: 1, dnu: 18, tk: 4, kom: 3, koment: 1, cas: 1, index: 0.45, stav: 'vyrazne', trend: -0.3, ohlasy: { stiznost: 1 }, zatez: 10, tickety: 6, zatez_prum: null, prideleno: 1, bez_prace: 4, nalada: null },
+        { login: 'nov', jmeno: 'Nováček', osoba: null, kapacita: 1, dnu: 2, tk: 1, kom: 1, koment: 0, cas: 0, index: null, stav: 'malo_dat', trend: null, ohlasy: {}, zatez: null, tickety: null, zatez_prum: null, prideleno: null, bez_prace: null, nalada: null }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
     osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
@@ -138,7 +138,11 @@ function spust(hash, opts) {
     t(r.html.includes('▼ -0,30') && r.html.includes('▲ +0,12'), 'Tým: trend proti minulému období');
     t(r.html.includes('úvazek 0,8') && r.html.includes('★ 2') && r.html.includes('! 1'), 'Tým: úvazek a ohlasy zákazníků');
     t(r.html.indexOf('René Heryán') < r.html.indexOf('Flákač'), 'Tým: pořadí podle API (nejlepší nahoře)');
+    t(r.html.includes('tg-zatez hot') && r.html.includes('(35)'), 'Tým: zátěž nad mediánem zvýrazněná, průměr období');
+    t(r.html.includes('tg-nalada n4') && r.html.includes('4/5') && r.html.includes('tg-trend nahoru">▲'), 'Tým: nálada z 1on1 se šipkou');
+    t(r.html.includes('tg-tag hot">4<'), 'Tým: 4 pracovní dny bez práce zvýrazněné');
     r = await spust('#osoba=Ren%C3%A9%20Hery%C3%A1n');
+    t(r.html.includes('name="m"') && r.html.includes('5 — výborná'), 'Detail: zápis 1on1 s náladou');
     t(r.html.includes('Dlouhodobě') && r.html.includes('tg-median') && r.html.includes('v vyrazne'), 'Detail: dlouhodobý graf po měsících s mediánem');
     t(r.html.indexOf('Dlouhodobě') < r.html.indexOf('2026-09'), 'Detail: tabulka měsíců od nejnovějšího');
     process.exit(chyb ? 1 : 0);
