@@ -2,7 +2,8 @@
 $body   = getJsonBody();
 $method = $_SERVER['REQUEST_METHOD'];
 
-// ── onenon_mappings ────────────────────────────────────────────────────────
+// ── onenon_mappings ──── 30. 10. 2026: přesunuto do Priority, tabulka smazána
+if (($_GET['sub'] ?? '') === 'onenon_mappings') { http_response_code(410); echo json_encode(['error' => '1on1 je v Priority']); exit; }
 if ($method === "GET" && ($_GET["sub"] ?? "") === "onenon_mappings") {
     $rows = DB::q("SELECT event_keyword, person FROM calendar_1on1_mappings WHERE active=1 ORDER BY event_keyword")->fetchAll();
     echo json_encode(["mappings" => $rows]);

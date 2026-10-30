@@ -7,5 +7,6 @@ for f in js/*.js; do node --check "$f" 2>/dev/null || { echo "CHYBA syntaxe: $f"
 node tests/logika_test.js || chyb=1
 node tests/gui_test.js || chyb=1
 php tests/kalendar_test.php || chyb=1
+php tests/uklid_test.php || chyb=1
 bash tests/web_test.sh || chyb=1
 [ $chyb = 0 ] && echo "VŠE OK" || { echo "SELHALO"; exit 1; }

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/../config.php';
+// 30. 10. 2026: 1on1 je jen v Priority (operations), tabulky tady smazány (záloha šifrovaně v priority-zaloha)
+http_response_code(410); echo json_encode(['error' => '1on1 je v Priority']); exit;
 
 $method = $_SERVER['REQUEST_METHOD'];
 $body   = getJsonBody();

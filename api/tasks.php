@@ -104,7 +104,7 @@ switch ($method) {
             'ai_context'      => $body['ai_context'] ?? '',
             'quadrant'        => in_array($body['quadrant'] ?? '', ['urgent_important','important','urgent','other'])
                                   ? $body['quadrant'] : 'other',
-            'type'            => ($body['type'] ?? '') === 'personal' ? 'personal' : 'work',
+            'type'            => 'personal',   // 30. 10. 2026: pracovní úkoly jen v Priority
             'due_date'        => $body['due_date'] ?: null,
             'daktela_tickets'  => json_encode($body['daktela_tickets'] ?? []),
             'sort_order'       => (int)($body['sort_order'] ?? 0),
