@@ -273,6 +273,23 @@ function renderLidePohled() {
             '<span class="w">' + (l.posledni ? 'poslední ' + TL.datum(l.posledni) + ' · ' + l.zapisu + ' zápisů' + (tgDny(l.posledni) > 45 ? ' · dlouho bez 1on1' : '') : 'bez schůzky') + '</span><span class="a"></span></li>').join('') + '</ul></div></section>';
 }
 
+const TG_DRUH = { stiznost: ['Stížnost', 'hot'], prusvih: ['Průšvih', 'hot'], pochvala: ['Pochvala', 'ok'] };
+/** Deník člověka: sloupcový graf aktivity a uzavřených ticketů za 14 dní + události (stížnost/průšvih/pochvala). */
+function renderDenik(d) {
+    if (!d) return '';
+    const max = Math.max(1, ...d.dny.map(x => Number(x.aktivit)));
+    const pocty = { stiznost: 0, prusvih: 0, pochvala: 0 };
+    d.udalosti.forEach(u => { pocty[u.druh] = (pocty[u.druh] || 0) + 1; });
+    const graf = d.dny.length ? '<div class="tg-graf">' + d.dny.map(x => '<div class="tg-graf-sl" title="' + esc(TL.datum(x.den) + ': ' + x.aktivit + ' aktivit, ' + x.uzavreno + ' uzavřeno, ' + x.emaily_in + ' e-mailů od zákazníků') + '">' +
+        '<span class="v" style="height:' + Math.round(Number(x.aktivit) / max * 100) + '%"></span><span class="d">' + Number(String(x.den).slice(8, 10)) + '</span></div>').join('') + '</div>' : '<span class="tg-muted">Zatím bez dat.</span>';
+    const sum = d.dny.reduce((s, x) => ({ a: s.a + Number(x.aktivit), u: s.u + Number(x.uzavreno), e: s.e + Number(x.emaily_in) }), { a: 0, u: 0, e: 0 });
+    return '<section class="tg-card"><header><h2>Aktivita</h2><span class="tg-sub">' + d.dny.length + ' dní · ' + sum.a + ' aktivit · ' + sum.u + ' uzavřeno · ' + sum.e + ' e-mailů od zákazníků</span></header><div class="tg-pad">' + graf +
+        '<div class="tg-druhy">' + Object.keys(TG_DRUH).map(k => '<span class="tg-tag ' + (pocty[k] ? TG_DRUH[k][1] : '') + '">' + TG_DRUH[k][0] + ' ' + pocty[k] + '</span>').join('') + '</div>' +
+        (d.udalosti.length ? '<ul class="tg-rows">' + d.udalosti.map(u => '<li data-rozbal="1"><span class="r">' + (u.druh === 'pochvala' ? '★' : '!') + '</span><span class="t"><a href="https://daktela.daktela.com/tickets/update/' + Number(u.ticket) + '" target="_blank" rel="noopener">' + esc(TG_DRUH[u.druh][0]) + ' · #' + Number(u.ticket) + '</a> <span class="tg-sub">' + esc(u.titul || '') + '</span></span>' +
+            '<span class="w">' + esc(String(u.kdy).slice(0, 16)) + ' · jistota ' + Math.round(Number(u.skore) * 100) + ' %</span><span class="c tg-cite">' + esc(u.citace || '') + '</span><span class="a"></span></li>').join('') + '</ul>' : '<div class="tg-muted" style="font-size:13.5px;margin-top:8px">Žádná stížnost, průšvih ani pochvala.</div>') +
+        '</div></section>';
+}
+
 function tgNactiOsobu(jmeno) {
     tgPriority('osoba&jmeno=' + encodeURIComponent(jmeno)).then(o => {
         const main = document.getElementById('tg-main');
@@ -289,6 +306,7 @@ function tgNactiOsobu(jmeno) {
                 '<article class="tg-zapis"><b>' + TL.datum(z.meeting_date) + ' ' + z.meeting_date.slice(0, 4) + '</b>' + (z.tags.length ? ' <span class="tg-sub">' + z.tags.map(esc).join(', ') + '</span>' : '') +
                 (z.notes ? '<div class="tg-zapis-text">' + esc(z.notes) + '</div>' : '') + (z.action_items.length ? '<div style="margin-top:6px">' + z.action_items.map((a, i) => ukol(z, a, i)).join('') + '</div>' : '') + '</article>').join('') || '<span class="tg-muted">Bez zápisů.</span>') + '</div></section>' +
             '</div><aside class="tg-col"><section class="tg-card"><header><h2>Otevřené úkoly (' + otevrene.length + ')</h2></header><div class="tg-pad">' + (otevrene.map(x => ukol(x.z, x.a, x.i)).join('') || '<span class="tg-muted">Nic otevřeného.</span>') + '</div></section>' +
+            renderDenik(o.denik) +
             (o.kontext && o.kontext.length ? '<section class="tg-card"><header><h2>Z portfolia</h2><span class="tg-sub">review, tým, rozvoj</span></header><div class="tg-pad">' +
                 o.kontext.map((k, i) => '<details class="tg-kontext"' + (i === 0 ? '' : '') + '><summary>' + esc(k.zdroj) + '</summary><div class="tg-zapis-text">' + esc(k.text) + '</div></details>').join('') + '</div></section>' : '') +
             '<section class="tg-card"><header><h2>Profil</h2></header><div class="tg-pad">' + (o.profil.length ? '<dl class="tg-profil">' + o.profil.map(p => '<dt>' + esc(p.popis) + '</dt><dd>' + esc(p.text) + '</dd>').join('') + '</dl>' : '<span class="tg-muted">Prázdný.</span>') + '</div></section></aside></div>';

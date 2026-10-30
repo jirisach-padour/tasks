@@ -240,3 +240,11 @@ dialog#tg-dlg .tg-acts { justify-content: flex-end; }
 .tg-kontext:first-child { border-top: 0; }
 .tg-kontext summary { cursor: pointer; font-weight: 600; font-size: 14px; }
 .tg-kontext .tg-zapis-text { font-size: 13.5px; max-height: 420px; overflow: auto; }
+.tg-graf { display: flex; gap: 4px; align-items: flex-end; height: 90px; margin: 6px 0 4px; }
+.tg-graf-sl { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; min-width: 0; }
+.tg-graf-sl .v { width: 100%; max-width: 26px; min-height: 2px; background: var(--accent); border-radius: 5px 5px 2px 2px; opacity: .85; }
+.tg-graf-sl .d { font-size: 11px; color: var(--text-3); }
+.tg-druhy { display: flex; gap: 6px; margin: 10px 0 4px; flex-wrap: wrap; }
+.tg-druhy .tg-tag { margin-left: 0; }
+.tg-tag.hot { background: var(--hot-2); color: var(--hot); }
+.tg-tag.ok { background: var(--ok-2); color: var(--ok); }

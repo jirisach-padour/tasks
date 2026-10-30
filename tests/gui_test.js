@@ -39,6 +39,8 @@ const DATA = {
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
     osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
+        denik: { login: 'rene_heryan', dny: [{ den: '2026-10-29', aktivit: 40, uzavreno: 6, emaily_in: 9, druhy: { EMAIL: 20 } }, { den: '2026-10-30', aktivit: 12, uzavreno: 1, emaily_in: 3, druhy: {} }],
+            udalosti: [{ ticket: 961679, titul: 'Směrování', kdy: '2026-10-30 09:10:00', druh: 'pochvala', skore: '0.92', citace: 'Moc děkujeme <3' }, { ticket: 961640, titul: 'Event', kdy: '2026-10-29 14:00:00', druh: 'stiznost', skore: '0.81', citace: 'Pořád to nefunguje' }] },
         kontext: [{ zdroj: 'Review 2026 H1', text: '# Heryán René\nSilné stránky <i>' }, { zdroj: 'Lidé a rozvoj', text: 'René Heryán — rene_heryan — Rendo' }] },
 };
 
@@ -101,6 +103,7 @@ function spust(hash, opts) {
     r.html = r.ctx.document.getElementById('tg-main').innerHTML;
     t(r.html.includes('Historie (1)') && r.html.includes('text &lt;b&gt;') && r.html.includes('Silné stránky'), 'Detail osoby: historie, escape, profil');
     t(r.html.includes('Z portfolia') && r.html.includes('Review 2026 H1') && r.html.includes('Silné stránky &lt;i&gt;'), 'Detail osoby: kontext z portfolia, escapovaný');
+    t(r.html.includes('Aktivita') && r.html.includes('tg-graf') && r.html.includes('Pochvala') && r.html.includes('Moc děkujeme &lt;3') && r.html.includes('961640'), 'Detail osoby: deník — graf, události s citací a ticketem');
 
     r = await spust('#ted', { zavreno: true });
     const h = new Date().getHours(), den = new Date().getDay();
