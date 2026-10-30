@@ -3,7 +3,7 @@
 ## Bugs — k opravě
 
 - [x] **Action items v 1on1 se otevírají špatně** — opraveno 2026-05-23 (popover right:0 → left:0, otevírá se doprava)
-- [ ] **Responsivní design — mobil** — vyladit zobrazení na mobilních zařízeních BEZ dopadu na PC; konkrétně: FAB tlačítko pro přidání rychlého tasku se překrývá se spodním fixním pilem; projít celý layout na <600px
+- [ ] Mobil: projít nové GUI na telefonu (staré FAB už není)
 
 - [x] **Připravit schůzku v 1on1** — opraveno 2026-05-23 (portal do #modals, modal-box CSS, signal chips, profil sekce, z-index)
 - [x] **Checklist a Daktela tickety v matici** — opraveno 2026-05-23
@@ -17,28 +17,27 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 
 - [x] F0: Anthropic API pryč (endpointy 410, klíč smazán, záloha /etc/tasks/secrets.php.bak-20261029) — 2026-10-29; Daktela proxy zůstává jen pro stary.php
 - [x] RSVP v calendar.php (lib/Kalendar.php) + příprava jen u potvrzených — 2026-10-29
-- [ ] F4d Slack zpráva od Karla/vedení s úkolem bez tasku → upozornit (C.17) — v priority na operations
-- [ ] Kompatibilita: tabulky tasks a onenon_* čtou Team Hub MCP (~/team-hub-mcp/server.py) a hourly-radar; daktela_tickets = JSON ["name"] — sloupce jen přidávat
-- [ ] Export API: GET otevřených tasků s tokenem, povolená jen IP operations
+- [ ] Kompatibilita: dokud běží hourly-radar, nechat tabulku tasks na hetzneru beze změny sloupců (Team Hub už čte Priority)
+- [~] Export API — nahrazeno: GUI bere pracovní data z Priority prohlížečem (klíč), hetzner nic firemního nedrží
 - [x] Nové GUI (index.php + js/novy.js + js/logika.js, stará verze stary.php) + testy na serveru (logika, GUI v node, kalendář, web) — 2026-10-29
-- [ ] GUI návrh v2 (UX revize 29. 10.): režim „Teď“ = 1 další věc + 2 v pořadí, TOP 10 sbalený; stabilní pořadí (posun jen při události, štítky nové/posunuto, nepřeskládat pod rukama)
-- [ ] Focus time z kalendáře (po dopoledne, pá odpoledne): skrýt vše kromě SLA v hodinách, ukázat strategický blok
+- [x] GUI návrh v2 (Teď, všichni čekající, stabilní pořadí, štítky nové/posunuto) — 2026-10-29
+- [x] Focus time (po dopoledne, pá odpoledne, blok v kalendáři) — 2026-10-29
 - [ ] Ranní výběr 3 závazků (2 min) + páteční výběr 1–2 strategických věcí do pondělního focus time (timebox do kalendáře)
-- [ ] Čekám na: datum připomenutí, sám se vrátí do TOP 10 v den připomenutí
-- [ ] Tlačítko „špatně zařazeno“ + důvod → kandidát na pravidlo (Claude ho na vyžádání převede do prioritizace_pravidla.md)
-- [ ] Příprava 1on1: nahoře „konkrétní feedback, který dlužíš“
-- [ ] Po pracovní době a o víkendu: práce zavřená („zítra začni: …“), jen osobní; tlačítko „přesto ukázat“ (JS nechce být rušen mimo pracovní dobu, historie vyčerpání 2025)
-- [ ] Tento týden: podíl času zákazníci a lidé × vlastní nástroje + počet rozpracovaných vlastních projektů (limit 3; 360 feedback: hodně paralelních projektů)
-- [ ] Červená jen pro SLA v hodinách a zákazníka, který čeká; ostatní neutrálně (bez alarmové únavy)
+- [x] Čekám na s připomenutím, vrací se do TOP 10 — 2026-10-29
+- [x] Špatně zařazeno → pr_feedback (kandidáti na pravidla) — 2026-10-29
+- [x] Příprava 1on1 s „feedback, který dlužíš“ u potvrzené schůzky — 2026-10-29
+- [x] Po pracovní době práce zavřená, „přesto ukázat“ — 2026-10-29
+- [x] Červená jen pro čekající zákazníky a SLA — 2026-10-29
 
-- [ ] F0 Úklid: tests/run.sh, oprava cronu daily_context (tasks-context.md stojí od 17. 5.), heslo DB ven ze skillu prioritizuj
-- [ ] F1 Datový model: položka se zdrojem (ručně/Fellow/Daktela/CHS/1on1) + odkaz, koš HOŘÍ/DNES/TÝDEN/DELEGOVAT/ČEKÁM NA, osoba, termín slibu
-- [ ] F2 Sběr bez AI: cron na hetzneru volá Daktela API (čtecí token) a Fellow Developer API; operations pushuje CHS/response monitor/czdelivery přes import endpoint s tokenem
+- [x] F0: tests/run.sh, Anthropic pryč; cron daily_context zrušen (nepotřebný) — 2026-10-29
+- [ ] Heslo DB ven ze skillu prioritizuj (skill zastaralý → smazat nebo přepsat na Priority API)
+- [x] F1 datový model v Priority (pr_tasks, čekám na, pr_tickety, pr_slack, pr_hotovo) — 2026-10-29
+- [x] F2 sběr bez Claude: cron na operations (Daktela + Jev + Slack) — 2026-10-29
 - [ ] F3 Fellow přes Developer API (cron, webhooky): action items a poznámky; dokončení položky z appky zpět do Fellow
-- [ ] F4 TOP 10 napříč zdroji podle portfolio projects/prioritizace_pravidla.md: Jev čte poslední komentář + parent (kdo drží krok, kategorie, slib), PHP řadí podle žebříčku, tier z accountu; u každé položky důvod + citace zdroje; Claude jen na vyžádání
-- [ ] F4b Slack: zprávy bez reakce v DM + 4 management kanálech (Karel nahoře) — jen čtení, user token
-- [ ] F5 UI: ranní pohled = 3–5 závazků + timeline + „čekám na“; matice jen jako pomocný pohled
-- [ ] F6 Vyhodit Anthropic API (ai, what_now, prep_topics, chat) — pravidlo z 19. 10.
+- [x] F4 TOP 10 podle pravidel (lib/poradi.php) — 2026-10-29
+- [x] F4b Slack bez reakce (kanály, DM, Karel) — 2026-10-29
+- [x] F5 nové GUI (Teď, dlaždice, tabule s přetahováním, Dnes, 1on1) — 2026-10-29
+- [x] F6 Anthropic API pryč, klíč smazán — 2026-10-29
 
 ## Po přepnutí 29. 10. — zbývá
 - [ ] Ověřit v prohlížeči: propojení klíčem (Priority → Propojit), CORS/Private Network v Chrome na VPN, odkliknutí, úprava úkolu
@@ -55,7 +54,7 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] **Mood trend chart v 1on1** — mini bar chart nálady (posledních 4 záznamy) v person detailu pod open items
 - [ ] Push notifikace / reminder pro overdue tasky
 - [ ] Export tasků (CSV, JSON)
-- [ ] Tmavý režim
+- [x] Tmavý režim — 2026-10-29
 - [ ] Export do Google Docs — po dokončení dne/týdne generovat přehled
 
 ## Dokončeno 2026-05-23
