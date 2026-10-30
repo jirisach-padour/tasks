@@ -5,9 +5,10 @@
 const TG_PR = 'https://operations.daktela.com/padour/priority/api.php';
 const TG_PRIORITY_WEB = 'https://operations.daktela.com/padour/priority/';
 const esc = TL.esc;
-const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: true };   // JS 30. 10.: co je bez reakce, musí být vidět
+const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: true, tym: {}, tymDni: Number(tgLsBezpecne('tg_tym_dni')) || 30 };   // JS 30. 10.: co je bez reakce, musí být vidět
 
 // ---------- úložiště a klíč ----------
+function tgLsBezpecne(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
 function tgLs(k, v) {
     try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; }
 }
@@ -63,7 +64,7 @@ function tgToast(text, zpet) {
 }
 function tgDny(iso) { return iso ? Math.floor((Date.now() - new Date(String(iso).replace(' ', 'T')).getTime()) / 86400000) : 0; }
 function tgDnesIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-function tgPohled() { const h = location.hash.replace('#', ''); return h.startsWith('osoba=') ? 'osoba' : (['ted', 'ukoly', 'lide'].includes(h) ? h : 'ted'); }
+function tgPohled() { const h = location.hash.replace('#', ''); return h.startsWith('osoba=') ? 'osoba' : (['ted', 'ukoly', 'lide', 'tym'].includes(h) ? h : 'ted'); }
 
 function tgStav() {
     const c = document.getElementById('tg-conn');
@@ -84,8 +85,9 @@ function tgVykresli() {
     const v = tgPohled();
     document.querySelectorAll('.tg-nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v || (v === 'osoba' && a.dataset.v === 'lide')));
     const main = document.getElementById('tg-main');
-    main.classList.toggle('siroke', v === 'ukoly');
+    main.classList.toggle('siroke', v === 'ukoly' || v === 'tym');
     if (v === 'ukoly') main.innerHTML = renderUkolyPohled();
+    else if (v === 'tym') main.innerHTML = renderTymPohled();
     else if (v === 'lide') main.innerHTML = renderLidePohled();
     else if (v === 'osoba') { main.innerHTML = '<p class="tg-muted">Načítám…</p>'; tgNactiOsobu(decodeURIComponent(location.hash.slice(7))); return; }
     else main.innerHTML = renderTedPohled();
@@ -281,6 +283,57 @@ function renderLidePohled() {
             '<span class="w">' + (l.posledni ? 'poslední ' + TL.datum(l.posledni) + ' · ' + l.zapisu + ' zápisů' + (tgDny(l.posledni) > 45 ? ' · dlouho bez 1on1' : '') : 'bez schůzky') + '</span><span class="a"></span></li>').join('') + '</ul></div></section>';
 }
 
+// ---------- Tým: srovnání z kompletní historie (deník v2, JS 30. 10.) ----------
+const TG_TYM_STAV = { ok: ['v normě', 'ok'], pod: ['pod týmem', 'warn'], vyrazne: ['výrazně pod', 'hot'], malo_dat: ['málo dat', ''] };
+const TG_TYM_OBDOBI = [[30, '30 dní'], [90, '3 měsíce'], [180, 'půl roku'], [365, 'rok']];
+function tgNactiTym(dni) {
+    tg.tym[dni] = 'nacitam';
+    tgPriority('tym&dni=' + dni).then(d => { tg.tym[dni] = d.chyba ? null : d; if (tgPohled() === 'tym') tgVykresli(); }).catch(() => { tg.tym[dni] = null; });
+}
+function tgCislo(x, des) { return Number(x).toLocaleString('cs-CZ', { minimumFractionDigits: des, maximumFractionDigits: des }); }
+function tgTrend(x) {
+    if (x === null || x === undefined) return '<span class="tg-muted">—</span>';
+    if (Math.abs(x) < 0.05) return '<span class="tg-muted" title="proti předchozímu období">→</span>';
+    return '<span class="tg-trend ' + (x > 0 ? 'nahoru' : 'dolu') + '" title="proti předchozímu stejně dlouhému období">' + (x > 0 ? '▲ +' : '▼ ') + tgCislo(x, 2) + '</span>';
+}
+function renderTymPohled() {
+    if (!tg.prace) return '<p class="tg-muted">Srovnání týmu je na operations — připoj se na VPN.</p>';
+    const d = tg.tym[tg.tymDni];
+    if (d === undefined) tgNactiTym(tg.tymDni);
+    const prepinac = '<div class="tg-obdobi">' + TG_TYM_OBDOBI.map(([n, t]) => '<button data-akce="tym-dni" data-d="' + n + '" class="' + (n === tg.tymDni ? 'on' : '') + '">' + t + '</button>').join('') + '</div>';
+    if (!d || d === 'nacitam') return '<section class="tg-card"><header><h2>Tým CZ-L1</h2>' + prepinac + '</header><div class="tg-pad"><span class="tg-muted">' + (d === null ? 'Nepodařilo se načíst.' : 'Načítám…') + '</span></div></section>';
+    const max = Math.max(1.5, ...d.lide.map(x => x.index || 0)), m = d.median;
+    const radek = x => {
+        const st = TG_TYM_STAV[x.stav] || TG_TYM_STAV.malo_dat, o = x.ohlasy || {};
+        const jm = x.osoba ? '<a href="#osoba=' + encodeURIComponent(x.osoba) + '">' + esc(x.jmeno) + '</a>' : esc(x.jmeno);
+        return '<tr class="' + esc(x.stav) + '"><td class="jm">' + jm + (x.kapacita < 1 ? ' <span class="tg-sub">úvazek ' + tgCislo(x.kapacita, 1) + '</span>' : '') + '</td>' +
+            '<td class="idx"><div class="tg-idx" title="index ' + (x.index === null ? '—' : tgCislo(x.index, 2)) + ' (1,00 = medián týmu)"><i style="width:' + Math.round((x.index || 0) / max * 100) + '%"></i><b style="left:' + Math.round(1 / max * 100) + '%"></b></div>' +
+            '<span class="n">' + (x.index === null ? '—' : tgCislo(x.index, 2)) + '</span></td>' +
+            '<td><span class="tg-tag ' + st[1] + '">' + st[0] + '</span></td>' +
+            '<td class="c">' + tgCislo(x.tk, 1) + '</td><td class="c">' + tgCislo(x.kom, 1) + '</td><td class="c">' + tgCislo(x.koment, 1) + '</td><td class="c">' + tgCislo(x.cas, 1) + '</td>' +
+            '<td class="c">' + x.dnu + '</td><td class="c">' + tgTrend(x.trend) + '</td>' +
+            '<td class="c">' + (o.pochvala ? '<span class="tg-tag ok">★ ' + o.pochvala + '</span>' : '') + (o.stiznost ? '<span class="tg-tag hot">! ' + o.stiznost + '</span>' : '') + (o.prusvih ? '<span class="tg-tag hot">průšvih ' + o.prusvih + '</span>' : '') + '</td></tr>';
+    };
+    return '<section class="tg-card"><header><h2>Tým CZ-L1</h2><span class="tg-sub">' + TL.datum(d.od) + ' – ' + TL.datum(d.do) + '</span>' + prepinac + '</header><div class="tg-pad tg-tym-wrap">' +
+        '<table class="tg-tym"><thead><tr><th>Člověk</th><th>Index proti týmu</th><th></th><th class="c" title="tickety, na kterých pracoval">Tickety</th><th class="c" title="e-maily, hovory, chaty, SMS, WhatsApp">Komunikace</th><th class="c">Komentáře</th><th class="c" title="Project Time, jedna aktivita nejvýš 4 h">Vykázáno h</th><th class="c" title="dní s aspoň jednou aktivitou">Dní</th><th class="c">Trend</th><th class="c">Ohlasy</th></tr></thead><tbody>' +
+        d.lide.map(radek).join('') + '<tr class="median"><td class="jm">Medián týmu</td><td class="idx"><span class="n">1,00</span></td><td></td><td class="c">' + tgCislo(m.tk, 1) + '</td><td class="c">' + tgCislo(m.kom, 1) + '</td><td class="c">' + tgCislo(m.koment, 1) + '</td><td class="c">' + tgCislo(m.cas, 1) + '</td><td colspan="3"></td></tr></tbody></table>' +
+        '<p class="tg-pozn">Hodnoty na den s prací a na úvazek. Index = průměr poměrů tickety, komunikace a vykázaný čas k mediánu týmu; v normě od 0,90, pod týmem 0,70–0,90. Den bez aktivity se nepočítá (dovolená ani nemoc v datech nejsou) — počet dní je ve sloupci Dní. Zdroj: aktivity v Daktele, jen čtení.</p></div></section>';
+}
+
+/** Dlouhodobě: index člověka po měsících proti tehdejšímu týmu (sloupce, čára = medián). */
+function renderHistorie(h) {
+    if (!h || !h.length) return '';
+    const max = Math.max(1.5, ...h.map(x => x.index || 0));
+    const sl = h.map(x => '<div class="tg-graf-sl" title="' + esc(x.mesic + ': index ' + (x.index === null ? '—' : tgCislo(x.index, 2)) + ', tickety ' + tgCislo(x.tk, 1) + '/den (tým ' + tgCislo(x.median.tk, 1) + '), komunikace ' + tgCislo(x.kom, 1) + ' (tým ' + tgCislo(x.median.kom, 1) + '), vykázáno ' + tgCislo(x.cas, 1) + ' h (tým ' + tgCislo(x.median.cas, 1) + '), ' + x.dnu + ' dní') + '">' +
+        '<span class="v ' + esc(x.stav) + '" style="height:' + Math.round((x.index || 0) / max * 100) + '%"></span><span class="d">' + Number(x.mesic.slice(5)) + '</span></div>').join('');
+    const posl = h.slice(-6).reverse();
+    return '<section class="tg-card"><header><h2>Dlouhodobě</h2><span class="tg-sub">index po měsících · čára = medián týmu</span></header><div class="tg-pad">' +
+        '<div class="tg-graf tg-graf-idx"><b class="tg-median" style="bottom:' + Math.round(1 / max * 100) + '%"></b>' + sl + '</div>' +
+        '<table class="tg-tym mini"><thead><tr><th>Měsíc</th><th class="c">Index</th><th class="c">Tickety</th><th class="c">Komunikace</th><th class="c">Vykázáno h</th><th class="c">Dní</th></tr></thead><tbody>' +
+        posl.map(x => '<tr class="' + esc(x.stav) + '"><td>' + esc(x.mesic) + '</td><td class="c">' + (x.index === null ? '—' : tgCislo(x.index, 2)) + '</td><td class="c">' + tgCislo(x.tk, 1) + ' <span class="tg-sub">/ ' + tgCislo(x.median.tk, 1) + '</span></td><td class="c">' + tgCislo(x.kom, 1) + ' <span class="tg-sub">/ ' + tgCislo(x.median.kom, 1) + '</span></td><td class="c">' + tgCislo(x.cas, 1) + ' <span class="tg-sub">/ ' + tgCislo(x.median.cas, 1) + '</span></td><td class="c">' + x.dnu + '</td></tr>').join('') +
+        '</tbody></table><p class="tg-pozn">Hodnota / medián týmu v tom měsíci, na den s prací a úvazek.</p></div></section>';
+}
+
 const TG_DRUH = { stiznost: ['Stížnost', 'hot'], prusvih: ['Průšvih', 'hot'], pochvala: ['Pochvala', 'ok'] };
 /** Deník člověka: sloupcový graf aktivity a uzavřených ticketů za 14 dní + události (stížnost/průšvih/pochvala). */
 function renderDenik(d) {
@@ -306,7 +359,7 @@ function tgNactiOsobu(jmeno) {
         o.zapisy.forEach(z => z.action_items.forEach((a, i) => { if (!a.done) otevrene.push({ z, a, i }); }));
         const ukol = (z, a, i) => '<div class="tg-task' + (a.done ? ' done' : '') + '"><input type="checkbox" data-akce="1on1" data-k="' + z.id + ':' + i + '"' + (a.done ? ' checked' : '') + '><span class="t">' + esc(a.text) + '</span></div>';
         main.innerHTML = '<div class="tg-detail-hlava"><a href="#lide" class="tg-muted">← 1on1</a><h2>' + esc(o.jmeno) + '</h2>' + (o.popis ? '<span class="tg-muted">' + esc(o.popis) + '</span>' : '') + '</div>' +
-            '<div class="tg-wrap"><div class="tg-col">' +
+            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) +
             '<section class="tg-card"><header><h2>Nový zápis</h2></header><div class="tg-pad"><form class="tg-form" id="tg-zapis"><input type="date" name="d" value="' + tgDnesIso() + '" required>' +
             '<textarea name="n" rows="4" placeholder="Co jste probírali…"></textarea><textarea name="u" rows="2" placeholder="Úkoly — jeden na řádek (jen u aktuální schůzky)"></textarea>' +
             '<div><button class="tg-btn pri" type="submit">Uložit zápis</button> <span class="tg-err" id="tg-zapis-chyba"></span></div></form></div></section>' +
@@ -380,6 +433,7 @@ document.addEventListener('click', e => {
         return;
     }
     const a = el.dataset.akce;
+    if (a === 'tym-dni') { tg.tymDni = Number(el.dataset.d); tgLs('tg_tym_dni', String(tg.tymDni)); tgVykresli(); return; }
     if (a === 'hotovo') {
         const x = tg.zobrazene[Number(el.dataset.i)];
         tgHotovoPolozka(x, true).then(() => tgToast(x.zdroj === 'ticket' ? 'Hotovo — vrátí se při nové aktivitě v ticketu.' : 'Hotovo.', () => tgHotovoPolozka(x, false)));

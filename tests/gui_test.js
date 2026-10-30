@@ -38,10 +38,16 @@ const DATA = {
     kalendar: { connected: true, events: [
         { title: '1:1 — René', date: iso(dnes), time: '23:00', allDay: false, start: iso(dnes) + 'T23:00:00', end: iso(dnes) + 'T23:30:00', durationH: 0.5, rsvp: 'accepted' },
         { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' },{ title: 'Z operations: L1 team talk', date: iso(dnes), time: '23:10', allDay: false, start: iso(dnes) + 'T23:10:00', end: iso(dnes) + 'T23:40:00', durationH: 0.5, rsvp: 'accepted' }] },
+    tym: { od: '2026-10-01', do: '2026-10-29', dni: 30, median: { tk: 9, kom: 7, koment: 4, cas: 3 }, lide: [
+        { login: 'rene_heryan', jmeno: 'René Heryán', osoba: 'René Heryán', kapacita: 0.8, dnu: 20, tk: 10, kom: 8, koment: 4, cas: 3, index: 1.1, stav: 'ok', trend: 0.12, ohlasy: { pochvala: 2 } },
+        { login: 'x_y', jmeno: 'Flákač <b>', osoba: null, kapacita: 1, dnu: 18, tk: 4, kom: 3, koment: 1, cas: 1, index: 0.45, stav: 'vyrazne', trend: -0.3, ohlasy: { stiznost: 1 } },
+        { login: 'nov', jmeno: 'Nováček', osoba: null, kapacita: 1, dnu: 2, tk: 1, kom: 1, koment: 0, cas: 0, index: null, stav: 'malo_dat', trend: null, ohlasy: {} }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
     osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
         denik: { login: 'rene_heryan', dny: [{ den: '2026-10-29', aktivit: 40, uzavreno: 6, emaily_in: 9, druhy: { EMAIL: 20 } }, { den: '2026-10-30', aktivit: 12, uzavreno: 1, emaily_in: 3, druhy: {} }],
+            historie: [{ mesic: '2026-09', dnu: 20, tk: 9.5, kom: 7, koment: 4, cas: 3.1, index: 1.05, stav: 'ok', median: { tk: 9, kom: 7, koment: 4, cas: 3 } },
+                { mesic: '2026-10', dnu: 21, tk: 5, kom: 4, koment: 2, cas: 1.5, index: 0.55, stav: 'vyrazne', median: { tk: 9, kom: 7, koment: 4, cas: 3 } }],
             udalosti: [{ ticket: 961679, titul: 'Směrování', kdy: '2026-10-30 09:10:00', druh: 'pochvala', skore: '0.92', citace: 'Moc děkujeme <3' }, { ticket: 961640, titul: 'Event', kdy: '2026-10-29 14:00:00', druh: 'stiznost', skore: '0.81', citace: 'Pořád to nefunguje' }] },
         kontext: [{ zdroj: 'Review 2026 H1', text: '# Heryán René\nSilné stránky <i>' }, { zdroj: 'Lidé a rozvoj', text: 'René Heryán — rene_heryan — Rendo' }] },
 };
@@ -122,5 +128,18 @@ function spust(hash, opts) {
 
     r = await spust('#ted', { klic: false });
     t(r.banner.innerHTML.includes('Propojit'), 'Bez klíče: návod na propojení');
+    // Tým (deník v2, 30. 10.): srovnání z historie, kdo je pod týmem, odkaz do 1on1, escapování
+    r = await spust('#tym');
+    r = await spust('#tym');
+    t(r.html.includes('Tým CZ-L1') && r.html.includes('Medián týmu'), 'Tým: tabulka s mediánem');
+    t(r.html.includes('href="#osoba=Ren%C3%A9%20Hery%C3%A1n"'), 'Tým: jméno vede na detail 1on1');
+    t(r.html.includes('Flákač &lt;b&gt;') && !r.html.includes('Flákač <b>'), 'Tým: jména escapovaná');
+    t(r.html.includes('tr class="vyrazne"') && r.html.includes('výrazně pod') && r.html.includes('málo dat'), 'Tým: stavy výrazně pod a málo dat');
+    t(r.html.includes('▼ -0,30') && r.html.includes('▲ +0,12'), 'Tým: trend proti minulému období');
+    t(r.html.includes('úvazek 0,8') && r.html.includes('★ 2') && r.html.includes('! 1'), 'Tým: úvazek a ohlasy zákazníků');
+    t(r.html.indexOf('René Heryán') < r.html.indexOf('Flákač'), 'Tým: pořadí podle API (nejlepší nahoře)');
+    r = await spust('#osoba=Ren%C3%A9%20Hery%C3%A1n');
+    t(r.html.includes('Dlouhodobě') && r.html.includes('tg-median') && r.html.includes('v vyrazne'), 'Detail: dlouhodobý graf po měsících s mediánem');
+    t(r.html.indexOf('Dlouhodobě') < r.html.indexOf('2026-09'), 'Detail: tabulka měsíců od nejnovějšího');
     process.exit(chyb ? 1 : 0);
 })().catch(e => { console.log('CHYBA za běhu: ' + e.stack.split('\n').slice(0, 3).join(' | ')); process.exit(1); });

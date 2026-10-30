@@ -15,13 +15,13 @@ header('Referrer-Policy: no-referrer');
 <script>try { const m = localStorage.getItem('tg_motiv'); if (m) document.documentElement.dataset.theme = m; } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/novy.css?v=6">
+<link rel="stylesheet" href="css/novy.css?v=7">
 </head>
 <body>
 <header class="tg-top">
   <h1>Tasks</h1>
   <nav class="tg-nav">
-    <a href="#ted" data-v="ted">Teď</a><a href="#ukoly" data-v="ukoly">Úkoly</a><a href="#lide" data-v="lide">1on1</a>
+    <a href="#ted" data-v="ted">Teď</a><a href="#ukoly" data-v="ukoly">Úkoly</a><a href="#lide" data-v="lide">1on1</a><a href="#tym" data-v="tym">Tým</a>
   </nav>
   <span class="tg-grow"></span>
   <span class="tg-conn" id="tg-conn"><i></i><span>…</span></span>
@@ -42,6 +42,6 @@ header('Referrer-Policy: no-referrer');
 <div class="tg-toast" id="tg-toast"><span></span><button type="button">Zpět</button></div>
 
 <script src="js/logika.js?v=3"></script>
-<script src="js/novy.js?v=9"></script>
+<script src="js/novy.js?v=10"></script>
 </body>
 </html>
