@@ -289,6 +289,8 @@ function tgNactiOsobu(jmeno) {
                 '<article class="tg-zapis"><b>' + TL.datum(z.meeting_date) + ' ' + z.meeting_date.slice(0, 4) + '</b>' + (z.tags.length ? ' <span class="tg-sub">' + z.tags.map(esc).join(', ') + '</span>' : '') +
                 (z.notes ? '<div class="tg-zapis-text">' + esc(z.notes) + '</div>' : '') + (z.action_items.length ? '<div style="margin-top:6px">' + z.action_items.map((a, i) => ukol(z, a, i)).join('') + '</div>' : '') + '</article>').join('') || '<span class="tg-muted">Bez zápisů.</span>') + '</div></section>' +
             '</div><aside class="tg-col"><section class="tg-card"><header><h2>Otevřené úkoly (' + otevrene.length + ')</h2></header><div class="tg-pad">' + (otevrene.map(x => ukol(x.z, x.a, x.i)).join('') || '<span class="tg-muted">Nic otevřeného.</span>') + '</div></section>' +
+            (o.kontext && o.kontext.length ? '<section class="tg-card"><header><h2>Z portfolia</h2><span class="tg-sub">review, tým, rozvoj</span></header><div class="tg-pad">' +
+                o.kontext.map((k, i) => '<details class="tg-kontext"' + (i === 0 ? '' : '') + '><summary>' + esc(k.zdroj) + '</summary><div class="tg-zapis-text">' + esc(k.text) + '</div></details>').join('') + '</div></section>' : '') +
             '<section class="tg-card"><header><h2>Profil</h2></header><div class="tg-pad">' + (o.profil.length ? '<dl class="tg-profil">' + o.profil.map(p => '<dt>' + esc(p.popis) + '</dt><dd>' + esc(p.text) + '</dd>').join('') + '</dl>' : '<span class="tg-muted">Prázdný.</span>') + '</div></section></aside></div>';
         document.getElementById('tg-zapis').addEventListener('submit', e => {
             e.preventDefault();

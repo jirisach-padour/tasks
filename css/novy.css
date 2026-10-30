@@ -236,3 +236,7 @@ dialog#tg-dlg .tg-acts { justify-content: flex-end; }
 .tg-kanban-karta .tg-task { border-top: 0; padding: 9px 0; }
 .tg-kanban-prazdno { font-size: 13px; color: var(--text-3); text-align: center; padding: 18px 0; border: 1.5px dashed var(--line-2); border-radius: 10px; }
 #tg-main.siroke { max-width: 1600px; }
+.tg-kontext { border-top: 1px solid var(--line); padding: 8px 0; }
+.tg-kontext:first-child { border-top: 0; }
+.tg-kontext summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.tg-kontext .tg-zapis-text { font-size: 13.5px; max-height: 420px; overflow: auto; }

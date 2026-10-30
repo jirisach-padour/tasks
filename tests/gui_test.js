@@ -38,7 +38,8 @@ const DATA = {
         { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' },{ title: 'Z operations: L1 team talk', date: iso(dnes), time: '23:10', allDay: false, start: iso(dnes) + 'T23:10:00', end: iso(dnes) + 'T23:40:00', durationH: 0.5, rsvp: 'accepted' }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
-    osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }] },
+    osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
+        kontext: [{ zdroj: 'Review 2026 H1', text: '# Heryán René\nSilné stránky <i>' }, { zdroj: 'Lidé a rozvoj', text: 'René Heryán — rene_heryan — Rendo' }] },
 };
 
 function spust(hash, opts) {
@@ -99,6 +100,7 @@ function spust(hash, opts) {
     await new Promise(x => setImmediate(() => setImmediate(x)));
     r.html = r.ctx.document.getElementById('tg-main').innerHTML;
     t(r.html.includes('Historie (1)') && r.html.includes('text &lt;b&gt;') && r.html.includes('Silné stránky'), 'Detail osoby: historie, escape, profil');
+    t(r.html.includes('Z portfolia') && r.html.includes('Review 2026 H1') && r.html.includes('Silné stránky &lt;i&gt;'), 'Detail osoby: kontext z portfolia, escapovaný');
 
     r = await spust('#ted', { zavreno: true });
     const h = new Date().getHours(), den = new Date().getDay();
