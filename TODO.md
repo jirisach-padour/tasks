@@ -17,7 +17,7 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 
 - [x] F0: Anthropic API pryč (endpointy 410, klíč smazán, záloha /etc/tasks/secrets.php.bak-20261029) — 2026-10-29; Daktela proxy zůstává jen pro stary.php
 - [x] RSVP v calendar.php (lib/Kalendar.php) + příprava jen u potvrzených — 2026-10-29
-- [ ] Kompatibilita: dokud běží hourly-radar, nechat tabulku tasks na hetzneru beze změny sloupců (Team Hub už čte Priority)
+- [x] (zrušeno — hourly-radar zahozen 30. 10.) Kompatibilita: dokud běží hourly-radar, nechat tabulku tasks na hetzneru beze změny sloupců (Team Hub už čte Priority)
 - [~] Export API — nahrazeno: GUI bere pracovní data z Priority prohlížečem (klíč), hetzner nic firemního nedrží
 - [x] Nové GUI (index.php + js/novy.js + js/logika.js, stará verze stary.php) + testy na serveru (logika, GUI v node, kalendář, web) — 2026-10-29
 - [x] GUI návrh v2 (Teď, všichni čekající, stabilní pořadí, štítky nové/posunuto) — 2026-10-29
