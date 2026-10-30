@@ -5,7 +5,7 @@
 const TG_PR = 'https://operations.daktela.com/padour/priority/api.php';
 const TG_PRIORITY_WEB = 'https://operations.daktela.com/padour/priority/';
 const esc = TL.esc;
-const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: false };
+const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: true };   // JS 30. 10.: co je bez reakce, musí být vidět
 
 // ---------- úložiště a klíč ----------
 function tgLs(k, v) {

@@ -80,6 +80,7 @@ function spust(hash, opts) {
     t(r.html.includes('Čekají na tebe'), 'Teď: víc čekajících zákazníků → všichni');
     t(r.html.includes('Tier 1B') && !r.html.includes('Zákazník čeká · Zákazník čeká'), 'Teď: tier, důvod bez opakování');
     t(r.html.includes('Karel'), 'Teď: Slack pruh s Karlem');
+    t(r.html.includes('tg-slackpop') && r.html.includes('Dneska ten Solver?'), 'Slack bez reakce je rozbalený hned, bez kliknutí (30. 10.)');
     t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
