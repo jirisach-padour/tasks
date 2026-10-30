@@ -43,7 +43,7 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] Ověřit v prohlížeči: propojení klíčem (Priority → Propojit), CORS/Private Network v Chrome na VPN, odkliknutí, úprava úkolu
 - [ ] Smazat pracovní tasky na hetzneru (164, shodné s pr_tasks 29. 10.) — jen po potvrzení JS
 - [ ] Tento týden: podíl času zákazníci × nástroje — chybí zdroj dat (navrhnout)
-- [ ] Kalendář přesunout na operations (OAuth klient z kpi-dashboardu, redirect URI) — dnes jede z hetzneru
+- [x] (hotovo v Priority 2026-10-30, pracovní kalendář) Kalendář přesunout na operations (OAuth klient z kpi-dashboardu, redirect URI) — dnes jede z hetzneru
 - [ ] Páteční výběr strategického bloku + timebox do kalendáře (zatím ruční výběr v GUI)
 - [ ] stary.php + api/daktela.php + onenon_* tabulky na hetzneru smazat po týdnu bez potřeby
 
