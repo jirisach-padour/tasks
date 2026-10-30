@@ -28,7 +28,9 @@ const DATA = {
         { skupina: 2, skupina_nazev: 'Zákazník čeká', klic: '3', zdroj: 'ticket', udalost: 'c', titul: 'Routing', duvod: 'čeká', citace: null, tier: 'bez tieru', zakaznik: 'Y', url: 'https://x/3' },
         { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: 'C:1', zdroj: 'slack', udalost: 'x', titul: 'Karel — Dneska ten Solver?', duvod: 'Karel na Slacku, bez tvé reakce a bez úkolu', citace: null, tier: null, zakaznik: '', url: 'https://s/1', slack_zdroj: 'slack:C:1' },
         { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: '4', zdroj: 'ukol', udalost: '', titul: 'Billing', duvod: 'Termín', citace: null, tier: null, zakaznik: '', url: null }],
-        slack: [{ klic: 'C:1', kanal_nazev: '#support_management', autor_jmeno: 'Karel Vůjtek', text: 'Dneska ten Solver?', kdy: '2026-10-29 12:27:13', poradi: 0, url: 'https://s/1', ma_ukol: false }],
+        slack: [{ klic: 'C:1', kanal: 'C1', kanal_nazev: '#support_management', autor_jmeno: 'Karel Vůjtek', text: 'Dneska ten Solver?', kdy: '2026-10-29 12:27:13', poradi: 0, url: 'https://s/1', ma_ukol: false },
+            { klic: 'G:2', kanal: 'G1', kanal_nazev: 'Skupinová zpráva', autor_jmeno: 'Jitka', text: 'Novější ve skupině', kdy: '2026-10-30 16:39:00', poradi: 2, url: 'https://s/2', ma_ukol: false },
+            { klic: 'G:1', kanal: 'G1', kanal_nazev: 'Skupinová zpráva', autor_jmeno: 'Milan', text: 'Starší ve skupině', kdy: '2026-10-30 09:00:00', poradi: 2, url: 'https://s/3', ma_ukol: false }],
         sber: { kdy: '2026-10-29 21:00:00', ticketu: 51, slack: 1 } },
     ukoly: { ukoly: [
         { id: 10, title: 'Infra témata', status: 'open', quadrant: 'urgent_important', due_date: '2026-10-21', ceka_na: null, pripomenout: null },
@@ -81,6 +83,9 @@ function spust(hash, opts) {
     t(r.html.includes('Tier 1B') && !r.html.includes('Zákazník čeká · Zákazník čeká'), 'Teď: tier, důvod bez opakování');
     t(r.html.includes('Karel'), 'Teď: Slack pruh s Karlem');
     t(r.html.includes('tg-slackpop') && r.html.includes('Dneska ten Solver?'), 'Slack bez reakce je rozbalený hned, bez kliknutí (30. 10.)');
+    t((r.html.match(/data-akce="slack-hotovo-vse"/g) || []).length === 1 && r.html.includes('data-kanal="G1"'), 'skupinová konverzace má jedno ✓✓ na vše, jednotlivá zpráva ne');
+    t(r.html.indexOf('Starší ve skupině') < r.html.indexOf('Novější ve skupině') && (r.html.match(/tg-sub-radek/g) || []).length === 1, 'hlavní řádek nejstarší, novější odsazený');
+    t((r.html.match(/data-akce="slack-hotovo" /g) || []).length === 3, 'každá zpráva má dál vlastní ✓');
     t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');

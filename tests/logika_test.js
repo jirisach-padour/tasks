@@ -37,6 +37,12 @@ t(Object.keys(L.znacky([p(2, 'a')], null)).length === 0, 'první načtení bez z
 // Slack souhrn
 const s = L.slackSouhrn([{ poradi: 0 }, { poradi: 0 }, { poradi: 1 }, { poradi: 2 }]);
 t(s.karel === 2 && s.kanaly === 1 && s.dm === 1, 'slack souhrn');
+// Slack po konverzacích (30. 10.): skupiny v pořadí vstupu, uvnitř od nejstarší
+const sz = [{ kanal: 'G1', kdy: '2026-10-30 16:39' }, { kanal: 'D1', kdy: '2026-10-30 12:46' }, { kanal: 'G1', kdy: '2026-10-30 16:36' }, { kanal: 'G1', kdy: '2026-10-29 09:00' }];
+const sk = L.slackSkupiny(sz);
+t(sk.length === 2 && sk[0].kanal === 'G1' && sk[1].kanal === 'D1', 'slack skupiny: pořadí konverzací podle vstupu');
+t(sk[0].i.join() === '3,2,0', 'slack skupiny: hlavní řádek je nejstarší, pak novější');
+t(L.slackSkupiny([]).length === 0, 'slack skupiny: prázdné');
 
 // Datum
 t(L.datum('2026-10-07') === '7. 10.', 'datum krátce');

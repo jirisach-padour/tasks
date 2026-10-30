@@ -165,9 +165,17 @@ function renderSlack() {
     if (!z.length) return '<div class="tg-slack"><span class="tg-sub">Slack: na všechno jsi reagoval.</span></div>';
     const s = TL.slackSouhrn(z);
     let h = '<div class="tg-slack"><span class="tg-sub">Slack</span><button data-akce="slack">Bez tvé reakce:' + (s.karel ? ' Karel <b>' + s.karel + '</b>' : '') + (s.kanaly ? ' kanály <b>' + s.kanaly + '</b>' : '') + (s.dm ? ' DM <b>' + s.dm + '</b>' : '') + '</button></div>';
-    if (tg.otevrenoSlack) h += '<div class="tg-slackpop"><ul class="tg-rows">' + z.map((m, i) => '<li><span class="r">·</span><span class="t"><a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + esc(m.autor_jmeno) + '</a> <span class="tg-sub">' + esc(m.kanal_nazev) + ' · ' + esc(m.kdy.slice(5, 16)) + '</span></span>' +
-        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a">' + (m.ma_ukol ? '<span class="tg-tag">úkol</span>' : '<button class="tg-ib" data-akce="slack-ukol-m" data-i="' + i + '" title="Udělat z toho úkol">+</button>') + '<button class="tg-ib ok" data-akce="slack-hotovo" data-i="' + i + '" title="Vyřízeno">✓</button></span></li>').join('') + '</ul></div>';
+    if (tg.otevrenoSlack) h += '<div class="tg-slackpop"><ul class="tg-rows">' + TL.slackSkupiny(z).map(sk => sk.i.map((i, n) => tgSlackRadek(z[i], i, n, sk)).join('')).join('') + '</ul></div>';
     return h;
+}
+
+/** Řádek Slacku: n = 0 hlavní (nejstarší) řádek skupiny, jeho ✓ vyřídí celou konverzaci; novější odsazené pod ním. */
+function tgSlackRadek(m, i, n, sk) {
+    const vic = sk.i.length > 1, hlavni = vic && n === 0;
+    return '<li class="' + (vic && n > 0 ? 'tg-sub-radek' : '') + (hlavni ? ' tg-hlavni' : '') + '"><span class="r">' + (hlavni ? sk.i.length : '·') + '</span><span class="t"><a href="' + esc(m.url) + '" target="_blank" rel="noopener">' + esc(m.autor_jmeno) + '</a> <span class="tg-sub">' + esc(m.kanal_nazev) + ' · ' + esc(m.kdy.slice(5, 16)) + (hlavni ? ' · ' + sk.i.length + ' zpráv' : '') + '</span></span>' +
+        '<span class="w">' + esc(m.text.length > 180 ? m.text.slice(0, 180) + '…' : m.text) + '</span><span class="a">' + (m.ma_ukol ? '<span class="tg-tag">úkol</span>' : '<button class="tg-ib" data-akce="slack-ukol-m" data-i="' + i + '" title="Udělat z toho úkol">+</button>') +
+        (hlavni ? '<button class="tg-ib ok" data-akce="slack-hotovo-vse" data-kanal="' + esc(sk.kanal) + '" title="Vyřízeno vše v konverzaci (' + sk.i.length + ')">✓✓</button>' : '') +
+        '<button class="tg-ib ok" data-akce="slack-hotovo" data-i="' + i + '" title="Vyřízeno">✓</button></span></li>';
 }
 
 function renderStrategicky() {
@@ -380,6 +388,10 @@ document.addEventListener('click', e => {
     else if (a === 'slack-hotovo') {
         const m = tg.ted.slack[Number(el.dataset.i)], x = { zdroj: 'slack', klic: m.klic, udalost: 'x' };
         tgHotovoPolozka(x, true).then(() => tgToast('Vyřízeno — na Slack se nic nezapsalo.', () => tgHotovoPolozka(x, false)));
+    } else if (a === 'slack-hotovo-vse') {
+        const xs = tg.ted.slack.filter(m => m.kanal === el.dataset.kanal).map(m => ({ zdroj: 'slack', klic: m.klic, udalost: 'x' }));
+        const vse = hotovo => Promise.all(xs.map(x => tgPriority('polozka_hotovo', { zdroj: x.zdroj, klic: x.klic, udalost: x.udalost, hotovo: hotovo }))).then(tgNacti);
+        vse(true).then(() => tgToast('Vyřízeno ' + xs.length + ' zpráv — na Slack se nic nezapsalo.', () => vse(false)));
     } else if (a === 'slack-ukol' || a === 'slack-ukol-m') {
         const m = a === 'slack-ukol' ? tg.zobrazene[Number(el.dataset.i)] : tg.ted.slack[Number(el.dataset.i)];
         const text = m.text || m.citace || m.titul, zdroj = m.slack_zdroj || ('slack:' + m.klic);

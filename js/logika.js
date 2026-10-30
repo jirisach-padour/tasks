@@ -50,6 +50,14 @@
         return s;
     }
 
+    /** Slack po konverzacích (30. 10.): pořadí skupin podle vstupu (Karel → kanály → DM, nejnovější první),
+     *  uvnitř skupiny od nejstarší — ta je hlavní řádek. Vrací [{ kanal, i: [indexy do zprav] }]. */
+    function slackSkupiny(zpravy) {
+        const sk = new Map();
+        (zpravy || []).forEach((z, i) => { if (!sk.has(z.kanal)) sk.set(z.kanal, []); sk.get(z.kanal).push(i); });
+        return [...sk].map(([kanal, i]) => ({ kanal, i: i.sort((a, b) => String(zpravy[a].kdy).localeCompare(String(zpravy[b].kdy))) }));
+    }
+
     function datum(iso) {
         if (!iso) return '';
         const [, m, d] = String(iso).slice(0, 10).split('-');
@@ -85,5 +93,5 @@
         return d;
     }
 
-    Object.assign(exp, { rezim, ted, znacky, slackSouhrn, datum, esc, dlazdice, sloupec, presun, SLOUPCE });
+    Object.assign(exp, { rezim, ted, znacky, slackSouhrn, slackSkupiny, datum, esc, dlazdice, sloupec, presun, SLOUPCE });
 })(typeof module !== 'undefined' ? module.exports : (window.TL = {}));
