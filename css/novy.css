@@ -318,3 +318,40 @@ dialog#tg-duk::backdrop { background: rgba(20,20,18,.4); }
 .tg-druhy .tg-tag { margin-left: 0; }
 .tg-tag.hot { background: var(--hot-2); color: var(--hot); }
 .tg-tag.ok { background: var(--ok-2); color: var(--ok); }
+
+/* Tým: jméno drží při vodorovném posunu (JS 31. 10.) */
+.tg-tym:not(.mini) th:first-child, .tg-tym:not(.mini) td.jm { position: sticky; left: 0; z-index: 2; background: var(--surface); box-shadow: inset -1px 0 0 var(--line); }
+.tg-tym:not(.mini) td.jm { min-width: 130px; }
+
+/* 1on1: příprava, cíle z hodnocení, hodnocení */
+.tg-priprava, .tg-detail-cile { margin-bottom: 22px; }
+.tg-priprava-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 28px; }
+@media (max-width: 760px) { .tg-priprava-grid { grid-template-columns: 1fr; } }
+.tg-priprava h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text-2); }
+.tg-ted { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: 13.5px; }
+.tg-ted dt { color: var(--text-3); }
+.tg-ted dd { margin: 0; }
+.tg-citlive { margin-top: 14px; padding: 10px 12px; border-radius: var(--r-sm); background: var(--hot-2); font-size: 13px; }
+.tg-citlive b { color: var(--hot); font-size: 12px; }
+.tg-citlive ul { margin: 4px 0 0; padding-left: 18px; }
+.tg-body { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; }
+.tg-body li { padding: 6px 10px; border-left: 3px solid var(--line-2); background: var(--surface-2); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+.tg-body li.hot { border-left-color: var(--hot); }
+.tg-body li.warn { border-left-color: var(--amber); }
+.tg-body li.ok { border-left-color: var(--ok); }
+.tg-cile { margin: 0 0 14px; padding-left: 20px; font-size: 14px; }
+.tg-cile li { margin: 3px 0; }
+.tg-mets { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.tg-met .tg-duk, .tg-met-box { display: grid; gap: 4px; width: 100%; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); }
+.tg-met .tg-duk:hover { border-color: var(--accent); }
+.tg-met-nazev { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+.tg-met-hod { font-size: 14px; font-variant-numeric: tabular-nums; }
+.tg-met-graf { display: flex; align-items: flex-end; gap: 3px; height: 34px; margin-top: 4px; }
+.tg-met-sl { flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.tg-met-sl i { display: block; width: 100%; border-radius: 2px 2px 0 0; background: var(--line-2); }
+.tg-met-sl.h2 i { background: var(--accent); }
+.tg-met-sl.prazdny { border-bottom: 1px dashed var(--line-2); }
+.tg-rev { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+.tg-rev li { margin: 3px 0; }
+.tg-plus { color: var(--ok); }
+.tg-minus { color: var(--hot); }

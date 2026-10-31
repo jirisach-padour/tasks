@@ -5,6 +5,9 @@ const fs = require('fs');
 const path = require('path');
 let chyb = 0;
 const t = (ok, co) => { if (!ok) { chyb++; console.log('CHYBA: ' + co); } };
+// Regrese 31. 10.: druhá renderPriprava přepsala přípravu na schůzku v Teď — žádné dvě funkce/konstanty stejného jména
+{ const jm = [...fs.readFileSync(path.join(__dirname, '..', 'js/novy.js'), 'utf8').matchAll(/^(?:function|const) (\w+)/gm)].map(x => x[1]);
+  const dup = jm.filter((x, i) => jm.indexOf(x) !== i); t(!dup.length, 'novy.js: duplicitní názvy ' + dup.join(', ')); }
 
 function prvek(id) {
     return {
@@ -47,7 +50,14 @@ const DATA = {
         { login: 'nov', jmeno: 'Nováček', osoba: null, kapacita: 1, dnu: 2, tk: 1, kom: 1, koment: 0, cas: 0, index: null, stav: 'malo_dat', trend: null, ohlasy: {}, zatez: null, tickety: null, zatez_prum: null, prideleno: null, bez_prace: null, nalada: null }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
     strategicky: { vybrany: null, kandidati: [{ id: 20, title: 'AI workshop', created_at: '2026-09-01', dni: 58 }] },
-    osoba: { jmeno: 'René Heryán', popis: '', profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
+    osoba: { jmeno: 'René Heryán', login: 'rene_heryan', popis: '',
+        review: { h2_od: '2026-07', cile: [{ text: 'Standard dost dobré <i>', metriky: ['akt'] }, { text: 'Kancelář', metriky: [] }],
+            casti: { citlive: ['INTERNÍ: neotvírat <x>'], silne: ['Komunikace #868551'], rozvoj: ['Efektivita'], skore: [{ kategorie: 'Overall', skore: '+1', poznamka: 'ok' }, { kategorie: 'Time', skore: '−1', poznamka: '' }],
+                kpi: [], csat: ['4.6'], tickety: [], dojem: [], kontext: [], rozhovor: [] },
+            metriky: { sr_fr: { klic: 'sr_fr', nazev: 'SR první odpověď do 3 h', h1: 73.9, h2: 60.2, smer: 'horsi', dukaz: 'sr_fr', mesice: [{ m: '2026-06', v: 73.9, n: 40, tym: null }, { m: '2026-07', v: 60.2, n: 30, tym: null }, { m: '2026-08', v: null, n: 0, tym: null }] },
+                onenon: { klic: 'onenon', nazev: '1on1 schůzky', h1: 1, h2: 1.5, smer: 'lepsi', dukaz: null, mesice: [{ m: '2026-06', v: 1, n: 1, tym: null }, { m: '2026-07', v: 2, n: 2, tym: null }] } } },
+        priprava: { posledni: '2026-09-01', dni: 60, ohlasy: [{ ticket: 5, druh: 'pochvala', citace: 'díky <3', titul: '' }],
+            tym: { index: 1.1, signal: { stav: 'pokles', prumer: 1.2, sd: 0.1, posledni: 0.9 }, vyhoreni: { stav: 'sleduj', duvody: ['zátěž 1,4× medián'] }, sla_vina: 2, dluzne: 3, nalada: { hodnota: 2, kdy: '2026-09-01' } } }, profil: [{ popis: 'Silné stránky', text: 'technika' }], zapisy: [{ id: 51, meeting_date: '2026-10-20', notes: 'text <b>', action_items: [{ text: 'a', done: false }], tags: ['rozvoj'] }],
         denik: { login: 'rene_heryan', dny: [{ den: '2026-10-29', aktivit: 40, uzavreno: 6, emaily_in: 9, druhy: { EMAIL: 20 } }, { den: '2026-10-30', aktivit: 12, uzavreno: 1, emaily_in: 3, druhy: {} }],
             historie: [{ mesic: '2026-09', dnu: 20, tk: 9.5, kom: 7, koment: 4, cas: 3.1, index: 1.05, stav: 'ok', median: { tk: 9, kom: 7, koment: 4, cas: 3 } },
                 { mesic: '2026-10', dnu: 21, tk: 5, kom: 4, koment: 2, cas: 1.5, index: 0.55, stav: 'vyrazne', median: { tk: 9, kom: 7, koment: 4, cas: 3 } }],
@@ -168,5 +178,14 @@ function spust(hash, opts) {
     t(r.html.includes('name="m"') && r.html.includes('5 — výborná'), 'Detail: zápis 1on1 s náladou');
     t(r.html.includes('Dlouhodobě') && r.html.includes('tg-median') && r.html.includes('v vyrazne'), 'Detail: dlouhodobý graf po měsících s mediánem');
     t(r.html.indexOf('Dlouhodobě') < r.html.indexOf('2026-09'), 'Detail: tabulka měsíců od nejnovějšího');
+    // 1on1 obohacené (31. 10.): příprava z dat, cíle H2 proti H1 s důkazy, hodnocení po částech, citlivé zvlášť
+    t(r.html.includes('Příprava na 1on1') && r.html.indexOf('Příprava na 1on1') < r.html.indexOf('Cíle na H2'), 'Detail: příprava nahoře, pak cíle');
+    t(r.html.includes('před 60 dny — domluvit') && r.html.includes('Projít 1 otevřených') && r.html.includes('— co se změnilo?') && r.html.includes('Ocenit: ') && r.html.includes('pod vlastním průměrem'), 'Příprava: body z dat (dlouho bez 1on1, úkoly, horší/lepší cíl, signál)');
+    t(r.html.includes('3 zákazníků čeká') && r.html.includes('Pochválit') && r.html.includes('díky &lt;3') && r.html.includes('Nálada na minulém 1on1 2/5'), 'Příprava: dlužné, pochvala escapovaná, nálada');
+    t(/data-co="sla_vina" data-d="30"/.test(r.html), 'Příprava: kvalita rozkliknutelná za 30 dní, ne za období Týmu');
+    t(r.html.includes('Citlivé — neotvírat sám') && r.html.includes('neotvírat &lt;x&gt;'), 'Příprava: citlivé zvlášť a escapované');
+    t(r.html.includes('data-co="sr_fr"') && r.html.includes('74 %') && r.html.includes('60 %') && r.html.includes('>horší<') && r.html.includes('tg-met-sl h2'), 'Cíle: metrika H1 → H2, směr, měsíce, důkazy');
+    t(r.html.includes('tg-met-box') && r.html.includes('daty neověřitelné') && r.html.includes('dost dobré &lt;i&gt;'), 'Cíle: 1on1 bez důkazu, neměřitelný cíl označen, escapování');
+    t(r.html.includes('Hodnocení H1 2026') && r.html.includes('tickets/update/868551') && r.html.includes('class="tg-plus">+1') && r.html.includes('class="tg-minus">−1'), 'Hodnocení: části, tickety jako odkazy, skóre barevně');
     process.exit(chyb ? 1 : 0);
 })().catch(e => { console.log('CHYBA za běhu: ' + e.stack.split('\n').slice(0, 3).join(' | ')); process.exit(1); });

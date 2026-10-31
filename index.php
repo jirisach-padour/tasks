@@ -17,7 +17,7 @@ header('Referrer-Policy: no-referrer');
 <script>try { const m = localStorage.getItem('tg_motiv'); if (m) document.documentElement.dataset.theme = m; } catch (e) {}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/novy.css?v=10">
+<link rel="stylesheet" href="css/novy.css?v=11">
 </head>
 <body>
 <header class="tg-top">
@@ -45,6 +45,6 @@ header('Referrer-Policy: no-referrer');
 <div class="tg-toast" id="tg-toast"><span></span><button type="button">Zpět</button></div>
 
 <script src="js/logika.js?v=3"></script>
-<script src="js/novy.js?v=14"></script>
+<script src="js/novy.js?v=15"></script>
 </body>
 </html>

@@ -466,6 +466,90 @@ function renderDenik(d) {
         '</div></section>';
 }
 
+// ---------- 1on1: příprava, cíle z hodnocení H1, hodnocení (JS 31. 10.) ----------
+const TG_MET = {
+    sr_fr: v => tgCislo(v, 0) + ' %', inc_sla: v => tgCislo(v, 0) + ' %', slozite: v => tgCislo(v, 0) + ' %', konzultace: v => tgCislo(v, 1) + ' %',
+    akt: v => tgCislo(v, 2) + '×', sla_vina: v => tgCislo(v, 1) + ' / měs.', dluzne: v => tgCislo(v, 0), onenon: v => tgCislo(v, 1) + ' / měs.',
+};
+const TG_SMER = { lepsi: ['lepší', 'ok'], horsi: ['horší', 'hot'], stejne: ['beze změny', ''] };
+function tgMet(k, v) { return v === null || v === undefined ? '—' : (TG_MET[k] || (x => tgCislo(x, 1)))(v); }
+/** Odkazy na tickety v textu z review (#123456 → Daktela); text se nejdřív escapuje. */
+function tgTicketyOdkazy(s) { return esc(s).replace(/#(\d{5,7})\b/g, '<a href="https://daktela.daktela.com/tickets/update/$1" target="_blank" rel="noopener">#$1</a>'); }
+function tgDniOd(m) { return Math.ceil((Date.now() - new Date(m + '-01T00:00:00').getTime()) / 86400000); }
+
+/** Dlaždice metriky: H1 → H2, měsíce sloupečky (H2 barevně), klik = důkazy. */
+function renderMetrika(m, kdo, h2od) {
+    const s = TG_SMER[m.smer];
+    const plne = m.mesice.filter(x => x.v !== null);
+    const max = Math.max(1e-9, ...plne.map(x => x.v), ...plne.map(x => x.tym || 0));
+    const sl = m.mesice.map(x => '<span class="tg-met-sl' + (x.m >= h2od ? ' h2' : '') + (x.v === null ? ' prazdny' : '') + '" title="' + esc(x.m + ': ' + (x.v === null ? 'bez dat' : tgMet(m.klic, x.v) + (x.n ? ' (n = ' + x.n + ')' : '') + (x.tym !== null && x.tym !== undefined ? ', tým ' + tgMet(m.klic, x.tym) : '') + (x.ted ? ', stav teď' : ''))) + '">' +
+        '<i style="height:' + (x.v === null ? 0 : Math.max(4, Math.round(x.v / max * 100))) + '%"></i></span>').join('');
+    const h = '<b class="tg-met-nazev">' + esc(m.nazev) + '</b><span class="tg-met-hod"><span class="tg-sub">H1</span> ' + tgMet(m.klic, m.h1) + ' <span class="tg-sub">→ ' + (m.klic === 'dluzne' ? 'teď' : 'od 7/26') + '</span> <b>' + tgMet(m.klic, m.h2) + '</b>' +
+        (s ? ' <span class="tg-tag ' + s[1] + '">' + s[0] + '</span>' : '') + '</span><span class="tg-met-graf">' + sl + '</span>';
+    return '<div class="tg-met">' + (m.dukaz ? tgDuk(kdo, m.dukaz, h, tgDniOd(m.mesice[0].m)) : '<div class="tg-met-box">' + h + '</div>') + '</div>';
+}
+
+/** Cíle na H2 z hodnocení + měřitelné metriky. */
+function renderCile(rv, kdo) {
+    if (!rv) return '';
+    const cile = rv.cile.map(c => '<li>' + tgTicketyOdkazy(c.text) + (c.metriky.length ? '' : ' <span class="tg-sub">· daty neověřitelné, probrat</span>') + '</li>').join('');
+    const met = Object.values(rv.metriky).map(m => renderMetrika(m, kdo, rv.h2_od)).join('');
+    return '<section class="tg-card tg-detail-cile"><header><h2>Cíle na H2 z hodnocení</h2><span class="tg-sub">půlroční hodnocení H1 2026 · klik na metriku = data</span></header><div class="tg-pad">' +
+        (cile ? '<ul class="tg-cile">' + cile + '</ul>' : '<span class="tg-muted">V hodnocení nejsou cíle.</span>') +
+        (met ? '<div class="tg-mets">' + met + '</div><p class="tg-pozn">H1 = leden–červen 2026 (složité a konzultace od dubna, kdy začíná historie Ticket Routeru), H2 = od července. Sloupečky po měsících, barevně H2. KPI jsou z KPI dashboardu (SR do 3 h bez interních, incidenty bez L3 eskalací), ostatní z Ticket Routeru. Dlužné odpovědi = stav teď, historie se sbírá od 31. 10.</p>' : '') + '</div></section>';
+}
+
+/** Otázky a body na 1on1 z dat (čistá funkce nad o). Každý bod má odkud a kde to ověřit. */
+function tgOtazky(o) {
+    const p = o.priprava || {}, t = p.tym, kdo = o.login || o.jmeno, out = [];
+    const otevrene = o.zapisy.reduce((s, z) => s + z.action_items.filter(a => !a.done).length, 0);
+    if (p.dni !== null && p.dni !== undefined && p.dni > 30) out.push(['hot', 'Poslední 1on1 před ' + p.dni + ' dny — domluvit pravidelný termín.']);
+    if (!o.zapisy.length) out.push(['hot', 'Zatím žádný zápis z 1on1.']);
+    if (otevrene) out.push(['', 'Projít ' + otevrene + ' otevřených úkolů z minula.']);
+    Object.values((o.review || {}).metriky || {}).forEach(m => {
+        if (m.smer === 'horsi') out.push(['hot', tgDuk(kdo, m.dukaz, esc(m.nazev) + ': H1 ' + tgMet(m.klic, m.h1) + ' → ' + tgMet(m.klic, m.h2)) + ' — co se změnilo?']);
+        else if (m.smer === 'lepsi') out.push(['ok', 'Ocenit: ' + tgDuk(kdo, m.dukaz, esc(m.nazev) + ' H1 ' + tgMet(m.klic, m.h1) + ' → ' + tgMet(m.klic, m.h2))]);
+    });
+    if (t) {
+        if (t.signal && (t.signal.stav === 'pokles' || t.signal.stav === 'vykyv_dolu')) out.push(['hot', 'Poslední 4 týdny pod vlastním průměrem (' + tgSignal(t.signal) + ') — co se děje?']);
+        if (t.signal && t.signal.stav === 'zlepseni') out.push(['ok', 'Ocenit: poslední 4 týdny nad vlastním průměrem.']);
+        if (t.vyhoreni && TG_POHODA[t.vyhoreni.stav]) out.push([TG_POHODA[t.vyhoreni.stav][1], 'Pohoda: ' + esc(t.vyhoreni.duvody.join('; ')) + ' — jak to zvládáš?']);
+        if (t.dluzne > 0) out.push([t.dluzne >= 5 ? 'hot' : '', tgDuk(kdo, 'dluzne', t.dluzne + ' zákazníků čeká 2+ pracovní dny na odpověď') + ' — co s nimi?']);
+        if (t.sla_vina > 0) out.push(['', tgDuk(kdo, 'sla_vina', 'SLA vlastní vinou: ' + t.sla_vina, 30) + ' (30 dní) — projít, co se stalo.']);
+        if (t.nalada && t.nalada.hodnota <= 2) out.push(['hot', 'Nálada na minulém 1on1 ' + t.nalada.hodnota + '/5 — navázat.']);
+    }
+    (p.ohlasy || []).forEach(u => out.push([u.druh === 'pochvala' ? 'ok' : 'hot', (u.druh === 'pochvala' ? 'Pochválit' : 'Probrat ' + (TG_DRUH[u.druh] ? TG_DRUH[u.druh][0].toLowerCase() : u.druh)) + ': <a href="https://daktela.daktela.com/tickets/update/' + Number(u.ticket) + '" target="_blank" rel="noopener">#' + Number(u.ticket) + '</a> <span class="tg-sub">' + esc(u.citace || u.titul || '') + '</span>']));
+    return out;
+}
+
+/** Karta Příprava na 1on1: od posledního zápisu, stav teď, body z dat, citlivé z hodnocení. */
+function renderOsobaPriprava(o) {
+    const p = o.priprava || {}, t = p.tym, rv = o.review;
+    const body = tgOtazky(o);
+    const citlive = rv && rv.casti.citlive.length ? '<div class="tg-citlive"><b>Citlivé — neotvírat sám</b><ul>' + rv.casti.citlive.map(s => '<li>' + esc(s) + '</li>').join('') + '</ul></div>' : '';
+    const ted = t ? '<dl class="tg-ted">' +
+        '<dt>Index 30 dní</dt><dd>' + (t.index === null || t.index === undefined ? '—' : tgDuk(o.login, 'dny', tgCislo(t.index, 2), 30)) + '</dd>' +
+        '<dt>Signál</dt><dd>' + tgSignal(t.signal) + '</dd><dt>Pohoda</dt><dd>' + tgPohoda(Object.assign({ login: o.login }, t)) + '</dd>' +
+        '<dt>Kvalita</dt><dd>' + tgKvalita(Object.assign({ login: o.login }, t)) + '</dd></dl>' : '<span class="tg-muted">Není v týmu CZ-L1 — bez dat z Daktely.</span>';
+    const ted30 = ted.replace(/(data-akce="dukazy" data-l="[^"]*" data-co="[^"]*")(?! data-d)/g, '$1 data-d="30"');   // stav teď = Tým za 30 dní
+    return '<section class="tg-card tg-priprava"><header><h2>Příprava na 1on1</h2><span class="tg-sub">' + (p.posledni ? 'poslední ' + TL.datum(p.posledni) + ' ' + String(p.posledni).slice(0, 4) + ' · před ' + p.dni + ' dny' : 'bez zápisu') + '</span></header>' +
+        '<div class="tg-pad tg-priprava-grid"><div><h3>Stav teď <span class="tg-sub">30 dní</span></h3>' + ted30 + citlive + '</div><div><h3>Body z dat</h3>' +
+        (body.length ? '<ul class="tg-body">' + body.map(b => '<li class="' + b[0] + '">' + b[1] + '</li>').join('') + '</ul>' : '<span class="tg-muted">Nic, co by data hlásila.</span>') +
+        '<p class="tg-pozn">Body skládá Priority z čísel (hodnocení H1 proti dnešku, Tým za 30 dní, ohlasy zákazníků od posledního 1on1). Klik = data.</p></div></div></section>';
+}
+
+/** Hodnocení H1 z portfolia po částech: silné stránky, rozvoj, skóre, KPI, CSAT, vzorové tickety. */
+function renderHodnoceni(rv) {
+    if (!rv) return '';
+    const c = rv.casti;
+    const sez = (nazev, x, otevrene) => x.length ? '<details class="tg-kontext"' + (otevrene ? ' open' : '') + '><summary>' + nazev + ' <span class="tg-sub">' + x.length + '</span></summary><ul class="tg-rev">' + x.map(s => '<li>' + tgTicketyOdkazy(s) + '</li>').join('') + '</ul></details>' : '';
+    const skore = c.skore.length ? '<details class="tg-kontext" open><summary>Skóre <span class="tg-sub">−2 až +3</span></summary><table class="tg-tym mini"><tbody>' +
+        c.skore.map(s => '<tr><td>' + esc(s.kategorie) + '</td><td class="c"><b class="' + (/^\+/.test(s.skore) ? 'tg-plus' : /^[−-]\d/.test(s.skore) ? 'tg-minus' : '') + '">' + esc(s.skore) + '</b></td><td class="tg-sub">' + esc(s.poznamka) + '</td></tr>').join('') + '</tbody></table></details>' : '';
+    return '<section class="tg-card"><header><h2>Hodnocení H1 2026</h2><span class="tg-sub">portfolio · jen tady</span></header><div class="tg-pad">' +
+        sez('Silné stránky', c.silne, true) + sez('Rozvoj', c.rozvoj, true) + skore + sez('Kontext', c.kontext, false) + sez('Celkový dojem z dat', c.dojem, false) +
+        sez('KPI v hodnocení', c.kpi, false) + sez('CSAT', c.csat, false) + sez('Vzorové tickety', c.tickety, false) + sez('Na hodnoticí rozhovor', c.rozhovor, false) + '</div></section>';
+}
+
 function tgNactiOsobu(jmeno) {
     tgPriority('osoba&jmeno=' + encodeURIComponent(jmeno)).then(o => {
         const main = document.getElementById('tg-main');
@@ -474,7 +558,8 @@ function tgNactiOsobu(jmeno) {
         o.zapisy.forEach(z => z.action_items.forEach((a, i) => { if (!a.done) otevrene.push({ z, a, i }); }));
         const ukol = (z, a, i) => '<div class="tg-task' + (a.done ? ' done' : '') + '"><input type="checkbox" data-akce="1on1" data-k="' + z.id + ':' + i + '"' + (a.done ? ' checked' : '') + '><span class="t">' + esc(a.text) + '</span></div>';
         main.innerHTML = '<div class="tg-detail-hlava"><a href="#lide" class="tg-muted">← 1on1</a><h2>' + esc(o.jmeno) + '</h2>' + (o.popis ? '<span class="tg-muted">' + esc(o.popis) + '</span>' : '') + '</div>' +
-            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) + (o.denik && o.denik.rozbor ? '<section class="tg-card"><header><h2>Rozbor</h2><span class="tg-sub">posledních 90 dní proti týmu</span></header><div class="tg-pad">' + renderRozpad(o.denik.rozbor.clovek, o.denik.rozbor.tym, 90) + '</div></section>' : '') + renderTydny(o.denik && o.denik.tydny) +
+            renderOsobaPriprava(o) + renderCile(o.review, o.login || o.jmeno) +
+            '<div class="tg-wrap"><div class="tg-col">' + renderHodnoceni(o.review) + renderHistorie(o.denik && o.denik.historie) + (o.denik && o.denik.rozbor ? '<section class="tg-card"><header><h2>Rozbor</h2><span class="tg-sub">posledních 90 dní proti týmu</span></header><div class="tg-pad">' + renderRozpad(o.denik.rozbor.clovek, o.denik.rozbor.tym, 90) + '</div></section>' : '') + renderTydny(o.denik && o.denik.tydny) +
             '<section class="tg-card"><header><h2>Nový zápis</h2></header><div class="tg-pad"><form class="tg-form" id="tg-zapis"><input type="date" name="d" value="' + tgDnesIso() + '" required>' +
             '<label class="tg-nalada-vyber">Nálada <select name="m"><option value="">neuvedeno</option><option value="5">5 — výborná</option><option value="4">4 — dobrá</option><option value="3">3 — neutrální</option><option value="2">2 — horší</option><option value="1">1 — špatná</option></select></label>' +
             '<textarea name="n" rows="4" placeholder="Co jste probírali…"></textarea><textarea name="u" rows="2" placeholder="Úkoly — jeden na řádek (jen u aktuální schůzky)"></textarea>' +
@@ -484,7 +569,7 @@ function tgNactiOsobu(jmeno) {
                 (z.notes ? '<div class="tg-zapis-text">' + esc(z.notes) + '</div>' : '') + (z.action_items.length ? '<div style="margin-top:6px">' + z.action_items.map((a, i) => ukol(z, a, i)).join('') + '</div>' : '') + '</article>').join('') || '<span class="tg-muted">Bez zápisů.</span>') + '</div></section>' +
             '</div><aside class="tg-col"><section class="tg-card"><header><h2>Otevřené úkoly (' + otevrene.length + ')</h2></header><div class="tg-pad">' + (otevrene.map(x => ukol(x.z, x.a, x.i)).join('') || '<span class="tg-muted">Nic otevřeného.</span>') + '</div></section>' +
             renderDenik(o.denik) +
-            (o.kontext && o.kontext.length ? '<section class="tg-card"><header><h2>Z portfolia</h2><span class="tg-sub">review, tým, rozvoj</span></header><div class="tg-pad">' +
+            (o.kontext && o.kontext.length ? '<section class="tg-card"><header><h2>Z portfolia</h2><span class="tg-sub">review (celý text), tým, rozvoj</span></header><div class="tg-pad">' +
                 o.kontext.map((k, i) => '<details class="tg-kontext"' + (i === 0 ? '' : '') + '><summary>' + esc(k.zdroj) + '</summary><div class="tg-zapis-text">' + esc(k.text) + '</div></details>').join('') + '</div></section>' : '') +
             '<section class="tg-card"><header><h2>Profil</h2></header><div class="tg-pad">' + (o.profil.length ? '<dl class="tg-profil">' + o.profil.map(p => '<dt>' + esc(p.popis) + '</dt><dd>' + esc(p.text) + '</dd>').join('') + '</dl>' : '<span class="tg-muted">Prázdný.</span>') + '</div></section></aside></div>';
         document.getElementById('tg-zapis').addEventListener('submit', e => {
