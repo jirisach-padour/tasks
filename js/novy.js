@@ -309,6 +309,46 @@ function tgNalada(n) {
     const sip = n.predtim === null || n.predtim === n.hodnota ? '' : n.hodnota > n.predtim ? ' <span class="tg-trend nahoru">▲</span>' : ' <span class="tg-trend dolu">▼</span>';
     return '<span class="tg-nalada n' + n.hodnota + '" title="1on1 ' + esc(TL.datum(n.kdy)) + (tgDny(n.kdy) > 45 ? ' — staré' : '') + '">' + n.hodnota + '/5</span>' + sip + (tgDny(n.kdy) > 45 ? ' <span class="tg-sub">staré</span>' : '');
 }
+// Deník v3 (JS 31. 10.): kvalita vedle objemu (Grove), signál vs. šum (Deming), pohoda (Maslach), Slack bez DM
+const TG_SIGNAL = { pokles: ['trvalý pokles', 'hot'], vykyv_dolu: ['výkyv dolů', 'warn'], zlepseni: ['zlepšení', 'ok'], vykyv_nahoru: ['výkyv nahoru', 'ok'], stabilni: ['stabilní', ''], malo_dat: ['málo dat', ''] };
+const TG_POHODA = { riziko: ['riziko', 'hot'], sleduj: ['sledovat', 'warn'] };
+function tgSignal(s) {
+    if (!s) return '—';
+    const x = TG_SIGNAL[s.stav] || TG_SIGNAL.malo_dat;
+    const tit = s.prumer !== undefined ? 'poslední 4 týdny ' + tgCislo(s.posledni, 2) + ', vlastní průměr ' + tgCislo(s.prumer, 2) + ' ± ' + tgCislo(s.sd, 2) : 'méně než 10 týdnů s prací';
+    return '<span class="tg-tag ' + x[1] + '" title="' + esc(tit) + '">' + x[0] + '</span>';
+}
+function tgKvalita(x) {
+    if (x.sla_vina === undefined) return '—';
+    const tit = 'SLA přetažené vinou vlastníka (zpoždění agenta, pozdě uzavřeno) v měsících období; dluží = zákazníci, kteří teď čekají na odpověď 2+ pracovní dny' + (x.dluzne_prum !== null && x.dluzne_prum !== undefined ? ' (průměr období ' + tgCislo(x.dluzne_prum, 1) + ')' : '');
+    return '<span class="tg-kval" title="' + esc(tit) + '"><span class="' + (x.sla_vina >= 3 ? 'tg-tag warn' : '') + '">SLA ' + x.sla_vina + '</span> <span class="' + (x.dluzne >= 5 ? 'tg-tag hot' : '') + '">dluží ' + x.dluzne + '</span></span>';
+}
+function tgSlack(x, m) {
+    const s = x.slack;
+    if (!s) return '—';
+    const tit = s.zprav + ' zpráv v ' + s.kanalu + ' kanálech, ' + s.vlakna + ' odpovědí ve vláknech, ' + s.sdileni + '× sdílený odkaz nebo návod; medián týmu ' + tgCislo(m.slack || 0, 1) + '/den. Jen kanály a skupiny od 4 lidí, nikdy DM.';
+    return '<span title="' + esc(tit) + '">' + tgCislo(x.dnu ? s.zprav / x.dnu : 0, 1) + '</span>' + (s.sdileni ? ' <span class="tg-sub" title="sdílené odkazy a návody">↗' + s.sdileni + '</span>' : '');
+}
+function tgPohoda(x) {
+    const v = x.vyhoreni;
+    if (!v || !TG_POHODA[v.stav]) return '<span class="tg-muted">ok</span>';
+    return '<span class="tg-tag ' + TG_POHODA[v.stav][1] + '" title="' + esc(v.duvody.join('\n')) + '">' + TG_POHODA[v.stav][0] + '</span>';
+}
+/** Na co se podívat: fakta seřazená podle naléhavosti (pohoda, trvalý pokles, dlužné odpovědi, dny bez práce, zlepšení k pochvale). */
+function tgPozor(d) {
+    const p = [];
+    d.lide.forEach(x => {
+        const v = x.vyhoreni, s = x.signal || {};
+        if (v && TG_POHODA[v.stav]) p.push([v.stav === 'riziko' ? 0 : 2, x, TG_POHODA[v.stav], 'pohoda: ' + v.duvody.join(', ')]);
+        if (s.stav === 'pokles' || s.stav === 'vykyv_dolu') p.push([1, x, TG_SIGNAL[s.stav], 'poslední 4 týdny ' + tgCislo(s.posledni, 2) + ' proti vlastnímu průměru ' + tgCislo(s.prumer, 2)]);
+        if (x.dluzne >= 5) p.push([1, x, ['dlužné odpovědi', 'hot'], x.dluzne + ' zákazníků čeká 2+ pracovní dny']);
+        if (x.bez_prace >= 3) p.push([2, x, ['bez práce', 'warn'], x.bez_prace + ' pracovních dní bez aktivity a bez absence']);
+        if (s.stav === 'zlepseni') p.push([3, x, TG_SIGNAL.zlepseni, 'zlepšení proti vlastnímu průměru — příležitost pochválit']);
+    });
+    if (!p.length) return '';
+    p.sort((a, b) => a[0] - b[0]);
+    return '<ul class="tg-pozor">' + p.map(([, x, tag, text]) => '<li><span class="tg-tag ' + tag[1] + '">' + tag[0] + '</span> <b>' + (x.osoba ? '<a href="#osoba=' + encodeURIComponent(x.osoba) + '">' + esc(x.jmeno) + '</a>' : esc(x.jmeno)) + '</b> <span class="tg-sub">' + esc(text) + '</span></li>').join('') + '</ul>';
+}
 function renderTymPohled() {
     if (!tg.prace) return '<p class="tg-muted">Srovnání týmu je na operations — připoj se na VPN.</p>';
     const d = tg.tym[tg.tymDni];
@@ -324,16 +364,31 @@ function renderTymPohled() {
             '<span class="n">' + (x.index === null ? '—' : tgCislo(x.index, 2)) + '</span></td>' +
             '<td><span class="tg-tag ' + st[1] + '">' + st[0] + '</span></td>' +
             '<td class="c">' + tgCislo(x.tk, 1) + '</td><td class="c">' + tgCislo(x.kom, 1) + '</td><td class="c">' + tgCislo(x.koment, 1) + '</td><td class="c">' + tgCislo(x.cas, 1) + '</td>' +
-            '<td class="c">' + x.dnu + '</td><td class="c">' + tgTrend(x.trend) + '</td>' +
+            '<td class="c">' + x.dnu + (x.kontext && (x.kontext.zvedacka || x.kontext.support_week) ? ' <span class="tg-sub" title="dny na zvedačce (víc hovorů, méně ticketů) / support week">' + (x.kontext.zvedacka ? 'zv ' + x.kontext.zvedacka : '') + (x.kontext.support_week ? ' sw' : '') + '</span>' : '') + '</td>' +
+            '<td class="c">' + tgTrend(x.trend) + '</td><td class="c">' + tgSignal(x.signal) + '</td><td class="c">' + tgKvalita(x) + '</td><td class="c">' + tgSlack(x, m) + '</td>' +
             '<td class="c">' + tgZatez(x, m) + '</td><td class="c">' + (x.prideleno === null ? '—' : tgCislo(x.prideleno, 1)) + '</td>' +
             '<td class="c">' + (x.bez_prace === null ? '—' : x.bez_prace ? '<span class="tg-tag ' + (x.bez_prace >= 3 ? 'hot' : 'warn') + '">' + x.bez_prace + '</span>' : '0') + '</td>' +
-            '<td class="c">' + tgNalada(x.nalada) + '</td>' +
+            '<td class="c">' + tgNalada(x.nalada) + '</td><td class="c">' + tgPohoda(x) + '</td>' +
             '<td class="c">' + (o.pochvala ? '<span class="tg-tag ok">★ ' + o.pochvala + '</span>' : '') + (o.stiznost ? '<span class="tg-tag hot">! ' + o.stiznost + '</span>' : '') + (o.prusvih ? '<span class="tg-tag hot">průšvih ' + o.prusvih + '</span>' : '') + '</td></tr>';
     };
-    return '<section class="tg-card"><header><h2>Tým CZ-L1</h2><span class="tg-sub">' + TL.datum(d.od) + ' – ' + TL.datum(d.do) + '</span>' + prepinac + '</header><div class="tg-pad tg-tym-wrap">' +
-        '<table class="tg-tym"><thead><tr><th>Člověk</th><th>Index proti týmu</th><th></th><th class="c" title="tickety, na kterých pracoval">Tickety</th><th class="c" title="e-maily, hovory, chaty, SMS, WhatsApp">Komunikace</th><th class="c">Komentáře</th><th class="c" title="Project Time, jedna aktivita nejvýš 4 h">Vykázáno h</th><th class="c" title="dní s aspoň jednou aktivitou">Dní</th><th class="c">Trend</th><th class="c" title="zátěž teď podle Ticket Routeru (otevřené tickety); v závorce průměr období">Zátěž</th><th class="c" title="přidělené tickety na den s prací">Přiděleno</th><th class="c" title="pracovní dny bez jediné aktivity a bez evidované absence">Bez práce</th><th class="c" title="nálada z posledního 1on1 (1–5)">Nálada</th><th class="c">Ohlasy</th></tr></thead><tbody>' +
-        d.lide.map(radek).join('') + '<tr class="median"><td class="jm">Medián týmu</td><td class="idx"><span class="n">1,00</span></td><td></td><td class="c">' + tgCislo(m.tk, 1) + '</td><td class="c">' + tgCislo(m.kom, 1) + '</td><td class="c">' + tgCislo(m.koment, 1) + '</td><td class="c">' + tgCislo(m.cas, 1) + '</td><td colspan="2"></td><td class="c">' + (m.zatez ? tgCislo(m.zatez, 0) : '—') + '</td><td class="c">' + (m.prideleno ? tgCislo(m.prideleno, 1) : '—') + '</td><td colspan="3"></td></tr></tbody></table>' +
-        '<p class="tg-pozn">Hodnoty na den s prací (bez přepočtu na kapacitu v routeru — kdo má „router 0,3“, dostává méně ticketů). Index = průměr poměrů tickety, komunikace a vykázaný čas k mediánu týmu; v normě od 0,90, pod týmem 0,70–0,90. Den bez aktivity se nepočítá (dovolená ani nemoc v datech nejsou) — počet dní je ve sloupci Dní. Zdroj: aktivity v Daktele, jen čtení.</p></div></section>';
+    return '<section class="tg-card"><header><h2>Tým CZ-L1</h2><span class="tg-sub">' + TL.datum(d.od) + ' – ' + TL.datum(d.do) + '</span>' + prepinac + '</header><div class="tg-pad tg-tym-wrap">' + tgPozor(d) +
+        '<table class="tg-tym"><thead><tr><th>Člověk</th><th>Index proti týmu</th><th></th><th class="c" title="tickety, na kterých pracoval">Tickety</th><th class="c" title="e-maily, hovory, chaty, SMS, WhatsApp">Komunikace</th><th class="c">Komentáře</th><th class="c" title="Project Time, jedna aktivita nejvýš 4 h">Vykázáno h</th><th class="c" title="dní s aspoň jednou aktivitou">Dní</th><th class="c">Trend</th><th class="c" title="poslední 4 týdny proti vlastnímu průměru (Deming): upozorní jen na trvalou změnu, ne na běžné kolísání">Signál</th><th class="c" title="kvalita vedle objemu: SLA přetažené vinou vlastníka, dlužné odpovědi teď">Kvalita</th><th class="c" title="zprávy ve Slacku na den s prací (kanály a skupiny od 4 lidí, nikdy DM); ↗ = sdílené odkazy a návody">Slack</th><th class="c" title="zátěž teď podle Ticket Routeru (otevřené tickety); v závorce průměr období">Zátěž</th><th class="c" title="přidělené tickety na den s prací">Přiděleno</th><th class="c" title="pracovní dny bez jediné aktivity a bez evidované absence">Bez práce</th><th class="c" title="nálada z posledního 1on1 (1–5)">Nálada</th><th class="c" title="varování před vyhořením: práce mimo dobu, přidělování a zátěž nad mediánem, dlouho bez volna, nálada — víc signálů najednou = riziko">Pohoda</th><th class="c">Ohlasy</th></tr></thead><tbody>' +
+        d.lide.map(radek).join('') + '<tr class="median"><td class="jm">Medián týmu</td><td class="idx"><span class="n">1,00</span></td><td></td><td class="c">' + tgCislo(m.tk, 1) + '</td><td class="c">' + tgCislo(m.kom, 1) + '</td><td class="c">' + tgCislo(m.koment, 1) + '</td><td class="c">' + tgCislo(m.cas, 1) + '</td><td colspan="2"></td><td></td><td></td><td class="c">' + tgCislo(m.slack || 0, 1) + '</td><td class="c">' + (m.zatez ? tgCislo(m.zatez, 0) : '—') + '</td><td class="c">' + (m.prideleno ? tgCislo(m.prideleno, 1) : '—') + '</td><td colspan="4"></td></tr></tbody></table>' +
+        '<p class="tg-pozn">Hodnoty na den s prací (bez přepočtu na kapacitu v routeru — kdo má „router 0,3“, dostává méně ticketů). Index = průměr poměrů tickety, komunikace a vykázaný čas k mediánu týmu; v normě od 0,90, pod týmem 0,70–0,90. Den bez aktivity se nepočítá (dovolená ani nemoc v datech nejsou) — počet dní je ve sloupci Dní. Signál porovnává člověka s ním samým (týdny, pásmo ± 2 σ), takže běžné kolísání nepoplaší. Kvalita: SLA zdůvodnění z KPI dashboardu a dlužné odpovědi z Ticket Routeru. Slack se do indexu nepočítá. Zdroj: Daktela, Slack, Ticket Router, KPI dashboard — jen čtení.</p></div></section>';
+}
+
+/** Týdny: index po týdnech s pásmem běžného kolísání člověka (vlastní průměr ± 2 σ) — Deming. */
+function renderTydny(t) {
+    if (!t || !t.rada || !t.rada.length) return '';
+    const s = t.signal || {}, ma = s.prumer !== undefined;
+    const max = Math.max(1.5, ...t.rada.map(x => x.index || 0), ma ? s.prumer + 2 * s.sd : 0);
+    const y = v => Math.round(Math.max(0, v) / max * 100);
+    const pasmo = ma ? '<b class="tg-pasmo" style="bottom:' + y(s.prumer - 2 * s.sd) + '%;height:' + (y(s.prumer + 2 * s.sd) - y(s.prumer - 2 * s.sd)) + '%"></b><b class="tg-median" style="bottom:' + y(s.prumer) + '%"></b>' : '';
+    const sl = t.rada.map(x => '<div class="tg-graf-sl" title="' + esc('týden od ' + TL.datum(x.tyden) + ': index ' + (x.index === null ? '—' : tgCislo(x.index, 2)) + ', ' + x.dnu + ' dní práce') + '">' +
+        '<span class="v' + (x.dnu < 3 ? ' slaby' : '') + '" style="height:' + y(x.index || 0) + '%"></span><span class="d">' + Number(x.tyden.slice(8, 10)) + '</span></div>').join('');
+    return '<section class="tg-card"><header><h2>Týdny</h2><span class="tg-sub">vlastní průměr ± 2 σ</span> ' + tgSignal(s) + '</header><div class="tg-pad">' +
+        '<div class="tg-graf tg-graf-idx">' + pasmo + sl + '</div>' +
+        '<p class="tg-pozn">Pásmo = běžné kolísání tohoto člověka (týdny před posledními čtyřmi). Upozorní jen na trvalý pokles (4 týdny pod průměrem o víc než σ) nebo týden mimo pásmo. Světlé sloupce = týden s méně než 3 dny práce, nepočítá se.</p></div></section>';
 }
 
 /** Dlouhodobě: index člověka po měsících proti tehdejšímu týmu (sloupce, čára = medián). */
@@ -375,7 +430,7 @@ function tgNactiOsobu(jmeno) {
         o.zapisy.forEach(z => z.action_items.forEach((a, i) => { if (!a.done) otevrene.push({ z, a, i }); }));
         const ukol = (z, a, i) => '<div class="tg-task' + (a.done ? ' done' : '') + '"><input type="checkbox" data-akce="1on1" data-k="' + z.id + ':' + i + '"' + (a.done ? ' checked' : '') + '><span class="t">' + esc(a.text) + '</span></div>';
         main.innerHTML = '<div class="tg-detail-hlava"><a href="#lide" class="tg-muted">← 1on1</a><h2>' + esc(o.jmeno) + '</h2>' + (o.popis ? '<span class="tg-muted">' + esc(o.popis) + '</span>' : '') + '</div>' +
-            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) +
+            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) + renderTydny(o.denik && o.denik.tydny) +
             '<section class="tg-card"><header><h2>Nový zápis</h2></header><div class="tg-pad"><form class="tg-form" id="tg-zapis"><input type="date" name="d" value="' + tgDnesIso() + '" required>' +
             '<label class="tg-nalada-vyber">Nálada <select name="m"><option value="">neuvedeno</option><option value="5">5 — výborná</option><option value="4">4 — dobrá</option><option value="3">3 — neutrální</option><option value="2">2 — horší</option><option value="1">1 — špatná</option></select></label>' +
             '<textarea name="n" rows="4" placeholder="Co jste probírali…"></textarea><textarea name="u" rows="2" placeholder="Úkoly — jeden na řádek (jen u aktuální schůzky)"></textarea>' +
