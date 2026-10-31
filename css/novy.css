@@ -290,6 +290,25 @@ dialog#tg-dlg .tg-acts { justify-content: flex-end; }
 .tg-pozor { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; }
 .tg-pozor li { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
 .tg-kval { white-space: nowrap; }
+.tg-duk { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.tg-duk:hover { color: var(--accent); }
+dialog#tg-duk { border: 0; border-radius: 16px; background: var(--surface); color: var(--text); width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+dialog#tg-duk::backdrop { background: rgba(20,20,18,.4); }
+.tg-duk-hlava { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tg-duk-hlava h3 { margin: 0; font-size: 18px; }
+.tg-duk-info { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 13px; margin: 12px 0; }
+.tg-duk-info dt { color: var(--text-3); }
+.tg-duk-info dd { margin: 0; }
+.tg-duk-filtr { width: 100%; max-width: 320px; margin-bottom: 8px; }
+.tg-duk-tab { overflow: auto; max-height: 60vh; }
+.tg-duk-tab td { font-size: 13px; vertical-align: top; }
+.tg-rozbal { background: none; border: 0; padding: 0 6px 0 0; cursor: pointer; color: var(--text-3); font: inherit; }
+.tg-odkaz { background: none; border: 0; padding: 0; cursor: pointer; color: var(--accent); font: inherit; font-size: 12.5px; text-decoration: underline; }
+.tg-rozbal-radek td { background: var(--bg-2, transparent); padding: 10px 12px 14px; }
+.tg-rozbal-obsah { max-width: 760px; }
+.tg-rozbor { margin: 0 0 10px; padding-left: 18px; font-size: 13.5px; line-height: 1.5; }
+.tg-rozbor li { margin-bottom: 3px; }
+.tg-rozpad td:first-child { white-space: nowrap; }
 .tg-graf-idx .tg-median { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--text-3); z-index: 1; pointer-events: none; }
 .tg-graf-sl .v.ok { background: var(--ok); }
 .tg-graf-sl .v.pod { background: var(--amber); }

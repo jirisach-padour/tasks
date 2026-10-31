@@ -5,7 +5,7 @@
 const TG_PR = 'https://operations.daktela.com/padour/priority/api.php';
 const TG_PRIORITY_WEB = 'https://operations.daktela.com/padour/priority/';
 const esc = TL.esc;
-const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: true, tym: {}, tymDni: Number(tgLsBezpecne('tg_tym_dni')) || 30 };   // JS 30. 10.: co je bez reakce, musí být vidět
+const tg = { kalPrace: null, klic: null, prace: null, ted: null, osobni: [], prUkoly: [], udalosti: [], lide: [], strat: null, chybaPrace: null, otevrenoSlack: true, tym: {}, tymDni: Number(tgLsBezpecne('tg_tym_dni')) || 30, tymRozbal: {} };   // JS 30. 10.: co je bez reakce, musí být vidět
 
 // ---------- úložiště a klíč ----------
 function tgLsBezpecne(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -321,18 +321,18 @@ function tgSignal(s) {
 function tgKvalita(x) {
     if (x.sla_vina === undefined) return '—';
     const tit = 'SLA přetažené vinou vlastníka (zpoždění agenta, pozdě uzavřeno) v měsících období; dluží = zákazníci, kteří teď čekají na odpověď 2+ pracovní dny' + (x.dluzne_prum !== null && x.dluzne_prum !== undefined ? ' (průměr období ' + tgCislo(x.dluzne_prum, 1) + ')' : '');
-    return '<span class="tg-kval" title="' + esc(tit) + '"><span class="' + (x.sla_vina >= 3 ? 'tg-tag warn' : '') + '">SLA ' + x.sla_vina + '</span> <span class="' + (x.dluzne >= 5 ? 'tg-tag hot' : '') + '">dluží ' + x.dluzne + '</span></span>';
+    return '<span class="tg-kval" title="' + esc(tit) + '">' + tgDuk(x.login, 'sla_vina', '<span class="' + (x.sla_vina >= 3 ? 'tg-tag warn' : '') + '">SLA ' + x.sla_vina + '</span>') + ' ' + tgDuk(x.login, 'dluzne', '<span class="' + (x.dluzne >= 5 ? 'tg-tag hot' : '') + '">dluží ' + x.dluzne + '</span>') + '</span>';
 }
 function tgSlack(x, m) {
     const s = x.slack;
     if (!s) return '—';
     const tit = s.zprav + ' zpráv v ' + s.kanalu + ' kanálech, ' + s.vlakna + ' odpovědí ve vláknech, ' + s.sdileni + '× sdílený odkaz nebo návod; medián týmu ' + tgCislo(m.slack || 0, 1) + '/den. Jen kanály a skupiny od 4 lidí, nikdy DM.';
-    return '<span title="' + esc(tit) + '">' + tgCislo(x.dnu ? s.zprav / x.dnu : 0, 1) + '</span>' + (s.sdileni ? ' <span class="tg-sub" title="sdílené odkazy a návody">↗' + s.sdileni + '</span>' : '');
+    return tgDuk(x.login, 'slack', '<span title="' + esc(tit) + '">' + tgCislo(x.dnu ? s.zprav / x.dnu : 0, 1) + '</span>') + (s.sdileni ? ' <span class="tg-sub" title="sdílené odkazy a návody">↗' + s.sdileni + '</span>' : '');
 }
 function tgPohoda(x) {
     const v = x.vyhoreni;
     if (!v || !TG_POHODA[v.stav]) return '<span class="tg-muted">ok</span>';
-    return '<span class="tg-tag ' + TG_POHODA[v.stav][1] + '" title="' + esc(v.duvody.join('\n')) + '">' + TG_POHODA[v.stav][0] + '</span>';
+    return '<span class="tg-tag ' + TG_POHODA[v.stav][1] + '" title="' + esc(v.duvody.join('\n')) + '">' + TG_POHODA[v.stav][0] + '</span>' + (v.duvody.some(s => s.startsWith('mimo')) ? ' ' + tgDuk(x.login, 'mimo', 'mimo dobu') : '');
 }
 /** Na co se podívat: fakta seřazená podle naléhavosti (pohoda, trvalý pokles, dlužné odpovědi, dny bez práce, zlepšení k pochvale). */
 function tgPozor(d) {
@@ -347,7 +347,49 @@ function tgPozor(d) {
     });
     if (!p.length) return '';
     p.sort((a, b) => a[0] - b[0]);
-    return '<ul class="tg-pozor">' + p.map(([, x, tag, text]) => '<li><span class="tg-tag ' + tag[1] + '">' + tag[0] + '</span> <b>' + (x.osoba ? '<a href="#osoba=' + encodeURIComponent(x.osoba) + '">' + esc(x.jmeno) + '</a>' : esc(x.jmeno)) + '</b> <span class="tg-sub">' + esc(text) + '</span></li>').join('') + '</ul>';
+    return '<ul class="tg-pozor">' + p.map(([, x, tag, text]) => '<li><span class="tg-tag ' + tag[1] + '">' + tag[0] + '</span> <b>' + (x.osoba ? '<a href="#osoba=' + encodeURIComponent(x.osoba) + '">' + esc(x.jmeno) + '</a>' : esc(x.jmeno)) + '</b> <span class="tg-sub">' + esc(text) + '</span> <button class="tg-odkaz" data-akce="tym-rozbal" data-l="' + esc(x.login) + '">rozbor</button></li>').join('') + '</ul>';
+}
+/** Rozpad přidělených ticketů člověk × tým + slovní rozbor z dat (JS 31. 10.: „nejsou to jednoduché tickety?“). */
+/** Číslo, které jde rozkliknout na důkazy (seznam ticketů / zpráv s odkazy, zdroj a pravidlo výpočtu). JS 31. 10. */
+function tgDuk(login, co, html, dni) { return '<button class="tg-duk" data-akce="dukazy" data-l="' + esc(login) + '" data-co="' + co + '"' + (dni ? ' data-d="' + dni + '"' : '') + ' title="ukázat data, ze kterých číslo je">' + html + '</button>'; }
+function tgDukBunka(v) { return v && typeof v === 'object' ? '<a href="' + esc(v.u) + '" target="_blank" rel="noopener">' + esc(v.t) + '</a>' : esc(v === null || v === undefined ? '' : String(v)); }
+function tgDukazy(login, co, dni) {
+    const dlg = document.getElementById('tg-duk');
+    dlg.innerHTML = '<div class="tg-duk-hlava"><h3>Načítám…</h3><button class="tg-btn" data-akce="duk-zavrit">Zavřít</button></div>';
+    if (!dlg.open) dlg.showModal();
+    tgPriority('tym_dukazy&login=' + encodeURIComponent(login) + '&dni=' + dni + '&co=' + co).then(d => {
+        if (d.chyba) { dlg.querySelector('h3').textContent = d.chyba; return; }
+        dlg.innerHTML = renderDukazy(d);
+        const f = dlg.querySelector('.tg-duk-filtr');
+        if (f) f.addEventListener('input', () => { const q = f.value.toLowerCase(); dlg.querySelectorAll('tbody tr').forEach(tr => { tr.hidden = q !== '' && !tr.textContent.toLowerCase().includes(q); }); });
+    }).catch(() => { dlg.querySelector('h3').textContent = 'Nepodařilo se načíst (VPN?).'; });
+}
+function renderDukazy(d) {
+    return '<div class="tg-duk-hlava"><h3>' + esc(d.nadpis) + ' <span class="tg-sub">' + esc(d.login) + ' · ' + d.celkem + (d.celkem > d.radky.length ? ' (ukázáno ' + d.radky.length + ')' : '') + '</span></h3><button class="tg-btn" data-akce="duk-zavrit">Zavřít</button></div>' +
+        '<dl class="tg-duk-info"><dt>Zdroj</dt><dd>' + esc(d.zdroj) + '</dd><dt>Jak se počítá</dt><dd>' + esc(d.pravidlo) + '</dd><dt>Období</dt><dd>' + esc(TL.datum(d.od)) + ' – ' + esc(TL.datum(d.do)) + ' (bez dneška)</dd></dl>' +
+        (d.radky.length ? '<input class="tg-duk-filtr" type="search" placeholder="Filtrovat řádky…">' +
+            '<div class="tg-duk-tab"><table class="tg-tym mini"><thead><tr>' + d.sloupce.map(s => '<th>' + esc(s) + '</th>').join('') + '</tr></thead><tbody>' +
+            d.radky.map(r => '<tr>' + r.map(v => '<td>' + tgDukBunka(v) + '</td>').join('') + '</tr>').join('') + '</tbody></table></div>' : '<p class="tg-muted">Žádné řádky.</p>');
+}
+function tgPct(v) { return v === null || v === undefined ? '—' : Math.round(v * 100) + ' %'; }
+function renderRozpad(x, t, dni) {
+    const r = x.rozpad;
+    let h = x.rozbor && x.rozbor.length ? '<ul class="tg-rozbor">' + x.rozbor.map(s => '<li>' + esc(s) + '</li>').join('') + '</ul>' : '';
+    if (!r || !t) return h;
+    const radek = (nazev, a, b, tit) => '<tr' + (tit ? ' title="' + esc(tit) + '"' : '') + '><td>' + nazev + '</td><td class="c">' + a + '</td><td class="c tg-sub">' + b + '</td></tr>';
+    const tem = Object.keys(r.temata || {}).slice(0, 5);
+    h += '<table class="tg-tym mini tg-rozpad"><thead><tr><th>Přidělené tickety</th><th class="c">' + esc(x.jmeno) + '</th><th class="c">tým</th></tr></thead><tbody>' +
+        radek('Počet', tgDuk(x.login, 'prideleno', String(r.n), dni), t.n) +
+        radek('Rutina / střední / složité', tgDuk(x.login, 'prideleno', tgPct(r.rutina) + ' / ' + tgPct(r.stredni) + ' / ' + tgPct(r.slozite), dni), tgPct(t.rutina) + ' / ' + tgPct(t.stredni) + ' / ' + tgPct(t.slozite), 'odhad náročnosti Ticket Routeru při přidělení') +
+        radek('Váha náročnosti', tgCislo(r.vaha || 0, 2), tgCislo(t.vaha || 0, 2), 'rutina 1, střední 2, složité 3') +
+        radek('Aktivit na ticket', tgCislo(r.akt, 1), tgCislo(t.akt, 1), 'všech aktivit na ticketu, skutečná pracnost') +
+        radek('Incidenty / SR', tgPct(r.inc) + ' / ' + tgPct(r.sr), tgPct(t.inc) + ' / ' + tgPct(t.sr)) +
+        radek('Klíčoví zákazníci (tier)', tgPct(r.klicovi), tgPct(t.klicovi)) +
+        radek('SLA překročeno', tgDuk(x.login, 'sla', tgPct(r.sla), dni), tgPct(t.sla)) +
+        radek('Předáno dál', tgDuk(x.login, 'predano', tgPct(r.predano), dni), tgPct(t.predano)) +
+        (r.kanaly ? radek('E-mail / hovor / chat', tgPct(r.kanaly.email) + ' / ' + tgPct(r.kanaly.hovor) + ' / ' + tgPct(r.kanaly.chat), t.kanaly ? tgPct(t.kanaly.email) + ' / ' + tgPct(t.kanaly.hovor) + ' / ' + tgPct(t.kanaly.chat) : '—', 'podíl komunikace podle kanálu') : '') +
+        tem.map(k => radek('Téma: ' + esc(k), tgPct(r.temata[k]), tgPct((t.temata || {})[k] || 0))).join('') + '</tbody></table>';
+    return h;
 }
 function renderTymPohled() {
     if (!tg.prace) return '<p class="tg-muted">Srovnání týmu je na operations — připoj se na VPN.</p>';
@@ -359,17 +401,19 @@ function renderTymPohled() {
     const radek = x => {
         const st = TG_TYM_STAV[x.stav] || TG_TYM_STAV.malo_dat, o = x.ohlasy || {};
         const jm = x.osoba ? '<a href="#osoba=' + encodeURIComponent(x.osoba) + '">' + esc(x.jmeno) + '</a>' : esc(x.jmeno);
-        return '<tr class="' + esc(x.stav) + '"><td class="jm">' + jm + (x.kapacita < 1 ? ' <span class="tg-sub" title="podíl ticketů, který mu dává Ticket Router — čísla se kvůli tomu nepřepočítávají">router ' + tgCislo(x.kapacita, 1) + '</span>' : '') + '</td>' +
+        const otev = !!tg.tymRozbal[x.login];
+        return '<tr class="' + esc(x.stav) + '"><td class="jm"><button class="tg-rozbal" data-akce="tym-rozbal" data-l="' + esc(x.login) + '" title="rozpad a rozbor">' + (otev ? '▾' : '▸') + '</button>' + jm + (x.kapacita < 1 ? ' <span class="tg-sub" title="podíl ticketů, který mu dává Ticket Router — čísla se kvůli tomu nepřepočítávají">router ' + tgCislo(x.kapacita, 1) + '</span>' : '') + '</td>' +
             '<td class="idx"><div class="tg-idx" title="index ' + (x.index === null ? '—' : tgCislo(x.index, 2)) + ' (1,00 = medián týmu)"><i style="width:' + Math.round((x.index || 0) / max * 100) + '%"></i><b style="left:' + Math.round(1 / max * 100) + '%"></b></div>' +
             '<span class="n">' + (x.index === null ? '—' : tgCislo(x.index, 2)) + '</span></td>' +
             '<td><span class="tg-tag ' + st[1] + '">' + st[0] + '</span></td>' +
-            '<td class="c">' + tgCislo(x.tk, 1) + '</td><td class="c">' + tgCislo(x.kom, 1) + '</td><td class="c">' + tgCislo(x.koment, 1) + '</td><td class="c">' + tgCislo(x.cas, 1) + '</td>' +
-            '<td class="c">' + x.dnu + (x.kontext && (x.kontext.zvedacka || x.kontext.support_week) ? ' <span class="tg-sub" title="dny na zvedačce (víc hovorů, méně ticketů) / support week">' + (x.kontext.zvedacka ? 'zv ' + x.kontext.zvedacka : '') + (x.kontext.support_week ? ' sw' : '') + '</span>' : '') + '</td>' +
+            '<td class="c">' + tgDuk(x.login, 'tickety', tgCislo(x.tk, 1)) + '</td><td class="c">' + tgCislo(x.kom, 1) + '</td><td class="c">' + tgCislo(x.koment, 1) + '</td><td class="c">' + tgCislo(x.cas, 1) + '</td>' +
+            '<td class="c">' + tgDuk(x.login, 'dny', String(x.dnu)) + (x.kontext && (x.kontext.zvedacka || x.kontext.support_week) ? ' <span class="tg-sub" title="dny na zvedačce (víc hovorů, méně ticketů) / support week">' + (x.kontext.zvedacka ? 'zv ' + x.kontext.zvedacka : '') + (x.kontext.support_week ? ' sw' : '') + '</span>' : '') + '</td>' +
             '<td class="c">' + tgTrend(x.trend) + '</td><td class="c">' + tgSignal(x.signal) + '</td><td class="c">' + tgKvalita(x) + '</td><td class="c">' + tgSlack(x, m) + '</td>' +
-            '<td class="c">' + tgZatez(x, m) + '</td><td class="c">' + (x.prideleno === null ? '—' : tgCislo(x.prideleno, 1)) + '</td>' +
-            '<td class="c">' + (x.bez_prace === null ? '—' : x.bez_prace ? '<span class="tg-tag ' + (x.bez_prace >= 3 ? 'hot' : 'warn') + '">' + x.bez_prace + '</span>' : '0') + '</td>' +
+            '<td class="c">' + tgZatez(x, m) + '</td><td class="c">' + (x.prideleno === null ? '—' : tgDuk(x.login, 'prideleno', tgCislo(x.prideleno, 1))) + '</td>' +
+            '<td class="c">' + (x.bez_prace === null ? '—' : x.bez_prace ? tgDuk(x.login, 'bez_prace', '<span class="tg-tag ' + (x.bez_prace >= 3 ? 'hot' : 'warn') + '">' + x.bez_prace + '</span>') : '0') + '</td>' +
             '<td class="c">' + tgNalada(x.nalada) + '</td><td class="c">' + tgPohoda(x) + '</td>' +
-            '<td class="c">' + (o.pochvala ? '<span class="tg-tag ok">★ ' + o.pochvala + '</span>' : '') + (o.stiznost ? '<span class="tg-tag hot">! ' + o.stiznost + '</span>' : '') + (o.prusvih ? '<span class="tg-tag hot">průšvih ' + o.prusvih + '</span>' : '') + '</td></tr>';
+            '<td class="c">' + ((o.pochvala || o.stiznost || o.prusvih) ? tgDuk(x.login, 'ohlasy', '⌕') : '') + (o.pochvala ? '<span class="tg-tag ok">★ ' + o.pochvala + '</span>' : '') + (o.stiznost ? '<span class="tg-tag hot">! ' + o.stiznost + '</span>' : '') + (o.prusvih ? '<span class="tg-tag hot">průšvih ' + o.prusvih + '</span>' : '') + '</td></tr>' +
+            (otev ? '<tr class="tg-rozbal-radek"><td colspan="22"><div class="tg-rozbal-obsah">' + renderRozpad(x, d.tym, tg.tymDni) + '</div></td></tr>' : '');
     };
     return '<section class="tg-card"><header><h2>Tým CZ-L1</h2><span class="tg-sub">' + TL.datum(d.od) + ' – ' + TL.datum(d.do) + '</span>' + prepinac + '</header><div class="tg-pad tg-tym-wrap">' + tgPozor(d) +
         '<table class="tg-tym"><thead><tr><th>Člověk</th><th>Index proti týmu</th><th></th><th class="c" title="tickety, na kterých pracoval">Tickety</th><th class="c" title="e-maily, hovory, chaty, SMS, WhatsApp">Komunikace</th><th class="c">Komentáře</th><th class="c" title="Project Time, jedna aktivita nejvýš 4 h">Vykázáno h</th><th class="c" title="dní s aspoň jednou aktivitou">Dní</th><th class="c">Trend</th><th class="c" title="poslední 4 týdny proti vlastnímu průměru (Deming): upozorní jen na trvalou změnu, ne na běžné kolísání">Signál</th><th class="c" title="kvalita vedle objemu: SLA přetažené vinou vlastníka, dlužné odpovědi teď">Kvalita</th><th class="c" title="zprávy ve Slacku na den s prací (kanály a skupiny od 4 lidí, nikdy DM); ↗ = sdílené odkazy a návody">Slack</th><th class="c" title="zátěž teď podle Ticket Routeru (otevřené tickety); v závorce průměr období">Zátěž</th><th class="c" title="přidělené tickety na den s prací">Přiděleno</th><th class="c" title="pracovní dny bez jediné aktivity a bez evidované absence">Bez práce</th><th class="c" title="nálada z posledního 1on1 (1–5)">Nálada</th><th class="c" title="varování před vyhořením: práce mimo dobu, přidělování a zátěž nad mediánem, dlouho bez volna, nálada — víc signálů najednou = riziko">Pohoda</th><th class="c">Ohlasy</th></tr></thead><tbody>' +
@@ -430,7 +474,7 @@ function tgNactiOsobu(jmeno) {
         o.zapisy.forEach(z => z.action_items.forEach((a, i) => { if (!a.done) otevrene.push({ z, a, i }); }));
         const ukol = (z, a, i) => '<div class="tg-task' + (a.done ? ' done' : '') + '"><input type="checkbox" data-akce="1on1" data-k="' + z.id + ':' + i + '"' + (a.done ? ' checked' : '') + '><span class="t">' + esc(a.text) + '</span></div>';
         main.innerHTML = '<div class="tg-detail-hlava"><a href="#lide" class="tg-muted">← 1on1</a><h2>' + esc(o.jmeno) + '</h2>' + (o.popis ? '<span class="tg-muted">' + esc(o.popis) + '</span>' : '') + '</div>' +
-            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) + renderTydny(o.denik && o.denik.tydny) +
+            '<div class="tg-wrap"><div class="tg-col">' + renderHistorie(o.denik && o.denik.historie) + (o.denik && o.denik.rozbor ? '<section class="tg-card"><header><h2>Rozbor</h2><span class="tg-sub">posledních 90 dní proti týmu</span></header><div class="tg-pad">' + renderRozpad(o.denik.rozbor.clovek, o.denik.rozbor.tym, 90) + '</div></section>' : '') + renderTydny(o.denik && o.denik.tydny) +
             '<section class="tg-card"><header><h2>Nový zápis</h2></header><div class="tg-pad"><form class="tg-form" id="tg-zapis"><input type="date" name="d" value="' + tgDnesIso() + '" required>' +
             '<label class="tg-nalada-vyber">Nálada <select name="m"><option value="">neuvedeno</option><option value="5">5 — výborná</option><option value="4">4 — dobrá</option><option value="3">3 — neutrální</option><option value="2">2 — horší</option><option value="1">1 — špatná</option></select></label>' +
             '<textarea name="n" rows="4" placeholder="Co jste probírali…"></textarea><textarea name="u" rows="2" placeholder="Úkoly — jeden na řádek (jen u aktuální schůzky)"></textarea>' +
@@ -505,6 +549,9 @@ document.addEventListener('click', e => {
         return;
     }
     const a = el.dataset.akce;
+    if (a === 'dukazy') { tgDukazy(el.dataset.l, el.dataset.co, Number(el.dataset.d) || tg.tymDni); return; }
+    if (a === 'duk-zavrit') { document.getElementById('tg-duk').close(); return; }
+    if (a === 'tym-rozbal') { tg.tymRozbal[el.dataset.l] = !tg.tymRozbal[el.dataset.l]; tgVykresli(); return; }
     if (a === 'tym-dni') { tg.tymDni = Number(el.dataset.d); tgLs('tg_tym_dni', String(tg.tymDni)); tgVykresli(); return; }
     if (a === 'hotovo') {
         const x = tg.zobrazene[Number(el.dataset.i)];

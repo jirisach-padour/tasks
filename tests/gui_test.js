@@ -38,10 +38,11 @@ const DATA = {
     kalendar: { connected: true, events: [
         { title: '1:1 — René', date: iso(dnes), time: '23:00', allDay: false, start: iso(dnes) + 'T23:00:00', end: iso(dnes) + 'T23:30:00', durationH: 0.5, rsvp: 'accepted' },
         { title: 'Provozní meeting', date: iso(dnes), time: '23:30', allDay: false, start: iso(dnes) + 'T23:30:00', end: iso(dnes) + 'T23:45:00', durationH: 0.25, rsvp: 'needsAction' },{ title: 'Z operations: L1 team talk', date: iso(dnes), time: '23:10', allDay: false, start: iso(dnes) + 'T23:10:00', end: iso(dnes) + 'T23:40:00', durationH: 0.5, rsvp: 'accepted' }] },
-    tym: { od: '2026-10-01', do: '2026-10-29', dni: 30, median: { tk: 9, kom: 7, koment: 4, cas: 3, zatez: 25, prideleno: 2, mimo: 0.05, slack: 2.5 }, lide: [
+    tym: { od: '2026-10-01', do: '2026-10-29', dni: 30, tym: { n: 2700, rutina: 0.34, stredni: 0.27, slozite: 0.39, vaha: 2.05, akt: 11, inc: 0.3, sr: 0.5, sla: 0.1, mi: 3, predano: 0.14, klicovi: 0.2, temata: { telefonie: 0.13 }, kanaly: { email: 0.7, hovor: 0.2, chat: 0.1 } }, median: { tk: 9, kom: 7, koment: 4, cas: 3, zatez: 25, prideleno: 2, mimo: 0.05, slack: 2.5 }, lide: [
         { login: 'rene_heryan', jmeno: 'René Heryán', osoba: 'René Heryán', kapacita: 0.8, dnu: 20, tk: 10, kom: 8, koment: 4, cas: 3, index: 1.1, stav: 'ok', trend: 0.12, ohlasy: { pochvala: 2 }, zatez: 40, tickety: 21, zatez_prum: 35, prideleno: 2.5, bez_prace: 0, nalada: { hodnota: 4, kdy: '2026-10-20', predtim: 2 },
             sla_vina: 3, dluzne: 6, dluzne_prum: 4.2, slack: { zprav: 60, vlakna: 20, sdileni: 4, kanalu: 7 }, kontext: { zvedacka: 3, support_week: 7 },
-            signal: { stav: 'pokles', prumer: 1.2, sd: 0.1, posledni: 0.95 }, vyhoreni: { stav: 'riziko', duvody: ['mimo pracovní dobu 20 % aktivit (tým 5 %)', 'aspoň 120 dní bez volna <x>'] } },
+            signal: { stav: 'pokles', prumer: 1.2, sd: 0.1, posledni: 0.95 }, rozbor: ['Dostává o 31 % víc ticketů <b>'],
+            rozpad: { n: 241, rutina: 0.33, stredni: 0.25, slozite: 0.42, vaha: 2.09, akt: 10.9, inc: 0.3, sr: 0.5, sla: 0.1, mi: 0, predano: 0.27, klicovi: 0.2, temata: { telefonie: 0.2 }, kanaly: { email: 0.7, hovor: 0.2, chat: 0.1 } }, vyhoreni: { stav: 'riziko', duvody: ['mimo pracovní dobu 20 % aktivit (tým 5 %)', 'aspoň 120 dní bez volna <x>'] } },
         { login: 'x_y', jmeno: 'Flákač <b>', osoba: null, kapacita: 1, dnu: 18, tk: 4, kom: 3, koment: 1, cas: 1, index: 0.45, stav: 'vyrazne', trend: -0.3, ohlasy: { stiznost: 1 }, zatez: 10, tickety: 6, zatez_prum: null, prideleno: 1, bez_prace: 4, nalada: null, signal: { stav: 'zlepseni', prumer: 0.4, sd: 0.05, posledni: 0.6 }, vyhoreni: { stav: 'ok', duvody: [] } },
         { login: 'nov', jmeno: 'Nováček', osoba: null, kapacita: 1, dnu: 2, tk: 1, kom: 1, koment: 0, cas: 0, index: null, stav: 'malo_dat', trend: null, ohlasy: {}, zatez: null, tickety: null, zatez_prum: null, prideleno: null, bez_prace: null, nalada: null }] },
     lide: { lide: [{ name: 'René Heryán', posledni: '2026-10-20', zapisu: 6, otevrenych: 0 }] },
@@ -149,6 +150,19 @@ function spust(hash, opts) {
     t(r.html.includes('>3,0</span>') && r.html.includes('↗4') && r.html.includes('zv 3 sw'), 'Tým: Slack na den s prací, sdílení, kontext zvedačky');
     t(r.html.includes('class="tg-pozor"') && r.html.indexOf('>riziko<') < r.html.indexOf('>zlepšení<') && r.html.includes('příležitost pochválit'), 'Tým: souhrn seřazený podle naléhavosti');
     t(r.html.includes('&lt;x&gt;') && !r.html.includes('volna <x>'), 'Tým: důvody escapované');
+    t(r.html.includes('data-akce="tym-rozbal" data-l="rene_heryan"') && !r.html.includes('tg-rozbal-radek'), 'Tým: rozpad zabalený, tlačítko rozbalit');
+    t(typeof r.ctx.renderRozpad === 'function', 'Tým: renderer rozpadu');
+    if (r.ctx.renderRozpad) {
+        const h = r.ctx.renderRozpad(DATA.tym.lide[0], DATA.tym.tym, 30);
+        t(h.includes('33 % / 25 % / 42 %') && h.includes('34 % / 27 % / 39 %') && h.includes('Předáno dál') && h.includes('27 %'), 'Rozpad: mix náročnosti člověk × tým');
+        t(h.includes('&lt;b&gt;') && !h.includes('ticketů <b>'), 'Rozpad: rozbor escapovaný');
+    }
+    // důkazy na klik (31. 10.): čísla jsou tlačítka, panel ukáže zdroj, pravidlo a řádky s odkazy (escapované)
+    t(r.html.includes('data-akce="dukazy" data-l="rene_heryan" data-co="sla_vina"') && r.html.includes('data-co="dluzne"') && r.html.includes('data-co="prideleno"') && r.html.includes('data-co="slack"') && r.html.includes('data-co="bez_prace"'), 'Tým: čísla rozkliknutelná na důkazy');
+    if (r.ctx.renderDukazy) {
+        const h = r.ctx.renderDukazy({ nadpis: 'Přidělené tickety', login: 'rene_heryan', celkem: 2, od: '2026-10-01', do: '2026-10-31', zdroj: 'Ticket Router', pravidlo: 'Přiděleno <x>', sloupce: ['Ticket', 'Název'], radky: [[{ t: '#1', u: 'https://daktela.daktela.com/tickets/update/1' }, 'a <b>']] });
+        t(h.includes('href="https://daktela.daktela.com/tickets/update/1"') && h.includes('Jak se počítá') && h.includes('&lt;x&gt;') && h.includes('a &lt;b&gt;') && h.includes('tg-duk-filtr'), 'Důkazy: odkazy, zdroj, pravidlo, filtr, escapování');
+    } else t(false, 'Důkazy: renderer');
     r = await spust('#osoba=Ren%C3%A9%20Hery%C3%A1n');
     t(r.html.includes('Týdny') && r.html.includes('tg-pasmo') && r.html.includes('v slaby'), 'Detail: týdny s pásmem, slabý týden světle');
     t(r.html.includes('name="m"') && r.html.includes('5 — výborná'), 'Detail: zápis 1on1 s náladou');
