@@ -163,16 +163,19 @@ function renderRadky(pole, od, znacky) {
         '<span class="a">' + (x.slack_zdroj ? '<button class="tg-ib" data-akce="slack-ukol" data-i="' + tgIdx(x) + '" title="Udělat z toho úkol">+</button>' : '') + '<button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
 
-/** Všechny moje tickety po skupinách (23. 11.) — TOP 10 jich ukáže jen pár. Ve focusu sbalené. */
+/** Moje tickety (23. 11.): TOP 10 podle skóre z Priority, jeden seznam s důvodem; zbytek sbalený. Ve focusu sbalené celé. */
+function renderMojeTicketyRadky(pole, od) {
+    return '<ul class="tg-rows">' + pole.map((x, i) => '<li class="' + (tgJeHot(x) ? 'hot' : '') + '"><span class="r">' + (od + i) + '</span>' +
+        '<span class="t">' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titul) + '</a>' : esc(x.titul)) + tgTier(x) + '</span>' +
+        '<span class="w">' + [(x.proc && x.proc.length ? x.proc.filter(p => !/^Tier |^bez tieru$/.test(p)).join(' · ') : x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : '')), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
+        '<span class="a"><button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
+}
 function renderMojeTickety(fokus) {
-    const sk = TL.tickety(tg.zobrazene);
-    if (!sk.length) return '';
-    let n = 0, telo = '';
-    for (const g of sk) {
-        telo += '<div class="tg-waiting"><h3>' + esc(g.nazev) + ' <span>' + g.polozky.length + '</span></h3>' + renderRadky(g.polozky, n + 1, {}) + '</div>';
-        n += g.polozky.length;
-    }
-    return '<section class="tg-card tg-tickety"><details class="tg-more"' + (fokus ? '' : ' open') + '><summary>Moje tickety — ' + n + ' ▾</summary>' + telo + '</details></section>';
+    const r = TL.tickety(tg.zobrazene, 10);
+    if (!r.top.length) return '';
+    const telo = '<div class="tg-waiting">' + renderMojeTicketyRadky(r.top, 1) + '</div>' +
+        (r.dalsi.length ? '<details class="tg-more tg-tk-dalsi"><summary>Další tickety — ' + r.dalsi.length + ' ▾</summary><div class="tg-waiting">' + renderMojeTicketyRadky(r.dalsi, 11) + '</div></details>' : '');
+    return '<section class="tg-card tg-tickety"><details class="tg-more"' + (fokus ? '' : ' open') + '><summary>Moje tickety — TOP ' + r.top.length + ' z ' + (r.top.length + r.dalsi.length) + ' ▾</summary>' + telo + '</details></section>';
 }
 
 function renderSlack() {

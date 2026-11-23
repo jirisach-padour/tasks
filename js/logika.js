@@ -77,26 +77,14 @@
                  jedenOn1: (lide || []).reduce((s, l) => s + (Number(l.otevrenych) || 0), 0) };
     }
 
-    /** Moje tickety (23. 11.): všechny tickety z Priority po skupinách, seřazené. Pořadí: skupina Priority,
-     *  u Hlídat podle dalšího kroku (zavřít → třetí strana → zákazník → review), uvnitř pořadí z Priority
-     *  (interní: nejdéle nedotčené první, zákaznické: tier). Vrací [{ nazev, polozky }]. */
-    const TK_KROKY = [['zavřít', 'Asi vyřešeno — zavřít?'], ['třetí', 'Další krok u třetí strany'], ['na zákazníkovi', 'Další krok na zákazníkovi'], ['review', 'Review nasazeného řešení']];
-    function tickety(polozky) {
-        const krok = x => {
-            if (x.skupina !== 8) return -1;
-            const d = String(x.duvod || '').toLowerCase();
-            const k = TK_KROKY.findIndex(s => d.includes(s[0]));
-            return k < 0 ? TK_KROKY.length : k;
-        };
-        const t = (polozky || []).map((x, i) => ({ x, i, k: krok(x) })).filter(o => o.x.zdroj === 'ticket');
-        t.sort((a, b) => (a.x.skupina - b.x.skupina) || (a.k - b.k) || (a.i - b.i));
-        const sk = [];
-        for (const o of t) {
-            const nazev = o.x.skupina === 7 ? 'Interní — další krok na tobě' : o.k < 0 ? String(o.x.skupina_nazev || '') : o.k < TK_KROKY.length ? TK_KROKY[o.k][1] : 'Hlídat';
-            if (!sk.length || sk[sk.length - 1].nazev !== nazev) sk.push({ nazev, polozky: [] });
-            sk[sk.length - 1].polozky.push(o.x);
-        }
-        return sk;
+    /** Moje tickety (23. 11., JS: žádné sekce, jeden seřazený seznam): jen tickety, podle skóre z Priority
+     *  (prTicketSkore) sestupně; bez skóre (starší Priority) pořadí z Priority. Vrací { top: prvních n, dalsi }. */
+    function tickety(polozky, n) {
+        n = n || 10;
+        const t = (polozky || []).map((x, i) => ({ x, i })).filter(o => o.x.zdroj === 'ticket');
+        t.sort((a, b) => ((Number(b.x.skore) || 0) - (Number(a.x.skore) || 0)) || (a.i - b.i));
+        const s = t.map(o => o.x);
+        return { top: s.slice(0, n), dalsi: s.slice(n) };
     }
 
     const SLOUPCE = ['urgent_important', 'important', 'urgent', 'other', 'ceka', 'osobni'];
