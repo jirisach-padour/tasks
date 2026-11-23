@@ -62,4 +62,14 @@ t(JSON.stringify(L.presun({ quadrant: 'other', ceka_na: 'X', pripomenout: '2026-
 t(L.presun({ quadrant: 'other' }, 'work', 'ceka').zeptat === true, 'do čekám na → zeptat se kdo a kdy');
 t(L.presun({ quadrant: 'other' }, 'work', 'osobni') === null && L.presun({ quadrant: 'other' }, 'personal', 'important') === null, 'mezi prací a osobním nejde');
 t(L.presun({ quadrant: 'important' }, 'work', 'important') === null, 'stejný sloupec = nic');
+// Moje tickety (23. 11.): jen tickety, po skupinách, Hlídat podle dalšího kroku, uvnitř pořadí z Priority
+{
+    const tk = (s, k, duvod) => ({ skupina: s, skupina_nazev: s === 8 ? 'Hlídat' : s === 7 ? 'Interní a úkoly' : 'Zákazník čeká', zdroj: 'ticket', klic: k, duvod });
+    const sk = L.tickety([tk(7, 'i1', 'Interní: další krok na tobě'), { skupina: 7, zdroj: 'slack', klic: 's' }, tk(8, 'z1', 'Další krok na zákazníkovi'),
+        tk(8, 'r1', 'Review nasazeného řešení — zákazník nečeká'), tk(8, 'v1', 'Další krok asi vyřešeno, zavřít?'), tk(8, 't1', 'Další krok u třetí strany'),
+        tk(8, 'z2', 'Další krok na zákazníkovi'), tk(2, 'c1', 'Zákazník čeká 3 h'), tk(7, 'i2', 'Interní: další krok na tobě')]);
+    t(JSON.stringify(sk.map(g => g.nazev)) === JSON.stringify(['Zákazník čeká', 'Interní — další krok na tobě', 'Asi vyřešeno — zavřít?', 'Další krok u třetí strany', 'Další krok na zákazníkovi', 'Review nasazeného řešení']), 'tickety: pořadí skupin');
+    t(sk.map(g => g.polozky.map(x => x.klic).join()).join('|') === 'c1|i1,i2|v1|t1|z1,z2|r1', 'tickety: uvnitř skupiny pořadí z Priority, bez Slacku');
+    t(L.tickety([]).length === 0 && L.tickety(null).length === 0, 'tickety: prázdné');
+}
 process.exit(chyb ? 1 : 0);

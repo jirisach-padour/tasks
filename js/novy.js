@@ -125,6 +125,7 @@ function renderTedPohled() {
         if (!fokus) html += renderSlack();
         html += '</section>';
         html += renderStrategicky();
+        html += renderMojeTickety(fokus);
         if (!fokus) html += renderCekam();
     }
     if (!fokus) html += renderMojeUkoly();
@@ -160,6 +161,18 @@ function renderRadky(pole, od, znacky) {
         '<span class="w">' + [x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : ''), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
         (x.citace ? '<span class="c tg-cite">' + esc(x.citace) + '</span>' : '') +
         '<span class="a">' + (x.slack_zdroj ? '<button class="tg-ib" data-akce="slack-ukol" data-i="' + tgIdx(x) + '" title="Udělat z toho úkol">+</button>' : '') + '<button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
+}
+
+/** Všechny moje tickety po skupinách (23. 11.) — TOP 10 jich ukáže jen pár. Ve focusu sbalené. */
+function renderMojeTickety(fokus) {
+    const sk = TL.tickety(tg.zobrazene);
+    if (!sk.length) return '';
+    let n = 0, telo = '';
+    for (const g of sk) {
+        telo += '<div class="tg-waiting"><h3>' + esc(g.nazev) + ' <span>' + g.polozky.length + '</span></h3>' + renderRadky(g.polozky, n + 1, {}) + '</div>';
+        n += g.polozky.length;
+    }
+    return '<section class="tg-card tg-tickety"><details class="tg-more"' + (fokus ? '' : ' open') + '><summary>Moje tickety — ' + n + ' ▾</summary>' + telo + '</details></section>';
 }
 
 function renderSlack() {

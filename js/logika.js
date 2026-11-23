@@ -77,6 +77,28 @@
                  jedenOn1: (lide || []).reduce((s, l) => s + (Number(l.otevrenych) || 0), 0) };
     }
 
+    /** Moje tickety (23. 11.): všechny tickety z Priority po skupinách, seřazené. Pořadí: skupina Priority,
+     *  u Hlídat podle dalšího kroku (zavřít → třetí strana → zákazník → review), uvnitř pořadí z Priority
+     *  (interní: nejdéle nedotčené první, zákaznické: tier). Vrací [{ nazev, polozky }]. */
+    const TK_KROKY = [['zavřít', 'Asi vyřešeno — zavřít?'], ['třetí', 'Další krok u třetí strany'], ['na zákazníkovi', 'Další krok na zákazníkovi'], ['review', 'Review nasazeného řešení']];
+    function tickety(polozky) {
+        const krok = x => {
+            if (x.skupina !== 8) return -1;
+            const d = String(x.duvod || '').toLowerCase();
+            const k = TK_KROKY.findIndex(s => d.includes(s[0]));
+            return k < 0 ? TK_KROKY.length : k;
+        };
+        const t = (polozky || []).map((x, i) => ({ x, i, k: krok(x) })).filter(o => o.x.zdroj === 'ticket');
+        t.sort((a, b) => (a.x.skupina - b.x.skupina) || (a.k - b.k) || (a.i - b.i));
+        const sk = [];
+        for (const o of t) {
+            const nazev = o.x.skupina === 7 ? 'Interní — další krok na tobě' : o.k < 0 ? String(o.x.skupina_nazev || '') : o.k < TK_KROKY.length ? TK_KROKY[o.k][1] : 'Hlídat';
+            if (!sk.length || sk[sk.length - 1].nazev !== nazev) sk.push({ nazev, polozky: [] });
+            sk[sk.length - 1].polozky.push(o.x);
+        }
+        return sk;
+    }
+
     const SLOUPCE = ['urgent_important', 'important', 'urgent', 'other', 'ceka', 'osobni'];
     function sloupec(u, typ) {
         if (typ === 'personal') return 'osobni';
@@ -93,5 +115,5 @@
         return d;
     }
 
-    Object.assign(exp, { rezim, ted, znacky, slackSouhrn, slackSkupiny, datum, esc, dlazdice, sloupec, presun, SLOUPCE });
+    Object.assign(exp, { rezim, ted, tickety, znacky, slackSouhrn, slackSkupiny, datum, esc, dlazdice, sloupec, presun, SLOUPCE });
 })(typeof module !== 'undefined' ? module.exports : (window.TL = {}));

@@ -30,6 +30,7 @@ const DATA = {
         { skupina: 3, skupina_nazev: 'Dlužíme', klic: '2', zdroj: 'ticket', udalost: 'b', titul: 'Nacenění', duvod: 'Dlužíme', citace: null, tier: 'Tier 3', zakaznik: 'X', url: 'https://x/2' },
         { skupina: 2, skupina_nazev: 'Zákazník čeká', klic: '3', zdroj: 'ticket', udalost: 'c', titul: 'Routing', duvod: 'čeká', citace: null, tier: 'bez tieru', zakaznik: 'Y', url: 'https://x/3' },
         { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: 'C:1', zdroj: 'slack', udalost: 'x', titul: 'Karel — Dneska ten Solver?', duvod: 'Karel na Slacku, bez tvé reakce a bez úkolu', citace: null, tier: null, zakaznik: '', url: 'https://s/1', slack_zdroj: 'slack:C:1' },
+        { skupina: 8, skupina_nazev: 'Hlídat', klic: '9', zdroj: 'ticket', udalost: 'h', titul: 'Čeká na <zákazníka>', duvod: 'Další krok na zákazníkovi', citace: null, tier: 'Tier 2', zakaznik: 'Z', url: 'https://x/9' },
         { skupina: 7, skupina_nazev: 'Interní a úkoly', klic: '4', zdroj: 'ukol', udalost: '', titul: 'Billing', duvod: 'Termín', citace: null, tier: null, zakaznik: '', url: null }],
         slack: [{ klic: 'C:1', kanal: 'C1', kanal_nazev: '#support_management', autor_jmeno: 'Karel Vůjtek', text: 'Dneska ten Solver?', kdy: '2026-10-29 12:27:13', poradi: 0, url: 'https://s/1', ma_ukol: false },
             { klic: 'G:2', kanal: 'G1', kanal_nazev: 'Skupinová zpráva', autor_jmeno: 'Jitka', text: 'Novější ve skupině', kdy: '2026-10-30 16:39:00', poradi: 2, url: 'https://s/2', ma_ukol: false },
@@ -108,6 +109,7 @@ function spust(hash, opts) {
     t((r.html.match(/data-akce="slack-hotovo" /g) || []).length === 3, 'každá zpráva má dál vlastní ✓');
     t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
+    t(r.html.includes('Moje tickety — 4') && r.html.includes('Čeká na &lt;zákazníka&gt;') && r.html.includes('Další krok na zákazníkovi <span>1</span>'), 'Teď: Moje tickety — všechny tickety po skupinách (23. 11.)');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
     t(r.html.includes('Servis auta'), 'Teď: osobní úkol');
     t(r.html.includes('potvrzeno · připrav se') && r.html.includes('nepotvrzeno'), 'Dnes: RSVP');
