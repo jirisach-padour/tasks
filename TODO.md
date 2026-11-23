@@ -82,3 +82,4 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [x] Ranní ritual, DnesResetModal, samoučení (estimated/actual minutes, přesnost odhadů)
 - [x] Denní cron (daily_context.php → tasks-context.md)
 - [x] 1on1 modul — osoby, záznamy, action items, mood, tagy, profil, ActionItemsPopover, PrepDocModal
+- [x] Moje tickety v Teď — všechny tickety z Priority po skupinách a seřazené (TOP 10 jich ukázal jen pár), ve focusu sbalené — implementováno 2026-11-23
