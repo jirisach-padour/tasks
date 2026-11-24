@@ -113,6 +113,7 @@ function renderTedPohled() {
     if (!fokus) html += renderDlazdice();
     html += '<div class="tg-wrap"><div class="tg-col">';
     if (tg.prace) {
+        html += renderMojeTickety(fokus);   // JS 24. 11.: tickety nahoře
         const hlavniVidet = r.hlavni && (!fokus || r.hlavni.skupina === 1);
         html += '<section class="tg-card"><header><h2>Teď</h2><span class="tg-grow"></span><span class="tg-sub">' + esc(new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })) + '</span></header>';
         if (!r.hlavni) html += '<div class="tg-next"><div class="big">Nic nehoří.</div><div class="why">Žádný zákazník na tebe nečeká.</div></div>';
@@ -125,7 +126,6 @@ function renderTedPohled() {
         if (!fokus) html += renderSlack();
         html += '</section>';
         html += renderStrategicky();
-        html += renderMojeTickety(fokus);
         if (!fokus) html += renderCekam();
     }
     if (!fokus) html += renderMojeUkoly();

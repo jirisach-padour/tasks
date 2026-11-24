@@ -110,6 +110,7 @@ function spust(hash, opts) {
     t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
     t(r.html.includes('Moje tickety — TOP 4 z 4') && r.html.includes('Čeká na &lt;zákazníka&gt;') && r.html.includes('na zákazníkovi, 12 dní ticho') && r.html.split('Moje tickety')[1].indexOf('Čeká na &lt;zákazníka&gt;') < r.html.split('Moje tickety')[1].indexOf('>Nacenění<'), 'Teď: Moje tickety — jeden seznam podle skóre s důvodem (23. 11.)');
+    t(r.html.indexOf('Moje tickety') < r.html.indexOf('<h2>Teď</h2>'), 'Teď: Moje tickety nahoře, nad kartou Teď (24. 11.)');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
     t(r.html.includes('Servis auta'), 'Teď: osobní úkol');
     t(r.html.includes('potvrzeno · připrav se') && r.html.includes('nepotvrzeno'), 'Dnes: RSVP');
