@@ -87,3 +87,4 @@ tasky si tahá přes read-only token. Nové GUI ve vanilla JS, vše pokryté tes
 - [ ] Priority: dokončit a ověřit prTicketSkore na operations (váhy podle pravděpodobností Jeva) — přerušeno výpadkem VPN 2026-11-23
 - [x] Teď ve třech sloupcích na velkém monitoru (≥1500 px): Tickety podle priority vlevo, Teď uprostřed, Dnes vpravo; užší = tickety pod Teď; ve focusu bez ticketů; ticket z TOP 10 tlumeně „v Teď“ — implementováno 2026-11-24
 - [ ] Analýza priorit ticketů kolem 8. 12. — detail v TODO.md Priority na operations (skóre se počítá tam)
+- [x] Pohled Tickety (záložka v navigaci): celý seřazený seznam na jakékoli obrazovce i ve focusu — implementováno 2026-11-24
