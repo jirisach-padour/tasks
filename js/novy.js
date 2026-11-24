@@ -86,6 +86,7 @@ function tgVykresli() {
     document.querySelectorAll('.tg-nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v || (v === 'osoba' && a.dataset.v === 'lide')));
     const main = document.getElementById('tg-main');
     main.classList.toggle('siroke', v === 'ukoly' || v === 'tym');
+    main.classList.toggle('siroke3', v === 'ted');   // 24. 11.: tři sloupce na velkém monitoru
     if (v === 'ukoly') main.innerHTML = renderUkolyPohled();
     else if (v === 'tym') main.innerHTML = renderTymPohled();
     else if (v === 'lide') main.innerHTML = renderLidePohled();
@@ -111,9 +112,11 @@ function renderTedPohled() {
     let html = '';
     if (fokus) html += '<div class="tg-banner" style="margin:0 0 14px;padding:0"><div>Focus time — vidíš jen strategický blok a to, co hoří v řádu hodin. <button data-akce="konec-focus">Ukončit focus</button></div></div>';
     if (!fokus) html += renderDlazdice();
-    html += '<div class="tg-wrap"><div class="tg-col">';
+    // 24. 11. (UX s JS): velký monitor = tickety vlevo, Teď uprostřed, Dnes vpravo; užší = tickety pod Teď; ve focusu tickety vůbec
+    const vTed = {};
+    [r.hlavni].concat(r.dalsi, r.zbytek).forEach(x => { if (x) vTed[x.klic] = 1; });
+    html += '<div class="tg-wrap tg-wrap3">' + (tg.prace && !fokus ? '<div class="tg-col tg-col-tk">' + renderMojeTickety(vTed) + '</div>' : '') + '<div class="tg-col">';
     if (tg.prace) {
-        html += renderMojeTickety(fokus);   // JS 24. 11.: tickety nahoře
         const hlavniVidet = r.hlavni && (!fokus || r.hlavni.skupina === 1);
         html += '<section class="tg-card"><header><h2>Teď</h2><span class="tg-grow"></span><span class="tg-sub">' + esc(new Date().toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' })) + '</span></header>';
         if (!r.hlavni) html += '<div class="tg-next"><div class="big">Nic nehoří.</div><div class="why">Žádný zákazník na tebe nečeká.</div></div>';
@@ -163,19 +166,21 @@ function renderRadky(pole, od, znacky) {
         '<span class="a">' + (x.slack_zdroj ? '<button class="tg-ib" data-akce="slack-ukol" data-i="' + tgIdx(x) + '" title="Udělat z toho úkol">+</button>' : '') + '<button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
 
-/** Moje tickety (23. 11.): TOP 10 podle skóre z Priority, jeden seznam s důvodem; zbytek sbalený. Ve focusu sbalené celé. */
-function renderMojeTicketyRadky(pole, od) {
-    return '<ul class="tg-rows">' + pole.map((x, i) => '<li class="' + (tgJeHot(x) ? 'hot' : '') + '"><span class="r">' + (od + i) + '</span>' +
-        '<span class="t">' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titul) + '</a>' : esc(x.titul)) + tgTier(x) + '</span>' +
+/** Tickety podle priority (23.–24. 11.): TOP 10 podle skóre z Priority, jeden seznam s důvodem; zbytek sbalený.
+ *  Ticket, který už je v TOP 10 v Teď, zůstává na svém místě, ale tlumeně se značkou „v Teď“. */
+function renderMojeTicketyRadky(pole, od, vTed) {
+    return '<ul class="tg-rows">' + pole.map((x, i) => '<li class="' + (tgJeHot(x) ? 'hot' : '') + (vTed[x.klic] ? ' v-ted' : '') + '"><span class="r">' + (od + i) + '</span>' +
+        '<span class="t">' + (x.url ? '<a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.titul) + '</a>' : esc(x.titul)) + tgTier(x) + (vTed[x.klic] ? '<span class="tg-tag">v Teď</span>' : '') + '</span>' +
         '<span class="w">' + [(x.proc && x.proc.length ? x.proc.filter(p => !/^Tier |^bez tieru$/.test(p)).join(' · ') : x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : '')), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
         '<span class="a"><button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
-function renderMojeTickety(fokus) {
+function renderMojeTickety(vTed) {
+    vTed = vTed || {};
     const r = TL.tickety(tg.zobrazene, 10);
     if (!r.top.length) return '';
-    const telo = '<div class="tg-waiting">' + renderMojeTicketyRadky(r.top, 1) + '</div>' +
-        (r.dalsi.length ? '<details class="tg-more tg-tk-dalsi"><summary>Další tickety — ' + r.dalsi.length + ' ▾</summary><div class="tg-waiting">' + renderMojeTicketyRadky(r.dalsi, 11) + '</div></details>' : '');
-    return '<section class="tg-card tg-tickety"><details class="tg-more"' + (fokus ? '' : ' open') + '><summary>Moje tickety — TOP ' + r.top.length + ' z ' + (r.top.length + r.dalsi.length) + ' ▾</summary>' + telo + '</details></section>';
+    const telo = '<div class="tg-waiting">' + renderMojeTicketyRadky(r.top, 1, vTed) + '</div>' +
+        (r.dalsi.length ? '<details class="tg-more tg-tk-dalsi"><summary>Další tickety — ' + r.dalsi.length + ' ▾</summary><div class="tg-waiting">' + renderMojeTicketyRadky(r.dalsi, 11, vTed) + '</div></details>' : '');
+    return '<section class="tg-card tg-tickety"><header><h2>Tickety podle priority</h2><span class="tg-grow"></span><span class="tg-sub">TOP ' + r.top.length + ' z ' + (r.top.length + r.dalsi.length) + '</span></header>' + telo + '</section>';
 }
 
 function renderSlack() {

@@ -109,8 +109,9 @@ function spust(hash, opts) {
     t((r.html.match(/data-akce="slack-hotovo" /g) || []).length === 3, 'každá zpráva má dál vlastní ✓');
     t(r.html.includes('data-akce="slack-ukol"'), 'C.17: tlačítko + úkol u Karlovy zprávy');
     t(r.html.includes('Strategický blok') && r.html.includes('AI workshop'), 'Teď: strategický blok');
-    t(r.html.includes('Moje tickety — TOP 4 z 4') && r.html.includes('Čeká na &lt;zákazníka&gt;') && r.html.includes('na zákazníkovi, 12 dní ticho') && r.html.split('Moje tickety')[1].indexOf('Čeká na &lt;zákazníka&gt;') < r.html.split('Moje tickety')[1].indexOf('>Nacenění<'), 'Teď: Moje tickety — jeden seznam podle skóre s důvodem (23. 11.)');
-    t(r.html.indexOf('Moje tickety') < r.html.indexOf('<h2>Teď</h2>'), 'Teď: Moje tickety nahoře, nad kartou Teď (24. 11.)');
+    t(r.html.includes('Tickety podle priority') && r.html.includes('TOP 4 z 4') && r.html.includes('Čeká na &lt;zákazníka&gt;') && r.html.includes('na zákazníkovi, 12 dní ticho') && r.html.split('Tickety podle priority')[1].indexOf('Čeká na &lt;zákazníka&gt;') < r.html.split('Tickety podle priority')[1].indexOf('>Nacenění<'), 'Teď: Moje tickety — jeden seznam podle skóre s důvodem (23. 11.)');
+    t(r.html.includes('tg-col-tk') && r.html.indexOf('tg-col-tk') < r.html.indexOf('<h2>Teď</h2>'), 'Teď: tickety ve vlastním sloupci vlevo (24. 11.)');
+    t(r.html.includes('class="hot v-ted"') && r.html.includes('>v Teď<'), 'Teď: ticket z TOP 10 je v ticketech tlumeně se značkou v Teď (24. 11.)');
     t(r.html.includes('Čekám na') && r.html.includes('Ilia'), 'Teď: čekám na');
     t(r.html.includes('Servis auta'), 'Teď: osobní úkol');
     t(r.html.includes('potvrzeno · připrav se') && r.html.includes('nepotvrzeno'), 'Dnes: RSVP');
