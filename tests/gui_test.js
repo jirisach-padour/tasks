@@ -76,7 +76,7 @@ function spust(hash, opts) {
         location: { hash, pathname: '/tasks/', href: '' }, history: { replaceState() {} },
         matchMedia: () => ({ matches: false }),
         localStorage: { _d: opts.klic === false ? {} : { tg_pr_klic: 'a'.repeat(64) }, getItem(k) { return this._d[k] ?? null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } },
-        sessionStorage: { _d: opts.zavreno ? {} : { tg_ukaz_praci: '1', tg_konec_focus: iso(dnes) }, getItem(k) { return this._d[k] ?? null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } },
+        sessionStorage: { _d: opts.zavreno ? {} : opts.focus ? { tg_ukaz_praci: '1' } : { tg_ukaz_praci: '1', tg_konec_focus: iso(dnes) }, getItem(k) { return this._d[k] ?? null; }, setItem(k, v) { this._d[k] = String(v); }, removeItem(k) { delete this._d[k]; } },
         document: {
             hidden: false, documentElement: { dataset: {} },
             getElementById(id) { return el[id] ??= prvek(id); },
@@ -85,7 +85,8 @@ function spust(hash, opts) {
         fetch(url) {
             const akce = String(url).includes('priority/api.php') ? String(url).split('action=')[1].split('&')[0] : String(url);
             if (opts.bezVpn && String(url).includes('priority')) return Promise.reject(new TypeError('Failed to fetch'));
-            const d = DATA[akce] ?? DATA[akce.split('&id=')[0]] ?? {};
+            let d = DATA[akce] ?? DATA[akce.split('&id=')[0]] ?? {};
+            if (opts.focus && akce === 'kalendar') d = { connected: true, events: [{ title: 'Focus', date: iso(dnes), time: '00:00', allDay: false, start: new Date(Date.now() - 36e5).toISOString(), end: new Date(Date.now() + 36e5).toISOString(), durationH: 2, rsvp: 'accepted' }] };
             return Promise.resolve({ status: 200, json: () => Promise.resolve(JSON.parse(JSON.stringify(d))) });
         },
     };
@@ -138,6 +139,9 @@ function spust(hash, opts) {
     r = await spust('#ted', { zavreno: true });
     const h = new Date().getHours(), den = new Date().getDay();
     if (den === 0 || den === 6 || h < 7 || h >= 18) t(r.html.includes('Práce je na dnes zavřená') && r.html.includes('Zítra začni'), 'Po pracovní době: zavřeno');
+
+    r = await spust('#ted', { focus: true });
+    t(r.html.includes('Focus time') && !r.html.includes('tg-col-tk') && !r.html.includes('Tickety podle priority'), 'Focus: sloupec s tickety se nezobrazí (24. 11.)');
 
     r = await spust('#ted', { bezVpn: true });
     t(r.banner.hidden === false && r.banner.innerHTML.includes('VPN'), 'Bez VPN: banner');
