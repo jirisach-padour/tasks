@@ -64,7 +64,7 @@ function tgToast(text, zpet) {
 }
 function tgDny(iso) { return iso ? Math.floor((Date.now() - new Date(String(iso).replace(' ', 'T')).getTime()) / 86400000) : 0; }
 function tgDnesIso() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
-function tgPohled() { const h = location.hash.replace('#', ''); return h.startsWith('osoba=') ? 'osoba' : (['ted', 'ukoly', 'lide', 'tym'].includes(h) ? h : 'ted'); }
+function tgPohled() { const h = location.hash.replace('#', ''); return h.startsWith('osoba=') ? 'osoba' : (['ted', 'tickety', 'ukoly', 'lide', 'tym'].includes(h) ? h : 'ted'); }
 
 function tgStav() {
     const c = document.getElementById('tg-conn');
@@ -89,6 +89,7 @@ function tgVykresli() {
     main.classList.toggle('siroke3', v === 'ted');   // 24. 11.: tři sloupce na velkém monitoru
     if (v === 'ukoly') main.innerHTML = renderUkolyPohled();
     else if (v === 'tym') main.innerHTML = renderTymPohled();
+    else if (v === 'tickety') main.innerHTML = renderTicketyPohled();
     else if (v === 'lide') main.innerHTML = renderLidePohled();
     else if (v === 'osoba') { main.innerHTML = '<p class="tg-muted">Načítám…</p>'; tgNactiOsobu(decodeURIComponent(location.hash.slice(7))); return; }
     else main.innerHTML = renderTedPohled();
@@ -174,6 +175,18 @@ function renderMojeTicketyRadky(pole, od, vTed) {
         '<span class="w">' + [(x.proc && x.proc.length ? x.proc.filter(p => !/^Tier |^bez tieru$/.test(p)).join(' · ') : x.skupina_nazev + (tgDuvod(x) ? ' ' + tgDuvod(x) : '')), x.zakaznik].filter(Boolean).map(esc).join(' · ') + '</span>' +
         '<span class="a"><button class="tg-ib ok" data-akce="hotovo" data-i="' + tgIdx(x) + '" title="Hotovo">✓</button><button class="tg-ib" data-akce="spatne" data-i="' + tgIdx(x) + '" title="Špatně zařazeno">⋯</button></span></li>').join('') + '</ul>';
 }
+/** Pohled Tickety (24. 11.): celý seřazený seznam na jakékoli obrazovce (notebook, mobil) i ve focusu — na vyžádání. */
+function renderTicketyPohled() {
+    if (!tg.prace) return '<p class="tg-muted">Tickety jsou na operations — připoj se na VPN.</p>';
+    const p = tg.ted ? tg.ted.polozky : [];
+    tg.zobrazene = p;
+    const r = TL.ted(p), vTed = {};
+    [r.hlavni].concat(r.dalsi, r.zbytek).forEach(x => { if (x) vTed[x.klic] = 1; });
+    const t = TL.tickety(p, 1000).top;
+    if (!t.length) return '<p class="tg-muted">Žádné otevřené tickety.</p>';
+    return '<section class="tg-card tg-tickety"><header><h2>Tickety podle priority</h2><span class="tg-grow"></span><span class="tg-sub">' + t.length + ' otevřených</span></header><div class="tg-waiting">' + renderMojeTicketyRadky(t, 1, vTed) + '</div></section>';
+}
+
 function renderMojeTickety(vTed) {
     vTed = vTed || {};
     const r = TL.tickety(tg.zobrazene, 10);

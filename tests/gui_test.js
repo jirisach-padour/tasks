@@ -121,6 +121,9 @@ function spust(hash, opts) {
     t(r.banner.hidden === true, 'připojeno: bez banneru');
     t(r.html.includes('Z operations: L1 team talk') && !r.html.includes('Jen záloha hetzner'), 'Dnes: pracovní kalendář z operations má přednost');
 
+    r = await spust('#tickety');
+    t(r.html.includes('Tickety podle priority') && r.html.includes('4 otevřených') && r.html.includes('Čeká na &lt;zákazníka&gt;') && !r.html.includes('Karel — Dneska') && !r.html.includes('Další tickety'), 'Tickety: celý seřazený seznam jako samostatný pohled (24. 11.)');
+
     r = await spust('#ukoly');
     t(r.html.includes('data-sloupec="urgent_important"') && r.html.includes('Infra témata'), 'Úkoly: tabule, práce ve sloupci Hoří');
     t(r.html.includes('data-sloupec="ceka"') && r.html.includes('Fix filtrů'), 'Úkoly: sloupec Čekám na');

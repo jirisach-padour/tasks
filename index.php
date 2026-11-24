@@ -23,7 +23,7 @@ header('Referrer-Policy: no-referrer');
 <header class="tg-top">
   <h1>Tasks</h1>
   <nav class="tg-nav">
-    <a href="#ted" data-v="ted">Teď</a><a href="#ukoly" data-v="ukoly">Úkoly</a><a href="#lide" data-v="lide">1on1</a><a href="#tym" data-v="tym">Tým</a>
+    <a href="#ted" data-v="ted">Teď</a><a href="#tickety" data-v="tickety">Tickety</a><a href="#ukoly" data-v="ukoly">Úkoly</a><a href="#lide" data-v="lide">1on1</a><a href="#tym" data-v="tym">Tým</a>
   </nav>
   <span class="tg-grow"></span>
   <span class="tg-conn" id="tg-conn"><i></i><span>…</span></span>
